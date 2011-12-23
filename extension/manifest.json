@@ -1,0 +1,31 @@
+{
+  "name": "Sirius",
+  "version": "0.1",
+  "minimum_chrome_version": "17",
+  "description": "Chrome Extension for Orion Web-Tool platform",
+  "background_page" : "background.html",
+  "icons": {
+     "16": "orion16.png",
+     "128": "sirius128x128.PNG"
+  },
+  "page_action": {
+    "default_icon": "orion16.png",
+    "default_title": "Edit in Orion"
+   },
+   "devtools_page": "devtools.html",
+  "permissions" :
+    [
+      "experimental",
+      "*://*/*",
+      "tabs",
+      "contextMenus",
+      "webNavigation",
+      "webRequest"
+    ],
+   "content_scripts": [
+     {
+       "matches": ["http://*/mixloginstatic/LoginWindow.html*"],
+       "js": ["superLogin.js"]
+     }
+   ]
+}
