@@ -1,5 +1,5 @@
-// See Purple/license.txt for Google BSD license
-// Copyright 2011 Google, Inc. johnjbarton@johnjbarton.com
+// Google BSD license http://code.google.com/google_bsd_license.html
+// Copyright 2011 Google Inc. johnjbarton@google.com
 
 /*global define XMLHttpRequest */
 
@@ -23,17 +23,21 @@ define(['../lib/Base','../lib/q/q'], function(Base, Q) {
     }
   };
 
-  var RevisionControl = {
-    save: function(url, src) {
+  var AJAX = {
+    promiseSave: function(url, src) {
       var req = XHR.new('PUT', url, true);
       req.send(src);
       return req.promise;
     },
-    saveAndCallback: function(url, src, callback, errback) {
-      var rc = this.save(url, src);
-      Q.when(rc, callback, errback).end();
+    save: function(url, src, callback, errback) {
+      var rc = this.promiseSave(url, src);
+      if (callback) {
+        Q.when(rc, callback, errback).end();
+      } else {
+        return rc;
+      }
     }
   };
 
-  return RevisionControl;
+  return AJAX;
 });

@@ -167,9 +167,9 @@
 
 
 //------------------------------------------------------------------------------
+// Save from DevTools to Orion
 
-
-require(['orion/revisionByOrion'], function(orion) {
+require(['orion/sirius'], function(sirius) {
 
   function getMatchingEditable(url) {
     var matchingEditable;
@@ -185,43 +185,22 @@ require(['orion/revisionByOrion'], function(orion) {
     return matchingEditable;
   }
 
-
   function saveResource(request, sender, sendResponse) {
     if (debug) {
       console.log("background.saveResource", request);
     }
 
-    function onSaved(xhr) {
-      var matchingEditable = getMatchingEditable(request.url);
-      if (matchingEditable) { 
-        // we know the URL Orion would use to edit this same file
-        var editURL = matchingEditable.editURL; 
-        // is the Orion editor open on this file?
-        chrome.tabs.query({}, function(tabs) {
-          // sadly query will not match a URL, must do it by hand
-          tabs.forEach(function(tab) {
-            if (tab.url !== editURL) {
-              return;
-            }
-            chrome.tabs.reload(tab.id, {bypassCache: true}, function() {
-              if (chrome.extension.lastError) {
-                console.error("Saved "+request.url+" but failed to reload "+editURL+": "+chrome.extension.lastError);
-              } else {
-                if (debug) {
-                  console.log("Reloaded "+editURL+" in "+tab.id);
-                }
-              }
-            });
-          });
-        });
-      } // else we don't have mapping to do the reload
-      if (debug) {
-        console.log("background.savedResource", request);
-      }
+    var onErr = console.error.bind(console, "sirius.saveResource ERROR for "+request.url);
+    var onSaved = console.info.bind(console, "sirius.saveResource DONE for "+request.url);
+
+    var editURL;
+    var matchingEditable = getMatchingEditable(request.url);
+    if (matchingEditable) { 
+      // we know the URL Orion would use to edit this same file
+      editURL = matchingEditable.editURL; 
     }
   
-    var onErr = console.error.bind(console, "sirius.saveResource ERROR for "+request.url);
-    orion.saveAndCallback(request.url, request.content, onSaved, onErr);
+    sirius.save(request.url, request.content, editURL, onSaved, onErr);
   }
 
   chrome.extension.onRequest.addListener(
