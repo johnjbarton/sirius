@@ -10,10 +10,12 @@
 <li>Open this index.html in Orion edit page: verify that the Orion page action appears</li>
 <li>Click on the page action: verify that index.html opens as a Web page</li>
 <li>Verify that the Web page has an Orion page action icon;</li>
-<li>Click on the page action: verify that the edit page opens</li>
-<li>Open devtools, find test.js in the Script panel</li>
-<li>Edit the return value of changeMe(); save (control s)</li>
-<li>Verify that the file is changed</li>
+<li>Click on the page action: verify that the edit page opens; close that tab</li>
+<li>Open Orion editor for test/test.js another tab; edit the value in changeMe() to 7, but do not save.</li>
+<li>Return to this page (index.html, not editing). Open devtools, find test.js in the Script panel</li>
+<li>Edit the return value of changeMe() to 8; save (control s)</li>
+<li>You should have a dialog on the editor for test.js, select Leave Page</li>
+<li>Verify that the file is changed to 8</li>
 </ol>
 </body>
 </html>

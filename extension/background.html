@@ -5,10 +5,11 @@
 -->
 <html>
   <head>
+  <script src="../lib/require.js"></script>
   </head>
   <body>
     <script>
-/*globals chrome console window */
+/*globals chrome console window require */
 
       var debug = true;
 
@@ -42,7 +43,7 @@
           if (!editableByTabId[tabId]) {
             editableByTabId[tabId] = [];
           }
-          editableByTabId[tabId].push({url: url, editURL: editURL});
+          editableByTabId[tabId].push({url: url, editURL: editURL, tabId: tabId});
         }
       }
       
@@ -166,37 +167,65 @@
 
 
 //------------------------------------------------------------------------------
-// SuperLogin: reload all Orion pages after logging in.
+
+
+require(['orion/revisionByOrion'], function(orion) {
+
+  function getMatchingEditable(url) {
+    var matchingEditable;
+    var editableTabIds = Object.keys(editableByTabId);
+    editableTabIds.forEach(function(tabId) {
+      var editables = editableByTabId[tabId];
+      editables.forEach(function(editable) {
+        if (editable.url === url) {
+          matchingEditable = editable;
+        }
+      });
+    });
+    return matchingEditable;
+  }
+
 
   function saveResource(request, sender, sendResponse) {
     if (debug) {
       console.log("background.saveResource", request);
     }
-    var editURL;
-    var editableTabIds = Object.keys(editableByTabId);
-    editableTabIds.forEach(function(tabId) {
-      var editables = editableByTabId[tabId];
-      editables.forEach(function(editable) {
-        if (editable.url === request.url) {
-          editURL = editable.editURL;
-        }
-      });
-    });
 
-    if (editURL) {
-      console.log("background.saveResource ready to PUT to "+editURL);
-    } else {
-      console.log("background.saveResource no editURL matches "+request.url);
+    function onSaved(xhr) {
+      var matchingEditable = getMatchingEditable(request.url);
+      if (matchingEditable) { 
+        // we know the URL Orion would use to edit this same file
+        var editURL = matchingEditable.editURL; 
+        // is the Orion editor open on this file?
+        chrome.tabs.query({}, function(tabs) {
+          // sadly query will not match a URL, must do it by hand
+          tabs.forEach(function(tab) {
+            if (tab.url !== editURL) {
+              return;
+            }
+            chrome.tabs.reload(tab.id, {bypassCache: true}, function() {
+              if (chrome.extension.lastError) {
+                console.error("Saved "+request.url+" but failed to reload "+editURL+": "+chrome.extension.lastError);
+              } else {
+                if (debug) {
+                  console.log("Reloaded "+editURL+" in "+tab.id);
+                }
+              }
+            });
+          });
+        });
+      } // else we don't have mapping to do the reload
+      if (debug) {
+        console.log("background.savedResource", request);
+      }
     }
+  
+    var onErr = console.error.bind(console, "sirius.saveResource ERROR for "+request.url);
+    orion.saveAndCallback(request.url, request.content, onSaved, onErr);
   }
 
   chrome.extension.onRequest.addListener(
     function dispatch(request, sender, sendResponse) {
-      if (debugRequests) {
-        console.log(sender.tab ?
-                  "from a content script:" + sender.tab.url :
-                  "from the extension");
-      }
       if (request.orion === "loginUnloading") {
         // built into Orion now superLogin(request, sender, sendResponse);
       } else if (request.message === "saveResource") {
@@ -206,7 +235,7 @@
       }
     }
   );
-  
+});  
 
     </script>
   </body>

@@ -1,7 +1,7 @@
 /*globals console document window */
 
 function changeMe() {
-  return 5;
+  return 9;
 }
 
 function runTest() {
