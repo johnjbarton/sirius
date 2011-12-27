@@ -7,4 +7,5 @@ A Page Action Icon (Orion brand icon) appears in the URL bar.
   
 Devtools edit-and-save
   
-  JS or CSS edits in Web Inspector on Orion files --> Save to Orion
+  JS or CSS edits in Web Inspector on Orion files Control+S --> Save to Orion
+   if Orion editor is open with changes on the same file, abort save
