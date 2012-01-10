@@ -15,10 +15,10 @@ define(['../lib/Base','../lib/q/q'], function(Base, Q) {
     setPromise: function(xhr) {
       var deferred = Q.defer();
       function resolve(event) {deferred.resolve(event);}
-      function reject(event) {deferred.resolve(event);}
-      xhr.addEventListener('error', resolve, false);
+      function reject(event) {deferred.reject(event);}
+      xhr.addEventListener('error', reject, false);
       xhr.addEventListener('abort', reject, false);
-      xhr.addEventListener('load', reject, false);
+      xhr.addEventListener('load', resolve, false);
       return deferred.promise;
     }
   };
