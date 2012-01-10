@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+// crx2app
+// Copyright 2011 Google Inc. 
+// johnjbarton@google.com
+-->
+<html>
+  <head>
+<script src="PostSource.js"></script>
+<script src="ensureOrigin.js"></script>
+<script src="saveRestoreOptions.js"></script>
+<script src="WindowsAdapter.js"></script>
+<script src="TabsAdapter.js"></script>
+<script src="DebuggerAdapter.js"></script>
+<script src="crxEnd.js"></script>
+
+<!-- for the constants -->
+<script src="../appEnd/appEnd.js"></script>
+<script>
+function define(deps, defn) {
+  window.remote = defn();
+}
+</script>
+<script src="../rpc/remote.js"></script>
+<script>
+
+function obeyOptions() {
+  var options = restoreOptions();
+  window.debugConnection = options.debugConnection;
+  window.debugMessages = options.debugMessages;
+  window.debugWarnings = options.debugWarnings;
+}
+
+var  WindowsAdapter = makeWindowsAdapter(chrome, PostSource);
+var  TabsAdapter = makeTabsAdapter(chrome, PostSource);
+var  DebuggerAdapter = makeDebuggerAdapter(chrome, PostSource, window.remote);
+
+function adapterFactory(origin, debuggerTab) {
+  obeyOptions();
+  var adapters = {};
+  var windowsAdapter = new WindowsAdapter(origin, debuggerTab);
+  adapters[WindowsAdapter.path] = windowsAdapter;
+  adapters[TabsAdapter.path] = new TabsAdapter(windowsAdapter);
+  adapters[DebuggerAdapter.path] = new DebuggerAdapter(windowsAdapter);
+  return adapters;
+};
+
+var crxEnd = makeCxrEnd(getChromeExtensionPipe, chrome);
+crxEnd.attach(adapterFactory);
+</script>
+  </head>
+  <body>
+
+  </body>
+</html>
