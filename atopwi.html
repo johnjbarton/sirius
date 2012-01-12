@@ -1,0 +1,111 @@
+<html>
+<head>
+<title>Web Inspector Web App Over crs2app</title>
+<script src="lib/crx2app/extension/appEnd/proxyChromePipe.js"></script>
+<script src="lib/crx2app/extension/lib/q/q.js"></script>
+<script src="lib/crx2app/extension/lib/requirejs/require.js"></script>
+<script>
+
+/*globals getChromeExtensionPipe window console Q require */
+
+// Base URL for crx2app
+
+var iframeDomain ="chrome-extension://bbjpappmojnmallpnfgfkjmjnhhplgog";
+
+var connection = getChromeExtensionPipe(iframeDomain);
+
+// dynamic iframe load
+//
+function loadChromeFrame(url) {
+  var iframe = document.createElement('iframe');
+  iframe.setAttribute('src', url);
+  var elt = document.getElementById('loadChromeIframe');
+  elt.appendChild(iframe);
+  return iframe;
+}
+
+
+
+function attach(event) {
+
+  var tid = setTimeout(function offerExtension() {
+    window.alert("Someday this will point you to an extension download");
+  }, 1000);
+  
+  // listen for a connection.
+  connection.attach(function onConnectedToChrome() {
+  
+    // we have connected to the extension, so clear the offer
+    clearTimeout(tid);
+    
+    var inspectorWindow = document.getElementById('WebInspector').contentWindow;
+    
+    console.log("ChromeFrame Ready "+window.location+'ready');
+    connection.addListener(function(data) {
+      console.log("atopwi got:", data);
+      if (data.source === 'chrome.debugger') {
+        inspectorWindow.InspectorBackend.dispatch(data); 
+      } else {
+        if (data.method === 'onError') {
+          console.error(data.params[0], data.params[1]);
+        } else {
+          console.log("atopwi drops data", data);
+        }
+      }
+    });
+    inspectorWindow.InspectorBackend.sendMessageObjectToBackend = function(messageObject) {
+      messageObject.target = 'chrome.debugger';
+      connection.postMessage(messageObject);
+    };
+    inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
+      throw new Error("Should not be called");
+      console.log('sendMessageToBackend', arguments);
+      connection.postMessage.apply(connection, arguments);
+    };
+    inspectorWindow.WebInspector.doLoadedDone();
+    inspectorWindow.WebInspector._doLoadedDoneWithCapabilities();
+  });
+  
+  // dynamically load the chromeIframe, it will connect and fire the callback
+  // (if we load the iframe statically, 
+  // this outer load event will come *after* the iframe load event.)
+  loadChromeFrame(iframeDomain + "/appEnd/chromeIframe.html");
+}
+
+function onLoad() {
+  // clean up
+  window.removeEventListener('load', onLoad, false);
+  
+  // connect to the chromeIframe
+  attach();
+}
+
+// as soon as we load, setup the test
+//
+window.addEventListener('load', onLoad, false);
+
+function detach() {
+  connection.detach();
+}
+
+window.addEventListener('unload', detach, false);
+
+</script>
+<style>
+html, body, iframe {
+  height: 100%;
+  width: 100%;
+  margin: 0px;  /* kill off any margin so we control */
+  border: none;
+}
+#loadChromeIframe {
+  display: none;
+} 
+</style>
+</head>
+<body>
+
+<iframe id="WebInspector" src="inspector/front-end/inspector.html">Inspector did not load</iframe>
+<div id="loadChromeIframe"></div>
+</body>
+</html>
