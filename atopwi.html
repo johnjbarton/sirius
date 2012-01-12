@@ -24,9 +24,78 @@ function loadChromeFrame(url) {
   return iframe;
 }
 
+function openInspector(tabId) {
+    var inspectorElt = document.getElementById('WebInspector');
+    inspectorElt.classList.remove('hide');
+    
+    var inspectorWindow = inspectorElt.contentWindow;
+    
+    console.log("ChromeFrame Ready to debug "+ tabId);
+    
+    connection.addListener(function(data) {
+      if (data.source === 'chrome.debugger') {
+        console.log("atopwi got:", data);
+        inspectorWindow.InspectorBackend.dispatch(data); 
+      } else {
+        if (data.method === 'onError') {
+          console.error(data.params[0], data.params[1]);
+        } else {
+          console.log("atopwi drops data", data);
+        }
+      }
+    });
+    
+    inspectorWindow.InspectorBackend.sendMessageObjectToBackend = function(messageObject) {
+      messageObject.target = 'chrome.debugger';
+      messageObject.debuggee = {tabId: tabId};
+      connection.postMessage(messageObject);
+    };
+    
+    inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
+      throw new Error("Should not be called");
+    };
+    
+    inspectorWindow.WebInspector.doLoadedDone();
+    inspectorWindow.WebInspector._doLoadedDoneWithCapabilities();
+}
 
+function promiseTabId(debuggee, chromeProxy) {
+  var deferred = Q.defer();
+  var tabId = parseInt(debuggee, 10);
+  if ( isNaN(tabId) ) {  // then we have a URL
+    var url = debuggee; 
+    var debuggerProxy = chromeProxy.openDebuggerProxy(url, {});     // when we are attached to the given page, test it.
+     Q.when(debuggerProxy, function(debuggerProxy) {
+       deferred.resolve(debuggerProxy._debuggee.tabId);
+     }, console.error).end();
+  } else {
+    deferred.resolve(tabId);
+  }
+  return deferred.promise;
+}
 
-function attach(event) {
+function openDebuggee(debuggee) {
+  // dynamically load the chrome proxy
+    require({
+      paths: {
+        "crx2app": "lib/crx2app/extension"
+      }
+    }); 
+   require.onError = function(err) {
+     console.error(err+"", {stack: err.stack.split('\n')});
+   };
+
+   require(['crx2app/rpc/ChromeProxy'], function open(ChromeProxy) {
+     var chromeProxy = ChromeProxy.new(connection, {windows: {}, tabs: {}});
+     var tabId = promiseTabId(debuggee, chromeProxy);
+     Q.when(tabId, function(tabId) {
+       openInspector(tabId);
+       
+     }).end();
+   });
+} 
+
+function attach(debuggee) {
 
   var tid = setTimeout(function offerExtension() {
     window.alert("Someday this will point you to an extension download");
@@ -38,32 +107,8 @@ function attach(event) {
     // we have connected to the extension, so clear the offer
     clearTimeout(tid);
     
-    var inspectorWindow = document.getElementById('WebInspector').contentWindow;
+    openDebuggee(debuggee);
     
-    console.log("ChromeFrame Ready "+window.location+'ready');
-    connection.addListener(function(data) {
-      console.log("atopwi got:", data);
-      if (data.source === 'chrome.debugger') {
-        inspectorWindow.InspectorBackend.dispatch(data); 
-      } else {
-        if (data.method === 'onError') {
-          console.error(data.params[0], data.params[1]);
-        } else {
-          console.log("atopwi drops data", data);
-        }
-      }
-    });
-    inspectorWindow.InspectorBackend.sendMessageObjectToBackend = function(messageObject) {
-      messageObject.target = 'chrome.debugger';
-      connection.postMessage(messageObject);
-    };
-    inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
-      throw new Error("Should not be called");
-      console.log('sendMessageToBackend', arguments);
-      connection.postMessage.apply(connection, arguments);
-    };
-    inspectorWindow.WebInspector.doLoadedDone();
-    inspectorWindow.WebInspector._doLoadedDoneWithCapabilities();
   });
   
   // dynamically load the chromeIframe, it will connect and fire the callback
@@ -72,16 +117,74 @@ function attach(event) {
   loadChromeFrame(iframeDomain + "/appEnd/chromeIframe.html");
 }
 
+function extractDebuggeeFromURL() {
+  var search = window.location.search;
+  if (search) {
+    var parameterString = search.substr(1);
+    if (parameterString) {
+      var params = {};
+      parameterString.split('&').forEach(function(param) {
+        var nv = param.split('=');
+        if (nv.length === 2 && nv[1]) {
+          params[nv[0]] = nv[1];
+        }
+      });
+      if (Object.keys(params).length) {
+        return params;
+      }
+    }
+  } // else undefined
+}
+
+function reloadWithURL(debuggeeURLElt) {
+  var debuggeeURL = debuggeeURLElt.value;
+  var base = window.location.href;
+  base = base.split('?')[0];
+  var relo = "debuggee="+encodeURIComponent(debuggeeURL)+'&';
+  window.open(base+'?'+relo);
+}
+
+
+function promptForDebuggee() {
+  var deferred = Q.defer();
+  var debuggeeURLElt = document.getElementById('debuggeeURLElt');
+  
+  var debuggee = document.getElementById('debuggee');
+  debuggee.classList.remove('hide');
+  
+  var doDebug = document.getElementById('doDebug');
+  doDebug.addEventListener('click', function(event) {
+    debuggee.classList.add('hide');
+    deferred.resolve(debuggeeURLElt.value);
+  }, false);
+
+  debuggee.addEventListener('keypress', function(event) {
+    if (event.keyCode === 13) {
+      debuggee.classList.add('hide');
+      deferred.resolve(debuggeeURLElt.value);
+    }
+  }, true);
+  return deferred.promise;
+}
+
+function promiseDebuggee() {
+  return Q.ref(extractDebuggeeFromURL()) || promptForDebuggee();
+}
+
 function onLoad() {
   // clean up
   window.removeEventListener('load', onLoad, false);
   
+  var debuggee = promiseDebuggee();
+  
   // connect to the chromeIframe
-  attach();
+  Q.when(debuggee, function(debuggee) {
+    attach(debuggee);
+  }, function(err) {
+    console.error(err);
+  }).end();
 }
 
-// as soon as we load, setup the test
-//
 window.addEventListener('load', onLoad, false);
 
 function detach() {
@@ -98,14 +201,25 @@ html, body, iframe {
   margin: 0px;  /* kill off any margin so we control */
   border: none;
 }
-#loadChromeIframe {
+body {
+  font-family:Verdana,Geneva,sans-serif;
+}
+.hide {
   display: none;
-} 
+}
+#debuggee {
+  margin: 20px;
+}
 </style>
 </head>
 <body>
-
-<iframe id="WebInspector" src="inspector/front-end/inspector.html">Inspector did not load</iframe>
-<div id="loadChromeIframe"></div>
+<div class='hide' id='debuggee'>
+<h1> Chrome Devtools as Web App using crx2app extension </h1>
+<form >
+URL: <input id='debuggeeURLElt' type='url' size='128'/><button id="doDebug">Debug</button>
+</form>
+</div>
+<iframe class='hide' id="WebInspector" src="inspector/front-end/inspector.html">Inspector did not load</iframe>
+<div class= 'hide' id="loadChromeIframe"></div>
 </body>
 </html>
