@@ -24,13 +24,17 @@ function loadChromeFrame(url) {
   return iframe;
 }
 
-function openInspector(tabId) {
+function showInspectorIframe() {
     var inspectorElt = document.getElementById('WebInspector');
     inspectorElt.classList.remove('hide');
     
-    var inspectorWindow = inspectorElt.contentWindow;
+    return inspectorElt.contentWindow;
+}
+
+function openInspector(debuggee, chromeProxy) {
+    var inspectorWindow = showInspectorIframe();
     
-    console.log("ChromeFrame Ready to debug "+ tabId);
+    console.log("ChromeFrame Ready to debug ", debuggee);
     
     connection.addListener(function(data) {
       if (data.source === 'chrome.debugger') {
@@ -46,9 +50,11 @@ function openInspector(tabId) {
     });
     
     inspectorWindow.InspectorBackend.sendMessageObjectToBackend = function(messageObject) {
-      messageObject.target = 'chrome.debugger';
-      messageObject.debuggee = {tabId: tabId};
-      connection.postMessage(messageObject);
+      chromeProxy.debugger.sendCommand(debuggee, messageObject.method, messageObject.params, function(data) {
+         data.id = messageObject.id;
+         console.log(data.id+" atopwi response to sendCommand "+messageObject.method, {messageObject: messageObject, data: data});
+         inspectorWindow.InspectorBackend.dispatch(data); 
+      });
     };
     
     inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
@@ -56,25 +62,45 @@ function openInspector(tabId) {
     };
     
     inspectorWindow.WebInspector.doLoadedDone();
-    inspectorWindow.WebInspector._doLoadedDoneWithCapabilities();
+    //inspectorWindow.WebInspector._doLoadedDoneWithCapabilities();
 }
 
-function promiseTabId(debuggee, chromeProxy) {
+function promiseNewTabId(url, chromeProxy) {
   var deferred = Q.defer();
-  var tabId = parseInt(debuggee, 10);
-  if ( isNaN(tabId) ) {  // then we have a URL
-    var url = debuggee; 
-    var debuggerProxy = chromeProxy.openDebuggerProxy(url, {});     // when we are attached to the given page, test it.
-     Q.when(debuggerProxy, function(debuggerProxy) {
-       deferred.resolve(debuggerProxy._debuggee.tabId);
+  var win = chromeProxy.promiseNewWindow();
+  Q.when(win, function(win) {
+    var tabId = win.tabs[0].id;
+    deferred.resolve(tabId);
+  });
+  return deferred.promise;
+}
+
+function promiseDebuggee(debuggee, chromeProxy) {
+  var deferred = Q.defer();
+  if ( debuggee.url ) {  
+    var newTabId = promiseNewTabId(debuggee.url, chromeProxy);
+     Q.when(newTabId, function(newTabId) {
+       debuggee.tabId = newTabId;
+       deferred.resolve(debuggee);
      }, console.error).end();
   } else {
-    deferred.resolve(tabId);
+    deferred.resolve(debuggee);
   }
   return deferred.promise;
 }
 
-function openDebuggee(debuggee) {
+function parseDebuggee(debuggeeSpec) {
+  var debuggee = {};
+  var tabId = parseInt(debuggeeSpec, 10);
+  if ( isNaN(tabId) ) {  // then we have a URL
+    debuggee.url = debuggeeSpec;
+  } else {
+    debuggee.tabId = tabId;
+  }
+  return debuggee;
+}
+
+function openDebuggee(debuggeeSpec) {
   // dynamically load the chrome proxy
     require({
       paths: {
@@ -87,15 +113,21 @@ function openDebuggee(debuggee) {
 
    require(['crx2app/rpc/ChromeProxy'], function open(ChromeProxy) {
      var chromeProxy = ChromeProxy.new(connection, {windows: {}, tabs: {}});
-     var tabId = promiseTabId(debuggee, chromeProxy);
-     Q.when(tabId, function(tabId) {
-       openInspector(tabId);
+     var debuggee = parseDebuggee(debuggeeSpec);
+     debuggee = promiseDebuggee(debuggee, chromeProxy);
+     Q.when(debuggee, function(debuggee) {
+       chromeProxy.debugger.attach({tabId: debuggee.tabId}, "0.1", function() {
+         openInspector(debuggee, chromeProxy);
+         if (debuggee.url) {
+           chromeProxy.tabs.update(debuggee.tabId, {url: debuggee.url});
+         }
+       });
        
      }).end();
    });
 } 
 
-function attach(debuggee) {
+function attach(debuggeeSpec) {
 
   var tid = setTimeout(function offerExtension() {
     window.alert("Someday this will point you to an extension download");
@@ -107,7 +139,7 @@ function attach(debuggee) {
     // we have connected to the extension, so clear the offer
     clearTimeout(tid);
     
-    openDebuggee(debuggee);
+    openDebuggee(debuggeeSpec);
     
   });
   
@@ -149,7 +181,7 @@ function promptForDebuggee() {
   var deferred = Q.defer();
   var debuggeeURLElt = document.getElementById('debuggeeURLElt');
   
-  var debuggee = document.getElementById('debuggee');
+  var debuggee = document.getElementById('debuggeeSpec');
   debuggee.classList.remove('hide');
   
   var doDebug = document.getElementById('doDebug');
@@ -167,19 +199,24 @@ function promptForDebuggee() {
   return deferred.promise;
 }
 
-function promiseDebuggee() {
-  return Q.ref(extractDebuggeeFromURL()) || promptForDebuggee();
+function getDebuggeeSpec() {
+  var debuggeeSpec = extractDebuggeeFromURL();
+  if (debuggeeSpec) {
+    return debuggeeSpec;
+  } else {
+    return "http://www.google.com";
+  }
 }
 
 function onLoad() {
   // clean up
   window.removeEventListener('load', onLoad, false);
   
-  var debuggee = promiseDebuggee();
+  var debuggeeSpec = getDebuggeeSpec();
   
   // connect to the chromeIframe
-  Q.when(debuggee, function(debuggee) {
-    attach(debuggee);
+  Q.when(debuggeeSpec, function(debuggeeSpec) {
+    attach(debuggeeSpec);
   }, function(err) {
     console.error(err);
   }).end();
@@ -213,10 +250,10 @@ body {
 </style>
 </head>
 <body>
-<div class='hide' id='debuggee'>
+<div class='hide' id='debuggeeSpec'>
 <h1> Chrome Devtools as Web App using crx2app extension </h1>
 <form >
-URL: <input id='debuggeeURLElt' type='url' size='128'/><button id="doDebug">Debug</button>
+URL: <input id='debuggeeSpecURLElt' type='url' size='128'/><button id="doDebug">Debug</button>
 </form>
 </div>
 <iframe class='hide' id="WebInspector" src="inspector/front-end/inspector.html">Inspector did not load</iframe>
