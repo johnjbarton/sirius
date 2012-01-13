@@ -16,10 +16,10 @@ var connection = getChromeExtensionPipe(iframeDomain);
 
 // dynamic iframe load
 //
-function loadChromeFrame(url) {
+function appendFrame(id, url, onload) {
   var iframe = document.createElement('iframe');
   iframe.setAttribute('src', url);
-  var elt = document.getElementById('loadChromeIframe');
+  var elt = document.getElementById(id);
   elt.appendChild(iframe);
   return iframe;
 }
@@ -27,42 +27,54 @@ function loadChromeFrame(url) {
 function showInspectorIframe() {
     var inspectorElt = document.getElementById('WebInspector');
     inspectorElt.classList.remove('hide');
-    
-    return inspectorElt.contentWindow;
+    return appendFrame('WebInspector', "inspector/front-end/inspector.html");
 }
 
 function openInspector(debuggee, chromeProxy) {
-    var inspectorWindow = showInspectorIframe();
+  var deferred = Q.defer();
+  var inspectorElt = showInspectorIframe();
+  var inspectorWindow = inspectorElt.contentWindow;
+  inspectorWindow.addEventListener('DOMContentLoaded', function(event){
     
     console.log("ChromeFrame Ready to debug ", debuggee);
-    
-    connection.addListener(function(data) {
-      if (data.source === 'chrome.debugger') {
-        console.log("atopwi got:", data);
-        inspectorWindow.InspectorBackend.dispatch(data); 
-      } else {
-        if (data.method === 'onError') {
-          console.error(data.params[0], data.params[1]);
-        } else {
-          console.log("atopwi drops data", data);
-        }
-      }
-    });
-    
-    inspectorWindow.InspectorBackend.sendMessageObjectToBackend = function(messageObject) {
+
+    function sendMessageObject(messageObject) {
+      console.log(messageObject.id+" atopwi sendCommand "+messageObject.method);
       chromeProxy.debugger.sendCommand(debuggee, messageObject.method, messageObject.params, function(data) {
          data.id = messageObject.id;
          console.log(data.id+" atopwi response to sendCommand "+messageObject.method, {messageObject: messageObject, data: data});
          inspectorWindow.InspectorBackend.dispatch(data); 
       });
+    }
+    
+    var queue = [];
+    inspectorWindow.InspectorBackend.sendMessageObjectToBackend = function(messageObject) {
+      queue.push(messageObject);
+    };      
+    
+    setInterval(function deq() {
+      var messageObject = queue.pop();
+      if (messageObject) {
+        sendMessageObject(messageObject);
+      }
+    }, 300);  // any faster and we fail
+    
+    chromeProxy.jsonHandlers['chrome.debugger'] = {
+      jsonObjectHandler:  function(data) {
+        console.log("jsonObjectHandler "+data.method, data);
+        inspectorWindow.InspectorBackend.dispatch.apply(inspectorWindow.InspectorBackend, [data]);
+      }
     };
     
     inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
       throw new Error("Should not be called");
     };
     
-    inspectorWindow.WebInspector.doLoadedDone();
-    //inspectorWindow.WebInspector._doLoadedDoneWithCapabilities();
+    event.stopPropagation();
+    event.preventDefault();
+    deferred.resolve(inspectorWindow);
+  }, true);
+  return deferred.promise;
 }
 
 function promiseNewTabId(url, chromeProxy) {
@@ -70,6 +82,7 @@ function promiseNewTabId(url, chromeProxy) {
   var win = chromeProxy.promiseNewWindow();
   Q.when(win, function(win) {
     var tabId = win.tabs[0].id;
+    console.log("atopwi promiseNewTabId "+tabId);
     deferred.resolve(tabId);
   });
   return deferred.promise;
@@ -117,10 +130,17 @@ function openDebuggee(debuggeeSpec) {
      debuggee = promiseDebuggee(debuggee, chromeProxy);
      Q.when(debuggee, function(debuggee) {
        chromeProxy.debugger.attach({tabId: debuggee.tabId}, "0.1", function() {
-         openInspector(debuggee, chromeProxy);
-         if (debuggee.url) {
-           chromeProxy.tabs.update(debuggee.tabId, {url: debuggee.url});
-         }
+         console.log("atopwi chrome.debugger.attach complete "+debuggee.tabId);
+         var iw = openInspector(debuggee, chromeProxy);
+         Q.when(iw, function(iw) {
+           iw.windowLoaded();
+           if (debuggee.url) {
+             console.log("atopwi setting URL:"+debuggee.url);
+             chromeProxy.tabs.update(debuggee.tabId, {url: debuggee.url}, function(tab) {
+               console.log("atopwi.chrome.tabs.update "+debuggee.tabId+" to "+debuggee.url);
+             });
+           }
+         });
        });
        
      }).end();
@@ -146,7 +166,7 @@ function attach(debuggeeSpec) {
   // dynamically load the chromeIframe, it will connect and fire the callback
   // (if we load the iframe statically, 
   // this outer load event will come *after* the iframe load event.)
-  loadChromeFrame(iframeDomain + "/appEnd/chromeIframe.html");
+  appendFrame('loadChromeIframe', iframeDomain + "/appEnd/chromeIframe.html");
 }
 
 function extractDebuggeeFromURL() {
@@ -256,7 +276,7 @@ body {
 URL: <input id='debuggeeSpecURLElt' type='url' size='128'/><button id="doDebug">Debug</button>
 </form>
 </div>
-<iframe class='hide' id="WebInspector" src="inspector/front-end/inspector.html">Inspector did not load</iframe>
+<div class='hide' id="WebInspector"></div>
 <div class= 'hide' id="loadChromeIframe"></div>
 </body>
 </html>
