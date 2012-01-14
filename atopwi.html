@@ -27,7 +27,7 @@ function appendFrame(id, url, onload) {
 function showInspectorIframe() {
     var inspectorElt = document.getElementById('WebInspector');
     inspectorElt.classList.remove('hide');
-    return appendFrame('WebInspector', "inspector/front-end/inspector.html");
+    return appendFrame('WebInspector', "inspector/front-end/devtools.html");
 }
 
 function openInspector(debuggee, chromeProxy) {
