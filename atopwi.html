@@ -94,6 +94,10 @@ function promiseDebuggee(debuggee, chromeProxy) {
     var newTabId = promiseNewTabId(debuggee.url, chromeProxy);
      Q.when(newTabId, function(newTabId) {
        debuggee.tabId = newTabId;
+       window.onbeforeunload = function() {
+         chromeProxy.tabs.remove(newTabId);
+         debugger;  // stopping in the debugger is the only way I can get the window to close
+       };
        deferred.resolve(debuggee);
      }, console.error).end();
   } else {
@@ -224,7 +228,7 @@ function getDebuggeeSpec() {
   if (debuggeeSpec) {
     return debuggeeSpec;
   } else {
-    return "http://www.google.com";
+    return "http://johnjbarton.github.com/webdev-examples/simple/scriptTagJSProject/index.html";
   }
 }
 
