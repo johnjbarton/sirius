@@ -1,12 +1,15 @@
 <html>
 <head>
 <title>Web Inspector Web App Over crs2app</title>
+
 <script src="lib/crx2app/extension/appEnd/proxyChromePipe.js"></script>
 <script src="lib/crx2app/extension/lib/q/q.js"></script>
 <script src="lib/crx2app/extension/lib/requirejs/require.js"></script>
 <script>
 
 /*globals getChromeExtensionPipe window console Q require */
+
+var debug = false;
 
 // Base URL for crx2app
 
@@ -27,7 +30,7 @@ function appendFrame(id, url, onload) {
 function showInspectorIframe() {
     var inspectorElt = document.getElementById('WebInspector');
     inspectorElt.classList.remove('hide');
-    return appendFrame('WebInspector', "inspector/front-end/inspector.html");
+    return appendFrame('WebInspector', "inspector/front-end/devtools.html");
 }
 
 function openInspector(debuggee, chromeProxy) {
@@ -36,32 +39,46 @@ function openInspector(debuggee, chromeProxy) {
   var inspectorWindow = inspectorElt.contentWindow;
   inspectorWindow.addEventListener('DOMContentLoaded', function(event){
     
-    console.log("ChromeFrame Ready to debug ", debuggee);
+    if (debug) {
+      console.log("ChromeFrame Ready to debug ", debuggee);
+    }
 
     function sendMessageObject(messageObject) {
-      console.log(messageObject.id+" atopwi sendCommand "+messageObject.method);
+      if (debug) {
+        console.log(messageObject.id+" atopwi sendCommand "+messageObject.method);
+      }
       chromeProxy.debugger.sendCommand(debuggee, messageObject.method, messageObject.params, function(data) {
          data.id = messageObject.id;
-         console.log(data.id+" atopwi response to sendCommand "+messageObject.method, {messageObject: messageObject, data: data});
+         if (debug) {
+           console.log(data.id+" atopwi response to sendCommand "+messageObject.method, {messageObject: messageObject, data: data});
+         }
          inspectorWindow.InspectorBackend.dispatch(data); 
       });
     }
     
-    var queue = [];
-    inspectorWindow.InspectorBackend.sendMessageObjectToBackend = function(messageObject) {
-      queue.push(messageObject);
-    };      
+    var delayMessages = true;
     
-    setInterval(function deq() {
-      var messageObject = queue.pop();
-      if (messageObject) {
-        sendMessageObject(messageObject);
-      }
-    }, 300);  // any faster and we fail
+    if (delayMessages) {
+      var queue = [];
+      inspectorWindow.InspectorBackend.sendMessageObjectToBackend = function(messageObject) {
+        queue.push(messageObject);
+      };      
+    
+      setInterval(function deq() {
+        var messageObject = queue.pop();
+        if (messageObject) {
+          sendMessageObject(messageObject);
+        }
+      }, 300);  // any faster and we fail
+    } else {
+      inspectorWindow.InspectorBackend.sendMessageObjectToBackend = sendMessageObject;
+    }
     
     chromeProxy.jsonHandlers['chrome.debugger'] = {
       jsonObjectHandler:  function(data) {
-        console.log("jsonObjectHandler "+data.method, data);
+        if (debug) {
+          console.log("jsonObjectHandler "+data.method, data);
+        }
         inspectorWindow.InspectorBackend.dispatch.apply(inspectorWindow.InspectorBackend, [data]);
       }
     };
@@ -82,7 +99,9 @@ function promiseNewTabId(url, chromeProxy) {
   var win = chromeProxy.promiseNewWindow();
   Q.when(win, function(win) {
     var tabId = win.tabs[0].id;
-    console.log("atopwi promiseNewTabId "+tabId);
+    if (debug) {
+      console.log("atopwi promiseNewTabId "+tabId);
+    }
     deferred.resolve(tabId);
   });
   return deferred.promise;
@@ -94,6 +113,10 @@ function promiseDebuggee(debuggee, chromeProxy) {
     var newTabId = promiseNewTabId(debuggee.url, chromeProxy);
      Q.when(newTabId, function(newTabId) {
        debuggee.tabId = newTabId;
+       window.onbeforeunload = function() {
+         chromeProxy.tabs.remove(newTabId);
+         debugger;  // stopping in the debugger is the only way I can get the window to close
+       };
        deferred.resolve(debuggee);
      }, console.error).end();
   } else {
@@ -104,9 +127,9 @@ function promiseDebuggee(debuggee, chromeProxy) {
 
 function parseDebuggee(debuggeeSpec) {
   var debuggee = {};
-  var tabId = parseInt(debuggeeSpec, 10);
-  if ( isNaN(tabId) ) {  // then we have a URL
-    debuggee.url = debuggeeSpec;
+  var tabId = parseInt(debuggeeSpec.tabId, 10);
+  if ( isNaN(tabId) ) {  // then we better have a URL
+    debuggee.url = debuggeeSpec.url;
   } else {
     debuggee.tabId = tabId;
   }
@@ -130,14 +153,20 @@ function openDebuggee(debuggeeSpec) {
      debuggee = promiseDebuggee(debuggee, chromeProxy);
      Q.when(debuggee, function(debuggee) {
        chromeProxy.debugger.attach({tabId: debuggee.tabId}, "0.1", function() {
-         console.log("atopwi chrome.debugger.attach complete "+debuggee.tabId);
+         if (debug) {
+           console.log("atopwi chrome.debugger.attach complete "+debuggee.tabId);
+         }
          var iw = openInspector(debuggee, chromeProxy);
          Q.when(iw, function(iw) {
            iw.windowLoaded();
            if (debuggee.url) {
-             console.log("atopwi setting URL:"+debuggee.url);
+             if (debug) {
+               console.log("atopwi setting URL:"+debuggee.url);
+             }
              chromeProxy.tabs.update(debuggee.tabId, {url: debuggee.url}, function(tab) {
-               console.log("atopwi.chrome.tabs.update "+debuggee.tabId+" to "+debuggee.url);
+               if (debug) {
+                 console.log("atopwi.chrome.tabs.update "+debuggee.tabId+" to "+debuggee.url);
+               }
              });
            }
          });
@@ -151,7 +180,7 @@ function attach(debuggeeSpec) {
 
   var tid = setTimeout(function offerExtension() {
     window.alert("Someday this will point you to an extension download");
-  }, 1000);
+  }, 2000);
   
   // listen for a connection.
   connection.attach(function onConnectedToChrome() {
@@ -161,6 +190,9 @@ function attach(debuggeeSpec) {
     
     openDebuggee(debuggeeSpec);
     
+  }, function errback(msg) {
+    var div = document.querySelector("#error");
+    div.innerHTML = msg;
   });
   
   // dynamically load the chromeIframe, it will connect and fire the callback
@@ -224,14 +256,17 @@ function getDebuggeeSpec() {
   if (debuggeeSpec) {
     return debuggeeSpec;
   } else {
-    return "http://www.google.com";
+    var defaultDebuggeeURL = "http://johnjbarton.github.com/webdev-examples/simple/scriptTagJSProject/index.html";
+    if (window.confirm("Use "+defaultDebuggeeURL)) {
+      return {url: defaultDebuggeeURL};
+    }
   }
 }
 
 function onLoad() {
   // clean up
   window.removeEventListener('load', onLoad, false);
-  
+
   var debuggeeSpec = getDebuggeeSpec();
   
   // connect to the chromeIframe
@@ -270,6 +305,7 @@ body {
 </style>
 </head>
 <body>
+<div class='hide' id='error'></div>
 <div class='hide' id='debuggeeSpec'>
 <h1> Chrome Devtools as Web App using crx2app extension </h1>
 <form >
