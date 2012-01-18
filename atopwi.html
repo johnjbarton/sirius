@@ -2,14 +2,14 @@
 <head>
 <title>Web Inspector Web App Over crs2app</title>
 
-var debug = false;
-
 <script src="lib/crx2app/extension/appEnd/proxyChromePipe.js"></script>
 <script src="lib/crx2app/extension/lib/q/q.js"></script>
 <script src="lib/crx2app/extension/lib/requirejs/require.js"></script>
 <script>
 
 /*globals getChromeExtensionPipe window console Q require */
+
+var debug = false;
 
 // Base URL for crx2app
 
@@ -39,13 +39,19 @@ function openInspector(debuggee, chromeProxy) {
   var inspectorWindow = inspectorElt.contentWindow;
   inspectorWindow.addEventListener('DOMContentLoaded', function(event){
     
-    console.log("ChromeFrame Ready to debug ", debuggee);
+    if (debug) {
+      console.log("ChromeFrame Ready to debug ", debuggee);
+    }
 
     function sendMessageObject(messageObject) {
-      console.log(messageObject.id+" atopwi sendCommand "+messageObject.method);
+      if (debug) {
+        console.log(messageObject.id+" atopwi sendCommand "+messageObject.method);
+      }
       chromeProxy.debugger.sendCommand(debuggee, messageObject.method, messageObject.params, function(data) {
          data.id = messageObject.id;
-         console.log(data.id+" atopwi response to sendCommand "+messageObject.method, {messageObject: messageObject, data: data});
+         if (debug) {
+           console.log(data.id+" atopwi response to sendCommand "+messageObject.method, {messageObject: messageObject, data: data});
+         }
          inspectorWindow.InspectorBackend.dispatch(data); 
       });
     }
@@ -70,7 +76,9 @@ function openInspector(debuggee, chromeProxy) {
     
     chromeProxy.jsonHandlers['chrome.debugger'] = {
       jsonObjectHandler:  function(data) {
-        console.log("jsonObjectHandler "+data.method, data);
+        if (debug) {
+          console.log("jsonObjectHandler "+data.method, data);
+        }
         inspectorWindow.InspectorBackend.dispatch.apply(inspectorWindow.InspectorBackend, [data]);
       }
     };
@@ -91,7 +99,9 @@ function promiseNewTabId(url, chromeProxy) {
   var win = chromeProxy.promiseNewWindow();
   Q.when(win, function(win) {
     var tabId = win.tabs[0].id;
-    console.log("atopwi promiseNewTabId "+tabId);
+    if (debug) {
+      console.log("atopwi promiseNewTabId "+tabId);
+    }
     deferred.resolve(tabId);
   });
   return deferred.promise;
@@ -143,14 +153,20 @@ function openDebuggee(debuggeeSpec) {
      debuggee = promiseDebuggee(debuggee, chromeProxy);
      Q.when(debuggee, function(debuggee) {
        chromeProxy.debugger.attach({tabId: debuggee.tabId}, "0.1", function() {
-         console.log("atopwi chrome.debugger.attach complete "+debuggee.tabId);
+         if (debug) {
+           console.log("atopwi chrome.debugger.attach complete "+debuggee.tabId);
+         }
          var iw = openInspector(debuggee, chromeProxy);
          Q.when(iw, function(iw) {
            iw.windowLoaded();
            if (debuggee.url) {
-             console.log("atopwi setting URL:"+debuggee.url);
+             if (debug) {
+               console.log("atopwi setting URL:"+debuggee.url);
+             }
              chromeProxy.tabs.update(debuggee.tabId, {url: debuggee.url}, function(tab) {
-               console.log("atopwi.chrome.tabs.update "+debuggee.tabId+" to "+debuggee.url);
+               if (debug) {
+                 console.log("atopwi.chrome.tabs.update "+debuggee.tabId+" to "+debuggee.url);
+               }
              });
            }
          });
