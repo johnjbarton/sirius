@@ -17,6 +17,13 @@ var iframeDomain ="chrome-extension://bbjpappmojnmallpnfgfkjmjnhhplgog";
 
 var connection = getChromeExtensionPipe(iframeDomain);
 
+window.beforeUnloadQueue = [];
+window.onbeforeunload = function runQueue() {
+  window.beforeUnloadQueue.forEach(function(fnc) {
+    fnc();
+  });
+};
+
 // dynamic iframe load
 //
 function appendFrame(id, url, onload) {
@@ -113,10 +120,10 @@ function promiseDebuggee(debuggee, chromeProxy) {
     var newTabId = promiseNewTabId(debuggee.url, chromeProxy);
      Q.when(newTabId, function(newTabId) {
        debuggee.tabId = newTabId;
-       window.onbeforeunload = function() {
+       window.beforeUnloadQueue.push(function() {
          chromeProxy.tabs.remove(newTabId);
          debugger;  // stopping in the debugger is the only way I can get the window to close
-       };
+       });
        deferred.resolve(debuggee);
      }, console.error).end();
   } else {
@@ -156,6 +163,11 @@ function openDebuggee(debuggeeSpec) {
          if (debug) {
            console.log("atopwi chrome.debugger.attach complete "+debuggee.tabId);
          }
+         
+         window.beforeUnloadQueue.unshift(function() {
+           chromeProxy.debugger.detach({tabId: debuggee.tabId});
+         });
+         
          var iw = openInspector(debuggee, chromeProxy);
          Q.when(iw, function(iw) {
            iw.windowLoaded();
@@ -279,11 +291,9 @@ function onLoad() {
 
 window.addEventListener('load', onLoad, false);
 
-function detach() {
+window.beforeUnloadQueue.push(function detach() {
   connection.detach();
-}
-
-window.addEventListener('unload', detach, false);
+});
 
 </script>
 <style>
