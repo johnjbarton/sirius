@@ -1,9 +1,12 @@
-/* Machine generated from inspector/Inspector.json on Thu Jan 19 2012 14:15:03 GMT-0800 (PST) */
+/* Machine generated from inspector/Inspector.json version: 0.1 on Thu Jan 19 2012 14:34:33 GMT-0800 (PST) */
 
 var chrome = chrome || {};
 chrome.debugger = chrome.debugger || {};
 
-/* unsupported */ chrome.debugger.Inspector = {
+chrome.debugger.version =  0.1;
+
+/* unsupported */ 
+chrome.debugger.Inspector = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -16,11 +19,13 @@ chrome.debugger = chrome.debugger || {};
   }
 };
 
-/* unsupported */ chrome.debugger.Memory = {
+/* unsupported */ 
+chrome.debugger.Memory = {
   commands: {
     getDOMNodeCount: /*count */ function(){},
   },
 };
+
 
 chrome.debugger.Page = {
   commands: {
@@ -40,10 +45,11 @@ chrome.debugger.Page = {
   events: {
     domContentEventFired: function(timestamp) {},
     loadEventFired: function(timestamp) {},
-    frameNavigated: function(frame) {},
-    frameDetached: function(frameId) {},
+    /* unsupported */ frameNavigated: function(frame) {},
+    /* unsupported */ frameDetached: function(frameId) {},
   }
 };
+
 
 chrome.debugger.Runtime = {
   commands: {
@@ -55,6 +61,7 @@ chrome.debugger.Runtime = {
     /* unsupported */ run:  function(){},
   },
 };
+
 
 chrome.debugger.Console = {
   commands: {
@@ -70,6 +77,7 @@ chrome.debugger.Console = {
     messagesCleared: function() {},
   }
 };
+
 
 chrome.debugger.Network = {
   commands: {
@@ -92,14 +100,15 @@ chrome.debugger.Network = {
     loadingFinished: function(requestId, timestamp) {},
     loadingFailed: function(requestId, timestamp, errorText, canceled) {},
     requestServedFromMemoryCache: function(requestId, frameId, loaderId, documentURL, timestamp, initiator, resource) {},
-    webSocketWillSendHandshakeRequest: function(requestId, timestamp, request) {},
-    webSocketHandshakeResponseReceived: function(requestId, timestamp, response) {},
-    webSocketCreated: function(requestId, url) {},
-    webSocketClosed: function(requestId, timestamp) {},
+    /* unsupported */ webSocketWillSendHandshakeRequest: function(requestId, timestamp, request) {},
+    /* unsupported */ webSocketHandshakeResponseReceived: function(requestId, timestamp, response) {},
+    /* unsupported */ webSocketCreated: function(requestId, url) {},
+    /* unsupported */ webSocketClosed: function(requestId, timestamp) {},
   }
 };
 
-/* unsupported */ chrome.debugger.Database = {
+/* unsupported */ 
+chrome.debugger.Database = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -113,7 +122,8 @@ chrome.debugger.Network = {
   }
 };
 
-/* unsupported */ chrome.debugger.DOMStorage = {
+/* unsupported */ 
+chrome.debugger.DOMStorage = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -127,7 +137,8 @@ chrome.debugger.Network = {
   }
 };
 
-/* unsupported */ chrome.debugger.ApplicationCache = {
+/* unsupported */ 
+chrome.debugger.ApplicationCache = {
   commands: {
     getFramesWithManifests: /*frameIds */ function(){},
     enable:  function(){},
@@ -140,12 +151,14 @@ chrome.debugger.Network = {
   }
 };
 
-/* unsupported */ chrome.debugger.FileSystem = {
+/* unsupported */ 
+chrome.debugger.FileSystem = {
   commands: {
     enable:  function(){},
     disable:  function(){},
   },
 };
+
 
 chrome.debugger.DOM = {
   commands: {
@@ -182,7 +195,7 @@ chrome.debugger.DOM = {
     setChildNodes: function(parentId, nodes) {},
     attributeModified: function(nodeId, name, value) {},
     attributeRemoved: function(nodeId, name) {},
-    inlineStyleInvalidated: function(nodeIds) {},
+    /* unsupported */ inlineStyleInvalidated: function(nodeIds) {},
     characterDataModified: function(nodeId, characterData) {},
     childNodeCountUpdated: function(nodeId, childNodeCount) {},
     childNodeInserted: function(parentNodeId, previousNodeId, node) {},
@@ -190,7 +203,8 @@ chrome.debugger.DOM = {
   }
 };
 
-/* unsupported */ chrome.debugger.CSS = {
+/* unsupported */ 
+chrome.debugger.CSS = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -214,6 +228,7 @@ chrome.debugger.DOM = {
   }
 };
 
+
 chrome.debugger.Timeline = {
   commands: {
     start:  function(maxCallStackDepth){},
@@ -223,6 +238,7 @@ chrome.debugger.Timeline = {
     eventRecorded: function(record) {},
   }
 };
+
 
 chrome.debugger.Debugger = {
   commands: {
@@ -258,6 +274,7 @@ chrome.debugger.Debugger = {
   }
 };
 
+
 chrome.debugger.DOMDebugger = {
   commands: {
     setDOMBreakpoint:  function(nodeId, type){},
@@ -269,7 +286,8 @@ chrome.debugger.DOMDebugger = {
   },
 };
 
-/* unsupported */ chrome.debugger.Profiler = {
+/* unsupported */ 
+chrome.debugger.Profiler = {
   commands: {
     causesRecompilation: /*result */ function(){},
     isSampling: /*result */ function(){},
@@ -296,7 +314,8 @@ chrome.debugger.DOMDebugger = {
   }
 };
 
-/* unsupported */ chrome.debugger.Worker = {
+/* unsupported */ 
+chrome.debugger.Worker = {
   commands: {
     setWorkerInspectionEnabled:  function(value){},
     sendMessageToWorker:  function(workerId, message){},
@@ -311,3 +330,6 @@ chrome.debugger.DOMDebugger = {
     disconnectedFromWorker: function() {},
   }
 };
+
+/* copyright 2011 Google, inc. johnjbarton@google.com Google BSD License */
+/* See https://github.com/johnjbarton/atopwi/blob/master/tailFeathers.html */
