@@ -1,12 +1,12 @@
-/* Machine generated from inspector/Inspector.json version: 0.1 on Thu Jan 19 2012 14:34:33 GMT-0800 (PST) */
+/* Machine generated from inspector/Inspector.json version: 0.1 on Thu Jan 19 2012 14:54:46 GMT-0800 (PST) */
 
 var chrome = chrome || {};
 chrome.debugger = chrome.debugger || {};
 
-chrome.debugger.version =  0.1;
+chrome.debugger.remote = {version:  0.1};
 
 /* unsupported */ 
-chrome.debugger.Inspector = {
+chrome.debugger.remote.Inspector = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -20,14 +20,14 @@ chrome.debugger.Inspector = {
 };
 
 /* unsupported */ 
-chrome.debugger.Memory = {
+chrome.debugger.remote.Memory = {
   commands: {
     getDOMNodeCount: /*count */ function(){},
   },
 };
 
 
-chrome.debugger.Page = {
+chrome.debugger.remote.Page = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -51,7 +51,7 @@ chrome.debugger.Page = {
 };
 
 
-chrome.debugger.Runtime = {
+chrome.debugger.remote.Runtime = {
   commands: {
     evaluate: /*result,wasThrown */ function(expression, objectGroup, includeCommandLineAPI, doNotPauseOnExceptions, frameId, returnByValue){},
     callFunctionOn: /*result,wasThrown */ function(objectId, functionDeclaration, arguments, returnByValue){},
@@ -63,7 +63,7 @@ chrome.debugger.Runtime = {
 };
 
 
-chrome.debugger.Console = {
+chrome.debugger.remote.Console = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -79,7 +79,7 @@ chrome.debugger.Console = {
 };
 
 
-chrome.debugger.Network = {
+chrome.debugger.remote.Network = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -108,7 +108,7 @@ chrome.debugger.Network = {
 };
 
 /* unsupported */ 
-chrome.debugger.Database = {
+chrome.debugger.remote.Database = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -123,7 +123,7 @@ chrome.debugger.Database = {
 };
 
 /* unsupported */ 
-chrome.debugger.DOMStorage = {
+chrome.debugger.remote.DOMStorage = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -138,7 +138,7 @@ chrome.debugger.DOMStorage = {
 };
 
 /* unsupported */ 
-chrome.debugger.ApplicationCache = {
+chrome.debugger.remote.ApplicationCache = {
   commands: {
     getFramesWithManifests: /*frameIds */ function(){},
     enable:  function(){},
@@ -152,7 +152,7 @@ chrome.debugger.ApplicationCache = {
 };
 
 /* unsupported */ 
-chrome.debugger.FileSystem = {
+chrome.debugger.remote.FileSystem = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -160,7 +160,7 @@ chrome.debugger.FileSystem = {
 };
 
 
-chrome.debugger.DOM = {
+chrome.debugger.remote.DOM = {
   commands: {
     getDocument: /*root */ function(){},
     requestChildNodes:  function(nodeId){},
@@ -204,7 +204,7 @@ chrome.debugger.DOM = {
 };
 
 /* unsupported */ 
-chrome.debugger.CSS = {
+chrome.debugger.remote.CSS = {
   commands: {
     enable:  function(){},
     disable:  function(){},
@@ -229,7 +229,7 @@ chrome.debugger.CSS = {
 };
 
 
-chrome.debugger.Timeline = {
+chrome.debugger.remote.Timeline = {
   commands: {
     start:  function(maxCallStackDepth){},
     stop:  function(){},
@@ -240,7 +240,7 @@ chrome.debugger.Timeline = {
 };
 
 
-chrome.debugger.Debugger = {
+chrome.debugger.remote.Debugger = {
   commands: {
     /* unsupported */ causesRecompilation: /*result */ function(){},
     /* unsupported */ supportsNativeBreakpoints: /*result */ function(){},
@@ -275,7 +275,7 @@ chrome.debugger.Debugger = {
 };
 
 
-chrome.debugger.DOMDebugger = {
+chrome.debugger.remote.DOMDebugger = {
   commands: {
     setDOMBreakpoint:  function(nodeId, type){},
     removeDOMBreakpoint:  function(nodeId, type){},
@@ -287,7 +287,7 @@ chrome.debugger.DOMDebugger = {
 };
 
 /* unsupported */ 
-chrome.debugger.Profiler = {
+chrome.debugger.remote.Profiler = {
   commands: {
     causesRecompilation: /*result */ function(){},
     isSampling: /*result */ function(){},
@@ -315,7 +315,7 @@ chrome.debugger.Profiler = {
 };
 
 /* unsupported */ 
-chrome.debugger.Worker = {
+chrome.debugger.remote.Worker = {
   commands: {
     setWorkerInspectionEnabled:  function(value){},
     sendMessageToWorker:  function(workerId, message){},
