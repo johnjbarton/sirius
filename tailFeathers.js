@@ -26,12 +26,15 @@ var tailFeathers = {
         }
     
         var result = [];
+        result.push("/* Machine generated from "+inspectorJSONUrl+" on "+new Date()+" */\n");
         result.push("var chrome = chrome || {};");
         result.push("chrome.debugger = chrome.debugger || {};\n");
         for (var i = 0; i < domains.length; ++i) {
             var domain = domains[i];
-            result.push("chrome.debugger."+domain.domain+'= {\n');
+            var unsupported = domain.hidden ? '/* unsupported */ ' : '';
+            result.push(unsupported+"chrome.debugger."+domain.domain+' = {');
             
+            result.push("  commands: {");
             var commands = domain["commands"] || [];    
             for (var j = 0; j < commands.length; ++j) {
                 var command = commands[j];
@@ -61,13 +64,16 @@ var tailFeathers = {
                     var parameter = returns[k];
                     returnsText.push( parameter.name );
                 }
+                var returnsString = "";
                 if (returnsText.length) {
-                  result.push("/* returns: "+ returnsText.join(',')+"*/");
+                  returnsString ="/*"+ returnsText.join(',')+" */";
                 }
-                result.push(command.name+': function('+paramsText.join(',')+'),');
+                var unsupported = command.hidden ? '/* unsupported */ ' : '';
+                result.push('    '+unsupported+command.name+': '+returnsString+' function('+paramsText.join(', ')+'){},');
             }
-            if (domain.events) {
-                result.push('events: {');
+            result.push('  },');
+            if (domain.events && domain.events.length) {
+                result.push('  events: {');
                 for (var j = 0; domain.events && j < domain.events.length; ++j) {
                     var event = domain.events[j];
                     var paramsText = [];
@@ -75,9 +81,9 @@ var tailFeathers = {
                         var parameter = event.parameters[k];
                         paramsText.push(parameter.name);
                     }
-                    result.push(event.name + ": function(" + paramsText.join(", ") + ")");
+                    result.push('    '+event.name + ": function(" + paramsText.join(", ") + ") {},");
                 }
-                result.push('}');
+                result.push('  }');
             }
             result.push("};\n");
         }
