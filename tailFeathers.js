@@ -26,13 +26,16 @@ var tailFeathers = {
         }
     
         var result = [];
-        result.push("/* Machine generated from "+inspectorJSONUrl+" on "+new Date()+" */\n");
+        var version = schema.version.major + '.' +schema.version.minor;
+        result.push("/* Machine generated from "+inspectorJSONUrl+' version: '+version+" on "+new Date()+" */\n");
         result.push("var chrome = chrome || {};");
         result.push("chrome.debugger = chrome.debugger || {};\n");
+        result.push("chrome.debugger.version =  "+version+';\n');
+        
         for (var i = 0; i < domains.length; ++i) {
             var domain = domains[i];
             var unsupported = domain.hidden ? '/* unsupported */ ' : '';
-            result.push(unsupported+"chrome.debugger."+domain.domain+' = {');
+            result.push(unsupported+"\nchrome.debugger."+domain.domain+' = {');
             
             result.push("  commands: {");
             var commands = domain["commands"] || [];    
@@ -81,12 +84,15 @@ var tailFeathers = {
                         var parameter = event.parameters[k];
                         paramsText.push(parameter.name);
                     }
-                    result.push('    '+event.name + ": function(" + paramsText.join(", ") + ") {},");
+                    var unsupported = event.hidden ? '/* unsupported */ ' : '';
+                    result.push('    '+unsupported+event.name + ": function(" + paramsText.join(", ") + ") {},");
                 }
                 result.push('  }');
             }
             result.push("};\n");
         }
+        result.push("/* copyright 2011 Google, inc. johnjbarton@google.com Google BSD License */");
+        result.push("/* See https://github.com/johnjbarton/atopwi/blob/master/tailFeathers.html */");
         return (result.join('\n'));
     }
 };
