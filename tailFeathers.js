@@ -1,4 +1,26 @@
 
+
+var boilerPlateAMDFromQ = 
+"(function (definition) {\n"+
+"\n"+
+"    // This file will function properly as a <script> tag, or a module\n"+
+"    // using CommonJS and NodeJS or RequireJS module formats. In\n"+
+"    // Common/Node/RequireJS, the module exports the chromeDebuggerRemote API and when\n"+
+"    // executed as a simple <script>, it chromeDebuggerRemote a Q global instead.\n"+
+"\n"+
+"    // RequireJS\n"+
+"    if (typeof define === 'function') {\n"+
+"        define(definition);\n"+
+"    // CommonJS\n"+
+"     } else if (typeof exports === 'object') {\n"+
+"         definition(exports);\n"+
+"     // <script>, create global\n"+
+"     } else {\n"+
+"         definition(chromeDebuggerRemote = {});\n"+
+"     }\n"+
+"\n"+
+"})(function (exports) {\n";
+
 var tailFeathers = {
 
 // Modified copy of InspectorBackend.js  loadFromJSONIfNeeded()
@@ -28,7 +50,9 @@ var tailFeathers = {
         var result = [];
         var version = schema.version.major + '.' +schema.version.minor;
         result.push("/* Machine generated from "+inspectorJSONUrl+' version: '+version+" on "+new Date()+" */\n");
-        result.push("var chromeDebuggerRemote = {version:  "+version+'};\n');
+        result.push(boilerPlateAMDFromQ);
+        result.push("var chromeDebuggerRemote = exports;");
+        result.push("chromeDebuggerRemote.version = "+version+';\n');
         
         for (var i = 0; i < domains.length; ++i) {
             var domain = domains[i];
@@ -89,8 +113,12 @@ var tailFeathers = {
             }
             result.push("};\n");
         }
+        result.push("return chromeDebuggerRemote;\n");
+        
         result.push("/* copyright 2011 Google, inc. johnjbarton@google.com Google BSD License */");
         result.push("/* See https://github.com/johnjbarton/atopwi/blob/master/tailFeathers.html */");
+        result.push(")};\n");
+        
         return (result.join('\n'));
     }
 };
