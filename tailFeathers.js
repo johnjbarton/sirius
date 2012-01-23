@@ -28,14 +28,12 @@ var tailFeathers = {
         var result = [];
         var version = schema.version.major + '.' +schema.version.minor;
         result.push("/* Machine generated from "+inspectorJSONUrl+' version: '+version+" on "+new Date()+" */\n");
-        result.push("var chrome = chrome || {};");
-        result.push("chrome.debugger = chrome.debugger || {};\n");
-        result.push("chrome.debugger.remote = {version:  "+version+'};\n');
+        result.push("var remote = {version:  "+version+'};\n');
         
         for (var i = 0; i < domains.length; ++i) {
             var domain = domains[i];
             var unsupported = domain.hidden ? '/* unsupported */ ' : '';
-            result.push(unsupported+"\nchrome.debugger.remote."+domain.domain+' = {');
+            result.push(unsupported+"\nremote."+domain.domain+' = {');
             
             result.push("  commands: {");
             var commands = domain["commands"] || [];    
