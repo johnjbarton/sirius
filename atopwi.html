@@ -40,14 +40,20 @@ function showInspectorIframe() {
     return appendFrame('WebInspector', "inspector/front-end/devtools.html");
 }
 
+
+// Promise the inspectorWindow only after the load event is processed
+
 function openInspector(debuggee, chromeProxy) {
   var deferred = Q.defer();
   var inspectorElt = showInspectorIframe();
   var inspectorWindow = inspectorElt.contentWindow;
+  
+  // Capture the DOMContentLoaded to monkey patch inspectorWindow.
+  //
   inspectorWindow.addEventListener('DOMContentLoaded', function(event){
     
     if (debug) {
-      console.log("ChromeFrame Ready to debug ", debuggee);
+      console.log("DOMContentLoaded on inspectorWindow ", debuggee);
     }
 
     function sendMessageObject(messageObject) {
@@ -63,23 +69,7 @@ function openInspector(debuggee, chromeProxy) {
       });
     }
     
-    var delayMessages = false;
-    
-    if (delayMessages) {
-      var queue = [];
-      inspectorWindow.InspectorBackend.sendMessageObjectToBackend = function(messageObject) {
-        queue.push(messageObject);
-      };      
-    
-      setInterval(function deq() {
-        var messageObject = queue.pop();
-        if (messageObject) {
-          sendMessageObject(messageObject);
-        }
-      }, 300);  // any faster and we fail
-    } else {
-      inspectorWindow.InspectorBackend.sendMessageObjectToBackend = sendMessageObject;
-    }
+    inspectorWindow.InspectorBackend.sendMessageObjectToBackend = sendMessageObject;
     
     chromeProxy.jsonHandlers['chrome.debugger.remote'] = {
       jsonObjectHandler:  function(data) {
@@ -94,9 +84,16 @@ function openInspector(debuggee, chromeProxy) {
       throw new Error("Should not be called");
     };
     
-    event.stopPropagation();
-    event.preventDefault();
-    deferred.resolve(inspectorWindow);
+    // This method is called asynchronously from WebInspector _initializeCapability
+    var stock_doLoadedDoneWithCapabilities = inspectorWindow.WebInspector._doLoadedDoneWithCapabilities;
+    
+    inspectorWindow.WebInspector._doLoadedDoneWithCapabilities = function() {
+      var args = Array.prototype.slice.call(arguments, 0);
+      stock_doLoadedDoneWithCapabilities.apply(this, args);
+      
+      deferred.resolve(inspectorWindow);
+    };
+    
   }, true);
   return deferred.promise;
 }
@@ -168,9 +165,8 @@ function openDebuggee(debuggeeSpec) {
            chromeProxy.debugger.detach({tabId: debuggee.tabId});
          });
          
-         var iw = openInspector(debuggee, chromeProxy);
-         Q.when(iw, function(iw) {
-           iw.windowLoaded();
+         var inspectorReady = openInspector(debuggee, chromeProxy);
+         Q.when(inspectorReady, function(inspectorReady) {
            if (debuggee.url) {
              if (debug) {
                console.log("atopwi setting URL:"+debuggee.url);
