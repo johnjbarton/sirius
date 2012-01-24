@@ -81,7 +81,7 @@ function openInspector(debuggee, chromeProxy) {
       inspectorWindow.InspectorBackend.sendMessageObjectToBackend = sendMessageObject;
     }
     
-    chromeProxy.jsonHandlers['chrome.debugger'] = {
+    chromeProxy.jsonHandlers['chrome.debugger.remote'] = {
       jsonObjectHandler:  function(data) {
         if (debug) {
           console.log("jsonObjectHandler "+data.method, data);

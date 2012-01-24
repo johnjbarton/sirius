@@ -10,7 +10,7 @@ var boilerPlateAMDFromQ =
 "\n"+
 "    // RequireJS\n"+
 "    if (typeof define === 'function') {\n"+
-"        define(definition);\n"+
+"        define([], definition);\n"+
 "    // CommonJS\n"+
 "     } else if (typeof exports === 'object') {\n"+
 "         definition(exports);\n"+
@@ -19,7 +19,7 @@ var boilerPlateAMDFromQ =
 "         definition(chromeDebuggerRemote = {});\n"+
 "     }\n"+
 "\n"+
-"})(function (exports) {\n";
+"}(function (ignoredRequire, exports) {\n";
 
 var tailFeathers = {
 
@@ -117,7 +117,7 @@ var tailFeathers = {
         
         result.push("/* copyright 2011 Google, inc. johnjbarton@google.com Google BSD License */");
         result.push("/* See https://github.com/johnjbarton/atopwi/blob/master/tailFeathers.html */");
-        result.push(")};\n");
+        result.push("}));\n");
         
         return (result.join('\n'));
     }
