@@ -1,13 +1,13 @@
 <html>
 <head>
-<title>Web Inspector Web App Over crs2app</title>
+<title>Web Inspector Web App Over crx2app</title>
 
 <script src="lib/crx2app/extension/appEnd/proxyChromePipe.js"></script>
 <script src="lib/crx2app/extension/lib/q/q.js"></script>
 <script src="lib/crx2app/extension/lib/requirejs/require.js"></script>
 <script>
 
-/*globals getChromeExtensionPipe window console Q require */
+/*globals chromeExtensionPipe window console Q require */
 
 var debug = false;
 
@@ -15,7 +15,7 @@ var debug = false;
 
 var iframeDomain ="chrome-extension://bbjpappmojnmallpnfgfkjmjnhhplgog";
 
-var connection = getChromeExtensionPipe(iframeDomain);
+var connection = chromeExtensionPipe.createFrom(iframeDomain);
 
 window.beforeUnloadQueue = [];
 window.onbeforeunload = function runQueue() {
