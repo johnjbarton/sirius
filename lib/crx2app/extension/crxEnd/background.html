@@ -45,9 +45,14 @@ function adapterFactory(origin, debuggerTab) {
 
 function obeyOptions() {
   var options = restoreOptions();
+  if (!options) {  // maybe our first time
+    return;
+  }
+  
   window.debugConnection = options.debugConnection;
   window.debugMessages = options.debugMessages;
   window.debugWarnings = options.debugWarnings;
+  window.debugAdapters = options.debugAdapters;
   
   options.allowedSites.forEach(function(allowedSite) {
     var name = 'Debug With ' + allowedSite.name;  
