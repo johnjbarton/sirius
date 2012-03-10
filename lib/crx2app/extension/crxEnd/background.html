@@ -18,15 +18,11 @@
 <!-- for the constants -->
 <script src="../appEnd/appEnd.js"></script>
 <script>
+/*globals window restoreOptions buildContextMenuItem */
+
 function define(deps, defn) {
   window.remote = defn();
 }
-</script>
-<script src="../rpc/remote.js"></script>
-<script>
-/*globals window restoreOptions buildContextMenuItem */
-
-
 
 var  WindowsAdapter = makeWindowsAdapter(chrome, PostSource);
 var  TabsAdapter = makeTabsAdapter(chrome, PostSource);
@@ -44,6 +40,12 @@ function adapterFactory(origin, debuggerTab) {
 
 
 function obeyOptions() {
+
+  window.debugConnection = false;
+  window.debugMessages = false;
+  window.debugWarnings = false;
+  window.debugAdapters = false;
+
   var options = restoreOptions();
   if (!options) {  // maybe our first time
     return;
@@ -53,6 +55,8 @@ function obeyOptions() {
   window.debugMessages = options.debugMessages;
   window.debugWarnings = options.debugWarnings;
   window.debugAdapters = options.debugAdapters;
+  
+  options.allowedSites = options.allowedSites || [];
   
   options.allowedSites.forEach(function(allowedSite) {
     var name = 'Debug With ' + allowedSite.name;  
@@ -73,7 +77,7 @@ function obeyOptions() {
           if (!windowsAdapter) {  // then this origin has not been seen
              windowsAdapter = crxEnd.createWindowsAdapter(validOrigin, debuggerTab);
           }
-          windowsAdapter.addTab(debuggeeTabId);
+          windowsAdapter.addUserSelectedTab(debuggeeTabId);
     
           var url = allowedSite.site + '?tabId=' + debuggeeTabId + '&';
           // now release the debugger
