@@ -156,7 +156,7 @@ function openDebuggee(debuggeeSpec) {
      var debuggee = parseDebuggee(debuggeeSpec);
      debuggee = promiseDebuggee(debuggee, chromeProxy);
      Q.when(debuggee, function(debuggee) {
-       chromeProxy.debugger.attach({tabId: debuggee.tabId}, "0.1", function() {
+       chromeProxy.debugger.attach({tabId: debuggee.tabId}, "1.0", function() {
          if (debug) {
            console.log("atopwi chrome.debugger.attach complete "+debuggee.tabId);
          }
