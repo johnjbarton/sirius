@@ -1,10 +1,7 @@
 // Google BSD license http://code.google.com/google_bsd_license.html
 // Copyright 2011 Google Inc. johnjbarton@google.com
 
-/*globals chromeExtensionPipe window console Q require */
-
-/*global define console window */
-
+/*globals chromeExtensionPipe window console Q require define */
 
 define(['q/q', 'appendFrame', 'openInspector'], 
 function(  Q,   appendFrame,   openInspector)  {

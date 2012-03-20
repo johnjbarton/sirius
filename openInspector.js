@@ -4,8 +4,8 @@
 /*global define console window */
 
 
-define(['q/q', 'appendFrame'], 
-function(  Q,   appendFrame)  {
+define(['q/q', 'appendFrame', 'overrides/overrides'], 
+function(  Q,   appendFrame,             overrides)  {
 
 var debug = false;
 
@@ -78,6 +78,8 @@ function openInspector(debuggee, chromeProxy) {
       
       deferred.resolve(inspectorWindow);
     };
+    
+    overrides.injectAll(inspectorWindow);
     
   }, true);
   return deferred.promise;
