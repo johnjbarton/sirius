@@ -30,22 +30,37 @@ define([], function() {
     
     win.document.body.appendChild(element);
   }
+  
+  function injectCSS(win, cssURL) {
+    var elt = win.document.createElement('link');
+    elt.setAttribute('rel', 'stylesheet');
+    elt.setAttribute('type', 'text/css');
+    elt.setAttribute('href', cssURL);
+    win.document.head.appendChild(elt);
+  }
 
   var overrides = {
-    files: [
+    jsFiles: [
      '../../../../MetaObject/q/q.js',  // before require
      '../../../../MetaObject/requirejs/require.js',
      '../../overrides/requireConfig.js',
      '../../overrides/requireOverrides.js'
     ],
+    
+    cssFiles: [
+      '../../overrides/orion-editor.css'
+    ],
 
     injectAll: function(win, thenCall) {
-      var file = this.files.shift();
+      var file = this.jsFiles.shift();
 
       if (file) {
         console.log("injecting "+file);
         injectOne(win, file, thenCall);
       } else {
+        this.cssFiles.forEach(function(file) {
+          injectCSS(win, file);
+        });
         thenCall();
       }
     }

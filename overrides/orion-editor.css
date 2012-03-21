@@ -1,0 +1,4 @@
+.orion-editor * {
+  -webkit-box-sizing: content-box;
+  box-sizing: content-box;
+}
