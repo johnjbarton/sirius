@@ -86,7 +86,7 @@ function(                    editorInserter,              AJAX)  {
     //-------------------------------------------------------------------------
     // Command to take focus
     SourceFrame.prototype.focus = function() {
-      console.error("SourceFrame function not implemented");
+      this._editor.getTextView().focus();
     };
     
     // Called by Panel. Return StatusBarButton for the button bar across the bottom.
