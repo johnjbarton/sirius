@@ -6,8 +6,8 @@
 // Implement WebInspector's SourceFrame using Orion Editor.
 // This file will be injected into the WebInspector iframe
 
-define(['OrionEditorEmbedded/editorInserter'], 
-function(                    editorInserter)  {
+define(['OrionEditorEmbedded/editorInserter', 'MetaObject/AJAX'], 
+function(                    editorInserter,              AJAX)  {
 
   /**
    * @extends {WebInspector.View}
@@ -19,6 +19,7 @@ function(                    editorInserter)  {
     WebInspector.View.call(this);
     
     this._editor = editorInserter.createEditor(this.element);
+    this._openURL(url);
     
     // element property defined and controlled by View
     this.element.addStyleClass("script-view");
@@ -33,9 +34,23 @@ function(                    editorInserter)  {
 
   SourceFrame.prototype = Object.create(WebInspector.View.prototype);
   
+  SourceFrame.prototype._openURL = function(url) {
+    AJAX.GET(
+      url,
+      function(event) {
+        var src = event.currentTarget.responseText;
+        this._editor.setInput(url, null, src);
+        return this;
+      }.bind(this),
+      function(msg) { 
+        console.error('openURL('+url+') FAILS '+msg, msg);
+      }
+    );
+  };
+  
     SourceFrame.prototype.setContent = function(mimeType, content) {
       // push content into Orion editor
-      
+      this._editor.setText(content);
       // Notify system we are ready
       this._loaded = true;
       this.dispatchEventToListeners(SourceFrame.Events.Loaded);
