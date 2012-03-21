@@ -8,7 +8,7 @@
 
 define([], function() {
 
-  function injectOne(win, file) {
+  function injectOne(win, file, thenCall) {
     var element = win.document.createElement('script');
     element.setAttribute('src', file);
     
@@ -22,7 +22,7 @@ define([], function() {
       element.removeEventListener('load', onLoad, false);
       element.removeEventListener('error', onError, false);
       // implicit loop 
-      overrides.injectAll(win);
+      overrides.injectAll(win, thenCall);
     }
     
     element.addEventListener('load', onLoad, false);
@@ -33,17 +33,20 @@ define([], function() {
 
   var overrides = {
     files: [
+     '../../../../MetaObject/q/q.js',  // before require
      '../../../../MetaObject/requirejs/require.js',
-     '../../../../OrionEditorEmbedded/requireConfig.js',
+     '../../overrides/requireConfig.js',
      '../../overrides/requireOverrides.js'
     ],
 
-    injectAll: function(win) {
+    injectAll: function(win, thenCall) {
       var file = this.files.shift();
 
       if (file) {
         console.log("injecting "+file);
-        injectOne(win, file);
+        injectOne(win, file, thenCall);
+      } else {
+        thenCall();
       }
     }
   };

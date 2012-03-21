@@ -17,12 +17,11 @@ function(          SourceFrame)  {
 
   }
   
-  JavaScriptSourceFrame.prototype = {
+  JavaScriptSourceFrame.prototype = Object.create(SourceFrame.prototype); 
   
-    // Called when the DebuggerPresentationModel sees a changed source
-    _onContentChanged: function() {
-      this._uiSourceCode.requestContent(this.setContent.bind(this));
-    }
+  // Called when the DebuggerPresentationModel sees a changed source
+  JavaScriptSourceFrame.prototype._onContentChanged = function() {
+    this._uiSourceCode.requestContent(this.setContent.bind(this));
   };
 
   return JavaScriptSourceFrame;
