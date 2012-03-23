@@ -63,7 +63,7 @@ function(  Q,   appendFrame,   openInspector)  {
     var debuggee = {};
     var tabId = parseInt(debuggeeSpec.tabId, 10);
     if ( isNaN(tabId) ) {  // then we better have a URL
-      debuggee.url = debuggeeSpec.url;
+      debuggee.url = decodeURIComponent(debuggeeSpec.url);
     } else {
       debuggee.tabId = tabId;
     }
