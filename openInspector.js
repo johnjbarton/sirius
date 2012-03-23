@@ -54,6 +54,8 @@ function onDynamicLoad(debuggee, chromeProxy, inspectorWindow, deferred, doLoade
       throw new Error("Should not be called");
     };
     
+    inspectorWindow.WebInspector.attached = true; // small icons for embed in orion
+    
     // Called asynchronously from WebInspector _initializeCapability
     var stock_doLoadedDoneWithCapabilities = 
         inspectorWindow.WebInspector._doLoadedDoneWithCapabilities;
