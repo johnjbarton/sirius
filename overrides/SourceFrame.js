@@ -68,7 +68,11 @@ function(                    editorInserter,              AJAX)  {
     ** Called at the end of View.show(), on all visible children.
     */
     SourceFrame.prototype.wasShown = function() {
-      this._editor.getTextView().resize();
+      if (this._editor.getTextView()) {
+        this._editor.getTextView().resize();
+      } else {
+        this._editor.installTextView();
+      }
     };
     
     /* View method, called only by View._processWillHide
