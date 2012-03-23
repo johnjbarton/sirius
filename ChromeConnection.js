@@ -1,10 +1,7 @@
 // Google BSD license http://code.google.com/google_bsd_license.html
 // Copyright 2011 Google Inc. johnjbarton@google.com
 
-/*globals chromeExtensionPipe window console Q require */
-
-/*global define console window */
-
+/*globals chromeExtensionPipe window console Q require define */
 
 define(['q/q', 'appendFrame', 'openInspector'], 
 function(  Q,   appendFrame,   openInspector)  {
@@ -66,7 +63,7 @@ function(  Q,   appendFrame,   openInspector)  {
     var debuggee = {};
     var tabId = parseInt(debuggeeSpec.tabId, 10);
     if ( isNaN(tabId) ) {  // then we better have a URL
-      debuggee.url = debuggeeSpec.url;
+      debuggee.url = decodeURIComponent(debuggeeSpec.url);
     } else {
       debuggee.tabId = tabId;
     }

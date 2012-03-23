@@ -4,10 +4,10 @@
 /*global define console window */
 
 
-define(['q/q', 'appendFrame'], 
-function(  Q,   appendFrame)  {
+define(['q/q', 'appendFrame', 'overrides/overrides'], 
+function(  Q,   appendFrame,             overrides)  {
 
-var debug = false;
+var debug = true;
 
 function showInspectorIframe() {
   var inspectorElt = window.document.getElementById('WebInspector');
@@ -15,21 +15,7 @@ function showInspectorIframe() {
   return appendFrame('WebInspector', "inspector/front-end/devtools.html");
 }
 
-// Promise the inspectorWindow after the load event is processed
-
-function openInspector(debuggee, chromeProxy) {
-  var deferred = Q.defer();
-  var inspectorElt = showInspectorIframe();
-  var inspectorWindow = inspectorElt.contentWindow;
-  
-  // Capture the DOMContentLoaded to monkey-patch inspectorWindow.
-  //
-  inspectorWindow.addEventListener('DOMContentLoaded', function(event){
-    
-    if (debug) {
-      console.log("DOMContentLoaded on inspectorWindow ", debuggee);
-    }
-
+function onDynamicLoad(debuggee, chromeProxy, inspectorWindow, deferred, doLoadedDone) {
     var backend = inspectorWindow.InspectorBackend;
 
     function sendMessageObject(messageObject) {
@@ -68,6 +54,8 @@ function openInspector(debuggee, chromeProxy) {
       throw new Error("Should not be called");
     };
     
+    inspectorWindow.WebInspector.attached = true; // small icons for embed in orion
+    
     // Called asynchronously from WebInspector _initializeCapability
     var stock_doLoadedDoneWithCapabilities = 
         inspectorWindow.WebInspector._doLoadedDoneWithCapabilities;
@@ -78,6 +66,40 @@ function openInspector(debuggee, chromeProxy) {
       
       deferred.resolve(inspectorWindow);
     };
+    
+    doLoadedDone.call(inspectorWindow.WebInspector);
+}
+
+// Promise the inspectorWindow after the load event is processed
+
+function openInspector(debuggee, chromeProxy) {
+  var inspectorElt = showInspectorIframe();
+  var inspectorWindow = inspectorElt.contentWindow;
+  
+  // Capture the DOMContentLoaded to monkey-patch inspectorWindow.
+  //
+  var deferred = Q.defer();
+  inspectorWindow.addEventListener('DOMContentLoaded', function(event){
+    
+    if (debug) {
+      console.log("DOMContentLoaded on inspectorWindow ", debuggee);
+    }
+
+    inspectorWindow.WebInspectorMonkeyPatchDeferred = Q.defer();
+
+    overrides.injectAll(inspectorWindow, function onStaticLoad() {
+    
+      // The static files for the override have been loaded, but require.js is
+      // still working. 
+
+      inspectorWindow.WebInspectorMonkeyPatchDeferred.promise.then(
+        onDynamicLoad.bind(null, debuggee, chromeProxy, inspectorWindow, deferred),
+        function(rejection) {
+          console.error("Monkey Patch rejection", rejection);
+        }
+      );
+    
+    });
     
   }, true);
   return deferred.promise;
