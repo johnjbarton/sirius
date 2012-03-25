@@ -1,6 +1,6 @@
 {
   "name": "Sirius",
-  "version": "0.1",
+  "version": "0.2",
   "minimum_chrome_version": "17",
   "description": "Chrome Extension for Orion Web-Tool platform",
   "background_page" : "background.html",
@@ -8,6 +8,9 @@
      "16": "orion16.png",
      "128": "sirius128x128.PNG"
   },
+  // Assigns the name 'fkhgelnmojgnpahkeemhnbjndeeocehc',
+  // see http://code.google.com/chrome/extensions/manifest.html#key
+  "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDBFtHafaZoLSONeUt49T7UmuDW9Z8i6hFjTDVBp7pBRGHhpi7x6XZEvWVUwNY+ExvzYW8MbIaFdaDsRMGMy3OGZlMM28LIvP11xEPB+F9epURPVvkMm+rqLvGQibbh6QneacOiBqw5luGxb0woMsAN4ij17TL8Qip4DEZLhB19PwIDAQAB",
   "page_action": {
     "default_icon": "orion16.png",
     "default_title": "Edit in Orion"
@@ -20,7 +23,8 @@
       "tabs",
       "contextMenus",
       "webNavigation",
-      "webRequest"
+      "webRequest",
+      "debugger"
     ],
    "content_scripts": [
      {
