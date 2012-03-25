@@ -7,9 +7,9 @@
 [submodule "extension/MetaObject"]
 	path = extension/MetaObject
 	url = git@github.com:johnjbarton/MetaObject.git
-[submodule "crx2app"]
-	path = crx2app
-	url = git@github.com:johnjbarton/crx2app.git
 [submodule "extension/orion.client"]
 	path = extension/orion.client
 	url = https://github.com/eclipse/orion.client.git
+[submodule "extension/crx2app"]
+	path = extension/crx2app
+	url = git@github.com:johnjbarton/crx2app.git
