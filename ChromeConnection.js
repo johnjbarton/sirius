@@ -3,8 +3,8 @@
 
 /*globals chromeExtensionPipe window console Q require define */
 
-define(['q/q', 'appendFrame', 'openInspector'], 
-function(  Q,   appendFrame,   openInspector)  {
+define(['q/q', 'appendFrame', 'openInspector', 'crx2app/appEnd/proxyChromePipe'], 
+function(  Q,   appendFrame,   openInspector, chromeExtensionPipe)  {
 
   var debug = false;
 
