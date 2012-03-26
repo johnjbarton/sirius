@@ -2,16 +2,14 @@
 <head>
 <title>Web Inspector Web App Over crx2app</title>
 
-<script>
- var SiriusBase = 'chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc';
- window.crx2appBase = SiriusBase+'/crx2app/extension';
-</script>
 
-<script src="chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/crx2app/extension/appEnd/proxyChromePipe.js"></script>
 <script src="chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/MetaObject/requirejs/require.js"></script>
-<script>
 
+<script>
 /*globals window console require*/
+
+var SiriusBase = 'chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc';
+window.crx2appBase = SiriusBase+'/crx2app/extension';
 
 function extractDebuggeeFromURL() {
   var search = window.location.search;
@@ -60,11 +58,18 @@ function onLoad() {
 
   require({
       paths: {
+<<<<<<< Updated upstream
         'crx2app': window.crx2appBase,
         'q': SiriusBase+'/MetaObject/q'
+=======
+        'crx2app': ',
+        'q': 'lib/MetaObject/q'
+>>>>>>> Stashed changes
       }
     }); 
     
+console.log('window.crx2appBase ', window.crx2appBase);
+
    require.onError = function(err) {
      console.error(err+'', {stack: err.stack.split('\n')});
    };
