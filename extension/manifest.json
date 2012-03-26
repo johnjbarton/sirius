@@ -11,6 +11,7 @@
   // Assigns the name 'fkhgelnmojgnpahkeemhnbjndeeocehc',
   // see http://code.google.com/chrome/extensions/manifest.html#key
   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDBFtHafaZoLSONeUt49T7UmuDW9Z8i6hFjTDVBp7pBRGHhpi7x6XZEvWVUwNY+ExvzYW8MbIaFdaDsRMGMy3OGZlMM28LIvP11xEPB+F9epURPVvkMm+rqLvGQibbh6QneacOiBqw5luGxb0woMsAN4ij17TL8Qip4DEZLhB19PwIDAQAB",
+  "options_page": "crx2app/extension/crxEnd/options.html",
   "page_action": {
     "default_icon": "orion16.png",
     "default_title": "Edit in Orion"
