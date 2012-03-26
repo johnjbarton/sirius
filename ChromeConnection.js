@@ -77,7 +77,7 @@ function(  Q,   appendFrame,   openInspector)  {
     // dynamically load the chrome proxy
     require({
       paths: {
-        'crx2app': 'lib/crx2app/extension'
+        'crx2app':  window.crx2appBase
       }
     }); 
     require.onError = function(err) {

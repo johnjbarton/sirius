@@ -2,8 +2,12 @@
 <head>
 <title>Web Inspector Web App Over crx2app</title>
 
-<script src="lib/crx2app/extension/appEnd/proxyChromePipe.js"></script>
-<script src="lib/crx2app/extension/lib/requirejs/require.js"></script>
+<script>
+ window.crx2appBase = 'chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/crx2app/extension';
+</script>
+
+<script src="chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/crx2app/extension/appEnd/proxyChromePipe.js"></script>
+<script src="chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/crx2app/extension/lib/requirejs/require.js"></script>
 <script>
 
 /*globals window console require*/
