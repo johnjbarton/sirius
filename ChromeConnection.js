@@ -10,7 +10,10 @@ function(  Q,   appendFrame,   openInspector)  {
 
   // Base URL for crx2app
 
-  var iframeDomain ="chrome-extension://bbjpappmojnmallpnfgfkjmjnhhplgog";
+  // stand alone crx2app
+  // var iframeDomain ="chrome-extension://bbjpappmojnmallpnfgfkjmjnhhplgog";
+  // Sirius crx2app
+  var iframeDomain = window.crx2appBase = 'chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/crx2app/extension';
 
   var connection = chromeExtensionPipe.createFrom(iframeDomain);
 
