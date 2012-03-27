@@ -11,7 +11,10 @@ To run atopwi, a modified Chrome Devtool (aka Web Inspector)
    load unpacked extension
    point the subdirectory sirius/extension from the repo in step 1
    You  should see the Sirus Star icon
-3. Reload any tab and use the context menu option Debug Sirius   
+3. Reload any tab and use the context menu option Debug Sirius
+4. The first time the devtools window comes up, it will be blank, just
+right click and reload.  This is a bug in Chrome 19 that will be fixed
+soon.
 
 
 Other Sirius Ideas:
