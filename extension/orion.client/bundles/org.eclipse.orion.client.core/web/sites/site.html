@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Edit Site</title>
+    	<link rel="stylesheet" type="text/css" href="site.css" />
+    	<script type="text/javascript" src="../requirejs/require.js"></script>
+		<script type="text/javascript">
+		require({
+			  baseUrl: '..',
+			  packages: [
+			    {
+			      name: 'dojo',
+			      location: 'org.dojotoolkit/dojo',
+			      main: 'lib/main-browser',
+			      lib: '.'
+			    },
+			    {
+			      name: 'dijit',
+			      location: 'org.dojotoolkit/dijit',
+			      main: 'lib/main',
+			      lib: '.'
+			    },
+			    {
+			      name: 'dojox',
+			      location: 'org.dojotoolkit/dojox',
+			      main: 'lib/main',
+			      lib: '.'
+			    }		    
+			  ],
+			  paths: {
+				  text: 'requirejs/text',
+				  i18n: 'requirejs/i18n'	    
+			  }
+			});
+		
+		require(["./site"]);
+		</script>
+<body style="visibility:hidden" class="nihilo">
+	<div id="eclipse.edit-site" class="orionPage" dojoType="dijit.layout.BorderContainer" design="headline" gutters="false">
+		<div class="banner" id="banner" dojoType="dijit.layout.ContentPane" region="top">
+		</div>
+		<div id="centerPane" dojoType="dijit.layout.BorderContainer" region="center" gutters="false" design="headline" liveSplitters="false" splitter="false">
+			<div class="toolbar" id="pageToolbar" dojoType="dijit.layout.ContentPane" splitter="false" region="top">
+			</div>
+			<div class="mainpane" id="site" dojoType="dijit.layout.ContentPane" splitter="false"region="center">
+			</div>
+		</div>
+		<div class="footer" id="footer" dojoType="dijit.layout.ContentPane" region="bottom" splitter="false">
+		</div>
+	</div>
+	
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<script type="text/javascript" src="../orion/plugin.js"></script>
+	<script>
+	/*global eclipse window*/
+	var VERSION = "0.5";
+
+	function qualifyURL(url){
+	    var a = document.createElement('a');
+	    a.href = url; // set string url
+	    return a.href;
+	}
+	
+	window.onload = function() {
+		var serviceImpl = { /* All data is in properties */ };
+
+		var provider = new eclipse.PluginProvider();
+		
+		// Primary navigation links
+		provider.registerServiceProvider("orion.page.link", serviceImpl, {
+			name: "Navigator",
+			id: "orion.navigator",
+			href: qualifyURL("../navigate/table.html#")
+		});
+		provider.registerServiceProvider("orion.page.link", serviceImpl, {
+			name: "Sites",
+			id: "orion.sites",
+			href: qualifyURL("../sites/sites.html")
+		});
+		provider.registerServiceProvider("orion.page.link", serviceImpl, {
+			name: "Repositories",
+			id: "orion.repositories",
+			href: qualifyURL("../git/git-repository.html#")
+		});
+		provider.registerServiceProvider("orion.page.link", serviceImpl, {
+			name: "Get Plugins",
+			id: "orion.plugins.get",
+			href: "http://mamacdon.github.com/#?target=" + qualifyURL("../settings/settings.html") + "&version=" + VERSION
+		});
+		
+		// Commands that we contribute so it can show up in related links
+		provider.registerServiceProvider("orion.navigate.command", {
+				run: function(item) {
+					return "../navigate/table.html" + "#" + item.ChildrenLocation;
+				}
+			}, {
+			name: "Navigate",
+			id: "orion.navigateFromFileMetadata",
+			tooltip: "Go to the navigator",
+			validationProperties: {"ChildrenLocation":"*"},
+			href: true,
+			forceSingleItem: true
+		});
+		
+		provider.registerServiceProvider("orion.navigate.command", {
+				run: function(item) {
+					return "../navigate/table.html" + "#" + item.ContentLocation + "?depth=1";
+				}
+			}, {
+			name: "Navigate",
+			id: "orion.navigateFromGitMetadata",
+			tooltip: "Go to the navigator",
+			validationProperties: {"ContentLocation":"*"},
+			href: true,
+			forceSingleItem: true
+		});
+		
+		provider.registerServiceProvider("orion.page.link.related", null, {
+			id: "orion.navigateFromFileMetadata"
+		});
+		provider.registerServiceProvider("orion.page.link.related", null, {
+			id: "orion.navigateFromGitMetadata"
+		});
+
+		provider.connect();
+	};
+	</script>
+</head>
+<body>
+</body>
+</html>

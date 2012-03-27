@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta name="copyright" content="Copyright (c) IBM Corporation and others 2011." >
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+	<script type="text/javascript" src="../../orion/plugin.js"></script>
+	<script type="text/javascript" src="../../org.dojotoolkit/dojo/dojo.js.uncompressed.js"></script>
+	<script>
+		window.onload = function() {
+			var temp = document.createElement('a');
+			
+			var provider = new eclipse.PluginProvider();
+			
+			temp.href = "../git-status.html";
+			var gitStatusURL = temp.href;
+			
+			provider.registerServiceProvider("orion.navigate.command", {
+				run: function(item) {
+					return gitStatusURL + "#" + item.Git.StatusLocation;
+				}
+			}, {
+				name: "Git Status",
+				id: "eclipse.git.status",
+				tooltip: "Go to Git Status",
+				validationProperties: {"Git":"*", "Directory":"true"},
+				href: true,
+				forceSingleItem: true
+			});
+			
+			
+			temp.href = "../git-log.html";
+			var gitLogURL = temp.href;
+			provider.registerServiceProvider("orion.navigate.command", {
+				run: function(item) {
+					return gitLogURL + "#" + item.Git.CommitLocation + "?page=1";
+				}
+			}, {
+				name: "Git Log",
+				id: "eclipse.git.log",
+				tooltip: "Go to Git Log",
+				validationProperties: {"Git":"*"},
+				href: true,
+				forceSingleItem: true
+			});
+			
+			provider.registerServiceProvider("orion.navigate.command", {
+				run : function(item) {
+					return gitLogURL + "#" + item.Git.DefaultRemoteBranchLocation + "?page=1";
+				}
+			}, {
+				name: "Git Remote",
+				id: "eclipse.git.remote",
+				validationProperties: {"Git:DefaultRemoteBranchLocation":"*"},
+				forceSingleItem: true,
+				href: true,
+				tooltip: "Go to Git Remote"
+			});
+
+			// shouldn't need two of these, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=370903
+			temp.href = "../git-repository.html";
+			var gitRepositoryURL = temp.href;
+
+			provider.registerServiceProvider("orion.navigate.command", {
+				run : function(item) {
+					return gitRepositoryURL + "#" + item.CloneLocation;
+				}
+			}, {
+				name: "Git Repository",
+				id: "eclipse.git.repository.fromGit",
+				validationProperties: {"CloneLocation":"*"},
+				forceSingleItem: true,
+				href: true,
+				tooltip: "Go to the git repository"
+			});
+			
+			provider.registerServiceProvider("orion.navigate.command", {
+				run : function(item) {
+					return gitRepositoryURL + "#" + item.Git.CloneLocation;
+				}
+			}, {
+				name: "Git Repository",
+				id: "eclipse.git.repository.fromResource",
+				validationProperties: {"Git:CloneLocation":"*"},
+				forceSingleItem: true,
+				href: true,
+				tooltip: "Go to the git repository"
+			});
+
+			
+			provider.registerServiceProvider("orion.page.link.related", null, {
+				id: "eclipse.git.status"
+			});
+			
+			provider.registerServiceProvider("orion.page.link.related", null, {
+				id: "eclipse.git.log"
+			});
+			
+			provider.registerServiceProvider("orion.page.link.related", null, {
+				id: "eclipse.git.remote"
+			});
+			
+			provider.registerServiceProvider("orion.page.link.related", null, {
+				id: "eclipse.git.repository.fromResource"
+			});
+
+			provider.registerServiceProvider("orion.page.link.related", null, {
+				id: "eclipse.git.repository.fromGit"
+			});
+			
+			// ideally these commands should also be declared here.
+			// see https://bugs.eclipse.org/bugs/show_bug.cgi?id=370903
+			provider.registerServiceProvider("orion.page.link.related", null, {
+				id: "orion.git.gotoEclipseGit"
+			});
+
+			provider.registerServiceProvider("orion.page.link.related", null, {
+				id: "orion.git.gotoGithub"
+			});
+						
+			temp.href = "../../gitapi/diff/";
+			var base = temp.href;
+			provider.registerServiceProvider("orion.core.diff", {
+				getDiffContent: function(diffURI){	
+					return dojo.xhrGet({
+						url: diffURI , 
+						headers: {
+							"Orion-Version": "1"
+						},
+						content: { "parts": "diff" },
+						handleAs: "text",
+						timeout: 15000
+					});
+				},			
+				getDiffFileURI: function(diffURI){
+					return dojo.xhrGet({
+						url: diffURI , 
+						headers: {
+							"Orion-Version": "1"
+						},
+						content: { "parts": "uris" },
+						handleAs: "json",
+						timeout: 15000
+					});
+				}
+			}, {
+				pattern: base
+			});
+			provider.connect();
+		};
+	</script>
+</head>
+<body>
+</body>
+</html>

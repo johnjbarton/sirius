@@ -1,0 +1,60 @@
+@import "../org.dojotoolkit/dojo/resources/dojo.css";
+
+@import "../org.dojotoolkit/dijit/themes/nihilo/nihilo.css";
+
+@import
+	"../org.dojotoolkit/dijit/themes/nihilo/layout/BorderContainer.css";
+
+@import "../org.dojotoolkit/dijit/themes/nihilo/form/Common.css";
+
+@import "../org.dojotoolkit/dijit/themes/nihilo/form/Button.css";
+
+@import "../org.dojotoolkit/dojox/layout/resources/ToggleSplitter.css";
+
+@import "../settings/settings.css";
+
+@import "../css/ide.css";
+
+@import "../css/UploaderFileList.css";
+
+@import "../css/customsplitter.css";
+
+@import "../css/breadcrumbs.css";
+
+@import "../css/commands.css";
+
+@import "../css/sections.css";
+
+@import "css/git.css";
+
+.tag-description {
+	font-size: 13px;
+	white-space: normal;
+	padding-right: 10px;
+	min-width: 100px;
+	max-width: 700px;
+}
+
+.lightTreeTableRow {
+	border-bottom: 1px solid #e6e6e6;
+}
+
+.darkTreeTableRow {
+	border-bottom: 1px solid #e6e6e6;
+}
+
+.stretch {
+	float: left;
+	position: relative;
+	white-space:normal;
+	max-width:700px;
+}
+
+.plugin-settings {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.activeBranch {
+	font-weight: bold;
+}

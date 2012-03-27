@@ -1,0 +1,42 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"> 
+	<script src="http://orionhub.org/orion/plugin.js"></script> 
+	<script> 
+// Based on
+// https://raw.github.com/sfmccourt/sfmccourt.github.com/master/plugins/pixlr/pixlrPlugin.html
+ /*global eclipse window*/
+	var VERSION = "0.5";
+
+	window.onload = function() {
+		var serviceImpl = { /* All data is in properties */ };
+
+		var provider = new eclipse.PluginProvider();
+		
+		provider.registerServiceProvider("orion.page.content", {}, {
+			id: "embedded.editor.content",
+			name: "OrionEditorEmbedded",
+			uriTemplate: "http://127.0.0.2:8080/OrionEditorEmbedded/editor.html?referrer=Orion&title={Name}&locktype=true&exit={ExitURL}&target={SaveURL}imgapi&locktitle=true,contentProvider=embedded.editor.content"});
+
+		provider.registerServiceProvider("orion.edit.editor", {}, {
+			id: "embedded.editor",
+			name: "Orion Editor as Plugin",
+			uriTemplate: "{OrionHome}/content/content.html#{Location},contentProvider=embedded.editor.content"});
+			
+		provider.registerServiceProvider("orion.navigate.openWith", {}, {
+				editor: "embedded.editor",
+				contentType: ["text.javascript", "text.html"]});
+				
+		provider.connect();
+	};
+	</script>
+	<title>Embedded Orion Editor Plugin</title>
+</head>
+<body><h1>Embedded Orion Editor</h1>
+<p>This is a plugin for <a href="http://wiki.eclipse.org/Orion/">Orion</a>. It is not meant to be viewed in a browser.</p>
+<p>To install this plugin, follow <a href="http://wiki.eclipse.org/Orion/How_Tos/Installing_A_Plugin">these instructions</a> using this URL:</p>
+<p id="url" style="font-family: monospace; font-size: large; padding-left:2em;"></p>
+<p><em>Requires Orion 0.5 stream.  See <a href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=372914">Bug 372914</a></em></p>
+</body> 
+</html>

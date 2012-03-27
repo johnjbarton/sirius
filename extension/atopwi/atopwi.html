@@ -1,0 +1,113 @@
+<html>
+<head>
+<title>Web Inspector Web App Over crx2app</title>
+
+
+<script src="chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/MetaObject/requirejs/require.js"></script>
+
+<script>
+/*globals window console require*/
+
+var SiriusBase = 'chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc';
+window.crx2appBase = SiriusBase+'/crx2app/extension';
+
+function extractDebuggeeFromURL() {
+  var search = window.location.search;
+  if (search) {
+    var parameterString = search.substr(1);
+    if (parameterString) {
+      var params = {};
+      parameterString.split('&').forEach(function(param) {
+        var nv = param.split('=');
+        if (nv.length === 2 && nv[1]) {
+          params[nv[0]] = nv[1];
+        }
+      });
+      if (Object.keys(params).length) {
+        return params;
+      }
+    }
+  } // else undefined
+}
+
+function reloadWithURL(debuggeeURLElt) {
+  var debuggeeURL = debuggeeURLElt.value;
+  var base = window.location.href;
+  base = base.split('?')[0];
+  var relo = 'debuggee='+encodeURIComponent(debuggeeURL)+'&';
+  window.open(base+'?'+relo);
+}
+
+
+function getDebuggeeSpec() {
+  var debuggeeSpec = extractDebuggeeFromURL();
+  if (debuggeeSpec) {
+    return debuggeeSpec;
+  } else {
+    // TODO just for testing
+    var defaultDebuggeeURL = 'http://johnjbarton.github.com/webdev-examples/simple/scriptTagJSProject/index.html';
+    if (window.confirm('Use '+defaultDebuggeeURL)) {
+      return {url: defaultDebuggeeURL};
+    }
+  }
+}
+
+function onLoad() {
+
+  window.removeEventListener('load', onLoad, false);
+
+  require({
+      paths: {
+        'crx2app': window.crx2appBase,
+        'q': SiriusBase+'/MetaObject/q'
+      }
+    }); 
+    
+console.log('window.crx2appBase ', window.crx2appBase);
+
+   require.onError = function(err) {
+     console.error(err+'', {stack: err.stack.split('\n')});
+   };
+  
+  require(['ChromeConnection'], function open(ChromeConnection) {
+    var debuggeeSpec = getDebuggeeSpec();
+    // connect to the chromeIframe
+    ChromeConnection.attach(debuggeeSpec);
+  });
+  
+}
+
+window.addEventListener('load', onLoad, false);
+
+</script>
+<style>
+html, body, iframe {
+  height: 100%;
+  width: 100%;
+  margin: 0px;  /* kill off any margin so we control */
+  border: none;
+}
+body {
+  font-family:Verdana,Geneva,sans-serif;
+}
+.hide {
+  display: none;
+}
+#debuggee {
+  margin: 20px;
+}
+</style>
+</head>
+<body>
+<div class='hide' id='error'></div>
+<div class='hide' id='debuggeeSpec'>
+<h1> Chrome Devtools as Web App using crx2app extension </h1>
+<form >
+URL: <input id='debuggeeSpecURLElt' type='url' size='128'/>
+  <button id="doDebug">Debug</button>
+</form>
+</div>
+<div class='hide' id="WebInspector"></div>
+<div class= 'hide' id="loadChromeIframe"></div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Test page for OrionEditorEmbedded</title>
+<script src="../../MetaObject/requirejs/require.js"></script>
+<script src="requireConfig.js"></script>
+<script>
+
+require(
+  ['OrionEditorEmbedded/editorInserter'], 
+  function(editorInserter){
+    var editor = editorInserter.createEditor(document.body, '100%');
+    editor.installTextView();
+  }
+);
+</script>
+</head>
+<body><!-- content all from JS -->
+</body>
+</html>

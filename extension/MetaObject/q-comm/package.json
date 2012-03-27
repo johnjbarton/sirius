@@ -1,0 +1,43 @@
+{
+    "name": "q-comm",
+    "version": "0.3.1",
+    "description": "An inter-worker asynchronous promise communication system.",
+    "homepage": "http://github.com/kriskowal/q-comm/",
+    "author": "Kris Kowal <kris@cixar.com> (http://github.com/kriskowal/)",
+    "contributors": [
+        "Kris Kowal <kris@cixar.com> (http://github.com/kriskowal/)",
+        "Irakli Gozalishvili <rfobic@gmail.com> (http://jeditoolkit.com/)"
+    ],
+    "credits": [
+        "Mark Miller <erights@google.com>"
+    ],
+    "bugs": {
+        "mail": "kris@cixar.com",
+        "url": "http://github.com/kriskowal/q-comm/issues"
+    },
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "http://github.com/kriskowal/q-comm/raw/master/LICENSE"
+        }
+    ],
+    "main": "q-comm.js",
+    "dependencies": {
+        "q": "0.8.2"
+    },
+    "devDependencies": {
+        "test": ">=0.1.0",
+        "event-queue": ">=0.1.0"
+    },
+    "scripts": {
+        "test": "node test/all.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/kriskowal/q-comm.git"
+    },
+    "engines": {
+        "node": ">=0.2.0",
+        "jetpack": ">=0.9.0"
+    }
+}
