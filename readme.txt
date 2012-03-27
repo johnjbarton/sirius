@@ -41,5 +41,8 @@ Fake git submodules under /extension
   cd ../..
   git clone git@github.com:johnjbarton/OrionEditorEmbedded.git extension/OrionEditorEmbedded
   git clone git@github.com:johnjbarton/MetaObject.git extension/MetaObject
-  git clone git://github.com/eclipse/orion.client.git extension/orion.client
+  git clone git@github.com:johnjbarton/orion.client.git extension/orion.client
+  cd extension/orion.client
+  git checkout hackOrionUtils
+  cd ../..
   git clone git@github.com:johnjbarton/crx2app.git extension/crx2app
