@@ -11,15 +11,11 @@ To run atopwi, a modified Chrome Devtool (aka Web Inspector)
    load unpacked extension
    point the subdirectory sirius/extension from the repo in step 1
    You  should see the Sirus Star icon
-3. Still on chrome://extensions open "options" link on Sirius
-   Add an allowed site: 
-     chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/atopwi/atopwi.html
-     Debug-With name: Sirius
-     Save
-   Return to chrome://extensions and reload Sirius extension
-4
-   
+3. Reload any tab and use the context menu option Debug Sirius   
 
+
+Other Sirius Ideas:
+---------------------------------------------------------------
 
 A Page Action Icon (Orion brand icon) appears in the URL bar.
 
