@@ -29,7 +29,23 @@
     <script>
 /*globals chrome console window require */
 
-      var debug = true;
+  var debug = true;
+
+  var options = restoreOptions();
+  if (!options) {  // maybe our first time
+    console.log("no options set"); 
+    options = {
+      allowedSites: [
+        {
+          name: 'Sirius',
+          site: 'chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/atopwi/atopwi.html'
+        }
+      ]
+    };
+    var stringified = JSON.stringify(options);
+    window.localStorage.setItem('options', stringified);
+  }
+
 
 //--------------------------------------------------------------------------
 // Build list of Orion edit headers as the headers arrive
