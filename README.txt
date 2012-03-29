@@ -56,3 +56,14 @@ Non-Orion Install:
 
 Some things won't work because the Chrome remote debug protocol is not yet 
 completely exposing the capabilities of the socket protocol.
+
+Updating the Chrome Devtools Front end
+--------------------------------------
+To get the front end for Chrome version 19.0.1081.2, search the DEPS file:
+http://src.chromium.org/svn/releases/19.0.1081.2/DEPS
+ for the string /trunk/Source@
+   'src/third_party/WebKit/Source':
+      Var("webkit_trunk")[:-6] + '/trunk/Source@112046',
+The number after @ is the WebKit SVN revision number. Then use
+  svn co http://svn.webkit.org/repository/webkit/trunk/Source/WebCore/inspector/@112046
+  
