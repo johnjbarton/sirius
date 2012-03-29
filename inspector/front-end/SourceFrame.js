@@ -44,15 +44,14 @@ WebInspector.SourceFrame = function(url)
     var textViewerDelegate = new WebInspector.TextViewerDelegateForSourceFrame(this);
     this._textViewer = new WebInspector.TextViewer(this._textModel, WebInspector.platform(), this._url, textViewerDelegate);
 
-    this._editButton = new WebInspector.StatusBarButton(WebInspector.UIString("Edit"), "edit-source-status-bar-item");
-    this._editButton.addEventListener("click", this._editButtonClicked.bind(this), this);
-
     this._currentSearchResultIndex = -1;
     this._searchResults = [];
 
     this._messages = [];
     this._rowMessages = {};
     this._messageBubbles = {};
+
+    this._textViewer.readOnly = !this.canEditSource();
 }
 
 WebInspector.SourceFrame.Events = {
@@ -83,8 +82,6 @@ WebInspector.SourceFrame.prototype = {
     {
         this._ensureContentLoaded();
         this._textViewer.show(this.element);
-        if (this._wasHiddenWhileEditing)
-            this.setReadOnly(false);
     },
 
     willHide: function()
@@ -94,19 +91,12 @@ WebInspector.SourceFrame.prototype = {
             this._textViewer.freeCachedElements();
 
         this._clearLineHighlight();
-        if (!this._textViewer.readOnly)
-            this._wasHiddenWhileEditing = true;
-        this.setReadOnly(true);
+        this._clearLineToReveal();
     },
 
     focus: function()
     {
         this._textViewer.focus();
-    },
-
-    get statusBarItems()
-    {
-        return [this._editButton.element];
     },
 
     get loaded()
@@ -182,6 +172,7 @@ WebInspector.SourceFrame.prototype = {
 
     highlightLine: function(line)
     {
+        this._clearLineToReveal();
         if (this.loaded)
             this._textViewer.highlightLine(line);
         else
@@ -196,33 +187,22 @@ WebInspector.SourceFrame.prototype = {
             delete this._lineToHighlight;
     },
 
-    _saveViewerState: function()
+    revealLine: function(line)
     {
-        this._viewerState = {
-            textModelContent: this._textModel.text,
-            messages: this._messages,
-            diffLines: this._diffLines,
-        };
+        this._clearLineHighlight();
+        if (this.loaded)
+            this._textViewer.revealLine(line);
+        else
+            this._lineToReveal = line;
     },
 
-    _restoreViewerState: function()
+    _clearLineToReveal: function()
     {
-        if (!this._viewerState)
-            return;
-        this._textModel.setText(null, this._viewerState.textModelContent);
-
-        this._messages = this._viewerState.messages;
-        this._diffLines = this._viewerState.diffLines;
-        this._setTextViewerDecorations();
-
-        delete this._viewerState;
+        delete this._lineToReveal;
     },
 
     beforeTextChanged: function()
     {
-        if (!this._viewerState)
-            this._saveViewerState();
-
         WebInspector.searchController.cancelSearch();
         this.clearMessages();
     },
@@ -247,6 +227,11 @@ WebInspector.SourceFrame.prototype = {
             delete this._lineToHighlight;
         }
 
+        if (typeof this._lineToReveal === "number") {
+            this.revealLine(this._lineToReveal);
+            delete this._lineToReveal;
+        }
+
         if (this._delayedFindSearchMatches) {
             this._delayedFindSearchMatches();
             delete this._delayedFindSearchMatches;
@@ -255,9 +240,6 @@ WebInspector.SourceFrame.prototype = {
         this.dispatchEventToListeners(WebInspector.SourceFrame.Events.Loaded);
 
         this._textViewer.endUpdates();
-
-        if (!this.canEditSource())
-            this._editButton.disabled = true;
     },
 
     _setTextViewerDecorations: function()
@@ -505,83 +487,31 @@ WebInspector.SourceFrame.prototype = {
         this._textViewer.inheritScrollPositions(sourceFrame._textViewer);
     },
 
-    _editButtonClicked: function()
-    {
-        if (!this.canEditSource())
-            return;
-
-        const shouldStartEditing = !this._editButton.toggled;
-        if (shouldStartEditing)
-            this.startEditing();
-        else
-            this.commitEditing();
-    },
-
     canEditSource: function()
     {
         return false;
     },
 
-    startEditing: function()
-    {
-        if (!this.canEditSource())
-            return false;
-
-        if (this._commitEditingInProgress)
-            return false;
-
-        this.setReadOnly(false);
-        return true;
-    },
-
     commitEditing: function()
     {
-        if (!this._viewerState) {
-            // No editing was actually done.
-            this.setReadOnly(true);
-            return;
+        function callback(error)
+        {
+            this.didEditContent(error, this._textModel.text);
         }
-
-        this._commitEditingInProgress = true;
-        this._textViewer.readOnly = true;
-        this._editButton.toggled = false;
-        this.editContent(this._textModel.text, this.didEditContent.bind(this));
+        this.editContent(this._textModel.text, callback.bind(this));
     },
 
-    didEditContent: function(error)
+    didEditContent: function(error, content)
     {
-        this._commitEditingInProgress = false;
-        this._textViewer.readOnly = false;
-
         if (error) {
             if (error.message)
                 WebInspector.log(error.message, WebInspector.ConsoleMessage.MessageLevel.Error, true);
             return;
         }
-
-        delete this._viewerState;
     },
 
     editContent: function(newContent, callback)
     {
-    },
-
-    cancelEditing: function()
-    {
-        this._restoreViewerState();
-        this.setReadOnly(true);
-    },
-
-    get readOnly()
-    {
-        return this._textViewer.readOnly;
-    },
-
-    setReadOnly: function(readOnly)
-    {
-        this._textViewer.readOnly = readOnly;
-        this._editButton.toggled = !readOnly;
-        WebInspector.markBeingEdited(this._textViewer.element, !readOnly);
     }
 }
 
@@ -598,11 +528,6 @@ WebInspector.TextViewerDelegateForSourceFrame = function(sourceFrame)
 }
 
 WebInspector.TextViewerDelegateForSourceFrame.prototype = {
-    doubleClick: function(lineNumber)
-    {
-        this._sourceFrame.startEditing(lineNumber);
-    },
-
     beforeTextChanged: function()
     {
         this._sourceFrame.beforeTextChanged();
@@ -616,11 +541,6 @@ WebInspector.TextViewerDelegateForSourceFrame.prototype = {
     commitEditing: function()
     {
         this._sourceFrame.commitEditing();
-    },
-
-    cancelEditing: function()
-    {
-        this._sourceFrame.cancelEditing();
     },
 
     populateLineGutterContextMenu: function(contextMenu, lineNumber)

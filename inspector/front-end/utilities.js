@@ -234,7 +234,7 @@ Element.prototype.isInsertionCaretInside = function()
     if (!selection.rangeCount || !selection.isCollapsed)
         return false;
     var selectionRange = selection.getRangeAt(0);
-    return selectionRange.startContainer === this || selectionRange.startContainer.isDescendant(this);
+    return selectionRange.startContainer.isSelfOrDescendant(this);
 }
 
 /**
@@ -256,14 +256,7 @@ DocumentFragment.prototype.createChild = Element.prototype.createChild;
  */
 Element.prototype.totalOffsetLeft = function()
 {
-    var total = 0;
-    for (var element = this; element; element = element.offsetParent) {
-        total += element.offsetLeft 
-        if (this !== element)
-            total += element.clientLeft - element.scrollLeft;
-    }
-        
-    return total;
+    return this.totalOffset().left;
 }
 
 /**
@@ -271,14 +264,36 @@ Element.prototype.totalOffsetLeft = function()
  */
 Element.prototype.totalOffsetTop = function()
 {
-    var total = 0;
+    return this.totalOffset().top;
+
+}
+
+Element.prototype.totalOffset = function()
+{
+    var totalLeft = 0;
+    var totalTop = 0;
+
     for (var element = this; element; element = element.offsetParent) {
-        total += element.offsetTop 
-        if (this !== element)
-            total += element.clientTop - element.scrollTop;
+        totalLeft += element.offsetLeft;
+        totalTop += element.offsetTop;
+        if (this !== element) {
+            totalLeft += element.clientLeft - element.scrollLeft;
+            totalTop += element.clientTop - element.scrollTop;
+        }
     }
-        
-    return total;
+
+    return { left: totalLeft, top: totalTop };
+}
+
+Element.prototype.scrollOffset = function()
+{
+    var curLeft = 0;
+    var curTop = 0;
+    for (var element = this; element; element = element.scrollParent) {
+        curLeft += element.scrollLeft;
+        curTop += element.scrollTop;
+    }
+    return { left: curLeft, top: curTop };
 }
 
 /**
@@ -327,8 +342,8 @@ Element.prototype.boxInWindow = function(targetWindow)
     targetWindow = targetWindow || this.ownerDocument.defaultView;
 
     var anchorBox = this.offsetRelativeToWindow(window);
-    anchorBox.width = this.offsetWidth;
-    anchorBox.height = this.offsetHeight;
+    anchorBox.width = Math.min(this.offsetWidth, window.innerWidth - anchorBox.x);
+    anchorBox.height = Math.min(this.offsetHeight, window.innerHeight - anchorBox.y);
 
     return anchorBox;
 }
@@ -360,6 +375,13 @@ KeyboardEvent.prototype.__defineGetter__("data", function()
                 return "";
     }
 });
+
+Event.prototype.consume = function()
+{
+    this.stopImmediatePropagation();
+    this.preventDefault();
+    this.handled = true;
+}
 
 Text.prototype.select = function(start, end)
 {
@@ -436,8 +458,15 @@ String.prototype.asParsedURL = function()
     // 4 - ?path
     // 5 - ?fragment
     var match = this.match(/^([^:]+):\/\/([^\/:]*)(?::([\d]+))?(?:(\/[^#]*)(?:#(.*))?)?$/i);
-    if (!match)
+    if (!match) {
+        if (this == "about:blank") {
+            return { scheme: "about",
+                     host: "blank",
+                     path: "/",
+                     lastPathComponent: ""};
+        }
         return null;
+    }
     var result = {};
     result.scheme = match[1].toLowerCase();
     result.host = match[2];
@@ -550,6 +579,16 @@ Node.prototype.isAncestor = function(node)
 Node.prototype.isDescendant = function(descendant)
 {
     return !!descendant && descendant.isAncestor(this);
+}
+
+Node.prototype.isSelfOrAncestor = function(node)
+{
+    return !!node && (node === this || this.isAncestor(node));
+}
+
+Node.prototype.isSelfOrDescendant = function(node)
+{
+    return !!node && (node === this || this.isDescendant(node));
 }
 
 Node.prototype.traverseNextNode = function(stayWithin)
@@ -733,7 +772,7 @@ String.sprintf = function(format, var_arg)
     return String.vsprintf(format, Array.prototype.slice.call(arguments, 1));
 }
 
-String.tokenizeFormatString = function(format)
+String.tokenizeFormatString = function(format, formatters)
 {
     var tokens = [];
     var substitutionIndex = 0;
@@ -748,22 +787,22 @@ String.tokenizeFormatString = function(format)
         tokens.push({ type: "specifier", specifier: specifier, precision: precision, substitutionIndex: substitutionIndex });
     }
 
+    function isDigit(c)
+    {
+        return !!/[0-9]/.exec(c);
+    }
+
     var index = 0;
     for (var precentIndex = format.indexOf("%", index); precentIndex !== -1; precentIndex = format.indexOf("%", index)) {
         addStringToken(format.substring(index, precentIndex));
         index = precentIndex + 1;
 
-        if (format[index] === "%") {
-            addStringToken("%");
-            ++index;
-            continue;
-        }
-
-        if (!isNaN(format[index])) {
+        if (isDigit(format[index])) {
             // The first character is a number, it might be a substitution index.
             var number = parseInt(format.substring(index), 10);
-            while (!isNaN(format[index]))
+            while (isDigit(format[index]))
                 ++index;
+
             // If the number is greater than zero and ends with a "$",
             // then this is a substitution index.
             if (number > 0 && format[index] === "$") {
@@ -780,8 +819,15 @@ String.tokenizeFormatString = function(format)
             precision = parseInt(format.substring(index), 10);
             if (isNaN(precision))
                 precision = 0;
-            while (!isNaN(format[index]))
+
+            while (isDigit(format[index]))
                 ++index;
+        }
+
+        if (!(format[index] in formatters)) {
+            addStringToken(format.substring(precentIndex, index + 1));
+            ++index;
+            continue;
         }
 
         addSpecifierToken(format[index], precision, substitutionIndex);
@@ -840,7 +886,7 @@ String.format = function(format, substitutions, formatters, initialValue, append
     }
 
     var result = initialValue;
-    var tokens = String.tokenizeFormatString(format);
+    var tokens = String.tokenizeFormatString(format, formatters);
     var usedSubstitutionIndexes = {};
 
     for (var i = 0; i < tokens.length; ++i) {
@@ -889,6 +935,11 @@ String.format = function(format, substitutions, formatters, initialValue, append
 function isEnterKey(event) {
     // Check if in IME.
     return event.keyCode !== 229 && event.keyIdentifier === "Enter";
+}
+
+function consumeEvent(e)
+{
+    e.consume();
 }
 
 /**
@@ -1177,11 +1228,11 @@ Map.prototype = {
         delete this._map[key.__identifier];
     },
     
-    keys: function()
+    values: function()
     {
         var result = [];
-        for (var key in this._map)
-            result.push(key);
+        for (var objectIdentifier in this._map)
+            result.push(this._map[objectIdentifier]);
         return result;
     },
     
@@ -1192,4 +1243,9 @@ Map.prototype = {
     {
         return this._map[key.__identifier];
     },
+    
+    clear: function()
+    {
+        this._map = {};
+    }
 }
