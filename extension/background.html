@@ -224,17 +224,21 @@ require(['orion/sirius'], function(sirius) {
       console.log("background.saveResource", request);
     }
 
-    var onErr = console.error.bind(console, "sirius.saveResource ERROR for "+request.url);
-    var onSaved = console.info.bind(console, "sirius.saveResource DONE for "+request.url);
-
     var editURL;
     var matchingEditable = getMatchingEditable(request.url);
     if (matchingEditable) { 
       // we know the URL Orion would use to edit this same file
       editURL = matchingEditable.editURL; 
     }
+
+    if (editURL) {
+      var onErr = console.error.bind(console, "sirius.saveResource ERROR for "+request.url);
+      var onSaved = console.info.bind(console, "sirius.saveResource DONE for "+request.url + ' ' + editURL);
   
-    sirius.save(request.url, request.content, editURL, onSaved, onErr);
+      sirius.save(request.url, request.content, editURL, onSaved, onErr);
+    } else {
+      console.error("No editURL for "+request.url);
+    }
   }
 
   chrome.extension.onRequest.addListener(
