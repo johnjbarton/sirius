@@ -1,0 +1,10 @@
+<html><head>
+<script src='inspector/front-end/ExtensionAPI.js'></script>
+<script src='extend.js'></script>
+<script>
+var InspectorExtensionAPI = injectedExtensionAPI('hiya');
+InspectorExtensionAPI.panels.create("Testing", '', '../Purple/log/log.html', function() {
+  console.log('extend.html PANEL callback');
+});
+</script>
+</head></html>
