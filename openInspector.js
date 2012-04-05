@@ -4,107 +4,225 @@
 /*global define console window */
 
 
-define(['q/q', 'appendFrame', 'overrides/overrides'], 
-function(  Q,   appendFrame,             overrides)  {
+define(['appendFrame', 'crx2app/appEnd/proxyChromePipe', 'crx2app/rpc/ChromeProxy'], 
+function(appendFrame,              chromeExtensionPipe,               ChromeProxy)  {
 
-var debug = true;
+  var debug = true;
 
-function showInspectorIframe() {
-  var inspectorElt = window.document.getElementById('WebInspector');
-  inspectorElt.classList.remove('hide');
-  return appendFrame('WebInspector', "inspector/front-end/devtools.html");
-}
+  function showInspectorIframe() {
+    var inspectorElt = window.document.getElementById('WebInspector');
+    inspectorElt.classList.remove('hide');
+    return appendFrame('WebInspector', "inspector/front-end/devtools.html");
+  }
 
-function onDynamicLoad(debuggee, chromeProxy, inspectorWindow, deferred, doLoadedDone) {
-    var backend = inspectorWindow.InspectorBackend;
+// TODO put this into a .js file loaded statically by override
 
-    function sendMessageObject(messageObject) {
+  var debug = false;
+
+  // Base URL for crx2app
+
+  // stand alone crx2app
+  // var iframeDomain ="chrome-extension://bbjpappmojnmallpnfgfkjmjnhhplgog";
+  // Sirius crx2app
+  var iframeDomain = window.crx2appBase;
+
+  var connection = chromeExtensionPipe.createFrom(iframeDomain);
+
+  window.beforeUnloadQueue = [];
+
+  window.onbeforeunload = function runQueue() {
+    window.beforeUnloadQueue.forEach(function(fnc) {
+      fnc();
+    });
+  };
+
+  window.beforeUnloadQueue.push(function detach() {
+    connection.detach();
+  });
+
+  function openNewTabId(chromeProxy, url, onNewTabId) {
+    chromeProxy.openNewWindow( function(win) {
+      var tabId = win.tabs[0].id;
+      if (debug) {
+        console.log('atopwi openNewTabId '+tabId);
+      }
+      onNewTabId(tabId);
+    });
+  }
+ 
+ 
+ 
+  function Debuggee(chromeProxy, debuggeeSpec) {
+    this.chrome = chromeProxy;
+  }
+  
+  Debuggee.prototype = {
+    parseDebuggee: function(debuggeeSpec) {
+      var tabId = parseInt(debuggeeSpec.tabId, 10);
+      if ( isNaN(tabId) ) {  // then we better have a URL
+        this.url = decodeURIComponent(debuggeeSpec.url);
+      } else {
+        this.tabId = tabId;
+      }
+    },
+    open: function(debuggeeSpec) {
+      this.parseDebuggee(debuggeeSpec);
+      openNewTabId(
+        this.chrome,
+        this.url, 
+        function(newTabId) {
+          this.tabId = newTabId;
+          window.beforeUnloadQueue.push(function() {
+            this.chrome.tabs.remove(newTabId);
+          }.bind(this));
+          this.attach();
+        }.bind(this)
+      );
+    },
+    attach: function() {
+      this.chrome.debugger.attach(
+        {tabId: this.tabId}, 
+        '1.0', 
+        this.onAttach.bind(this)
+      );
+    },
+    
+    onAttach: function() {
+      if (debug) {
+        console.log('atopwi chrome.debugger.attach complete '+this.tabId);
+      }
+       
+      window.beforeUnloadQueue.unshift(function() {
+          this.chrome.debugger.detach({tabId: this.tabId});
+        }.bind(this));
+            
+      this.openInspector();
+    },
+    
+    openInspector: function() {
+      var inspectorElt = showInspectorIframe();
+      this.inspectorWindow = inspectorElt.contentWindow;
+  
+      // Capture the DOMContentLoaded to monkey-patch inspectorWindow.
+      //
+      this.inspectorWindow.addEventListener(
+        'DOMContentLoaded', 
+        this.patchInspector.bind(this)
+      );
+    },
+    
+    patchInspector: function(event) {
+      if (debug) {
+        console.log("DOMContentLoaded on inspectorWindow ", this);
+      }
+
+      var backend = this.inspectorWindow.InspectorBackend;
+      backend.sendMessageObjectToBackend = this.sendMessageObject.bind(this);
+      
+      this.chrome.jsonHandlers['chrome.debugger.remote'] = {
+        jsonObjectHandler:  function(data) {
+          if (debug) {
+            console.log("jsonObjectHandler "+data.method, data);
+          }
+          backend.dispatch.apply(backend, [data]);
+        }
+      };
+    
+      this.inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
+        throw new Error("Should not be called");
+      };
+    
+      this.inspectorWindow.WebInspector.attached = true; // small icons for embed in orion
+    
+      // Called asynchronously from WebInspector _initializeCapability
+      this._doLoadedDoneWithCapabilities = 
+        this.inspectorWindow.WebInspector._doLoadedDoneWithCapabilities;
+    
+      this.inspectorWindow.WebInspector._doLoadedDoneWithCapabilities = function() {
+        var args = Array.prototype.slice.call(arguments, 0);
+        this._doLoadedDoneWithCapabilities.apply(this, args);
+      
+        this.navigateToURL();
+      }.bind(this);
+    
+      var WebInspector = this.inspectorWindow.WebInspector;
+      WebInspector.doLoadedDone();
+    },
+    
+    navigateToURL: function(inspectorReady) {
+      if (this.url) { // then we started in a new tab, navigate
+        if (debug) {
+          console.log('atopwi setting URL:'+this.url);
+        }
+        this.chrome.tabs.update(
+         this.tabId, 
+         {url: this.url}, 
+         this.onTabUpdate.bind(this)
+        );
+      }
+    },
+    
+    onTabUpdate: function(tab) {
+      if (debug) {
+        var msg = 'atopwi.chrome.tabs.update ' + this.tabId;
+        msg += ' to ' + this.url;
+        console.log(msg);
+      }
+    },
+    
+    sendMessageObject: function(messageObject) {
       if (debug) {
         console.log(messageObject.id+" atopwi sendCommand "+messageObject.method);
       }
-      chromeProxy.debugger.sendCommand(
-        debuggee, 
+      this.chrome.debugger.sendCommand(
+        this.debuggee, 
         messageObject.method, 
         messageObject.params, 
-        function handleResponse(data) {
-          data.id = messageObject.id;
-          if (debug) {
-            var msg = data.id +
-               " atopwi response to sendCommand " + messageObject.method;
-            var obj = {messageObject: messageObject, data: data};
-            console.log(msg, obj);
-          }
-          backend.dispatch(data); 
-        }
+        this.handleCommandResponse.bind(this, messageObject)
       );
-    }
-    
-    backend.sendMessageObjectToBackend = sendMessageObject;
-    
-    chromeProxy.jsonHandlers['chrome.debugger.remote'] = {
-      jsonObjectHandler:  function(data) {
-        if (debug) {
-          console.log("jsonObjectHandler "+data.method, data);
-        }
-        backend.dispatch.apply(backend, [data]);
+    },
+     
+    handleCommandResponse: function(messageObject, data) {
+      data.id = messageObject.id;
+      if (debug) {
+        var msg = data.id +
+           " atopwi response to sendCommand " + messageObject.method;
+           var obj = {messageObject: messageObject, data: data};
+           console.log(msg, obj);
       }
-    };
-    
-    inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
-      throw new Error("Should not be called");
-    };
-    
-    inspectorWindow.WebInspector.attached = true; // small icons for embed in orion
-    
-    // Called asynchronously from WebInspector _initializeCapability
-    var stock_doLoadedDoneWithCapabilities = 
-        inspectorWindow.WebInspector._doLoadedDoneWithCapabilities;
-    
-    inspectorWindow.WebInspector._doLoadedDoneWithCapabilities = function() {
-      var args = Array.prototype.slice.call(arguments, 0);
-      stock_doLoadedDoneWithCapabilities.apply(this, args);
-      
-      deferred.resolve(inspectorWindow);
-    };
-    
-    doLoadedDone.call(inspectorWindow.WebInspector);
-}
-
-// Promise the inspectorWindow after the load event is processed
-
-function openInspector(debuggee, chromeProxy) {
-  var inspectorElt = showInspectorIframe();
-  var inspectorWindow = inspectorElt.contentWindow;
-  
-  // Capture the DOMContentLoaded to monkey-patch inspectorWindow.
-  //
-  var deferred = Q.defer();
-  inspectorWindow.addEventListener('DOMContentLoaded', function(event){
-    
-    if (debug) {
-      console.log("DOMContentLoaded on inspectorWindow ", debuggee);
+      this.inspectorWindow.InspectorBackend.dispatch(data); 
     }
+};
 
-    inspectorWindow.WebInspectorMonkeyPatchDeferred = Q.defer();
+  function attach(debuggeeSpec) {
 
-    overrides.injectAll(inspectorWindow, function onStaticLoad() {
+    var tid = window.setTimeout(function offerExtension() {
+      // TODO
+      window.alert('Requires: https://github.com/johnjbarton/crx2app');
+    }, 2000);
+  
+    // listen for a connection.
+    connection.attach(function onConnectedToChrome() {
+      // we have connected to the extension, so clear the offer
+      window.clearTimeout(tid);
+      
+      var chromeProxy = ChromeProxy.new(connection, {windows: {}, tabs: {}});
+      var debuggee = new Debuggee(chromeProxy);   
+      debuggee.open(debuggeeSpec);
     
-      // The static files for the override have been loaded, but require.js is
-      // still working. 
-
-      inspectorWindow.WebInspectorMonkeyPatchDeferred.promise.then(
-        onDynamicLoad.bind(null, debuggee, chromeProxy, inspectorWindow, deferred),
-        function(rejection) {
-          console.error("Monkey Patch rejection", rejection);
-        }
-      );
-    
+    }, function errback(msg) {
+      var div = window.document.querySelector('#error');
+      div.innerHTML = msg;
     });
-    
-  }, true);
-  return deferred.promise;
-}
+  
+    // dynamically load the chromeIframe, it will connect and fire the callback
+    // (if we load the iframe statically, 
+    // this outer load event will come *after* the iframe load event.)
+    appendFrame('loadChromeIframe', iframeDomain + '/appEnd/chromeIframe.html');
+  }
 
-return openInspector;
+  return {
+    attach: attach
+  };
 
 });

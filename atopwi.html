@@ -69,10 +69,10 @@ console.log('window.crx2appBase ', window.crx2appBase);
      console.error(err+'', {stack: err.stack.split('\n')});
    };
   
-  require(['ChromeConnection'], function open(ChromeConnection) {
+  require(['openInspector'], function open(openInspector) {
     var debuggeeSpec = getDebuggeeSpec();
     // connect to the chromeIframe
-    ChromeConnection.attach(debuggeeSpec);
+    openInspector.attach(debuggeeSpec);
   });
   
 }
