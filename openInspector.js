@@ -17,8 +17,6 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
 
 // TODO put this into a .js file loaded statically by override
 
-  var debug = false;
-
   // Base URL for crx2app
 
   // stand alone crx2app
@@ -57,6 +55,7 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
   }
   
   Debuggee.prototype = {
+    
     parseDebuggee: function(debuggeeSpec) {
       var tabId = parseInt(debuggeeSpec.tabId, 10);
       if ( isNaN(tabId) ) {  // then we better have a URL
@@ -65,6 +64,7 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
         this.tabId = tabId;
       }
     },
+    
     open: function(debuggeeSpec) {
       this.parseDebuggee(debuggeeSpec);
       openNewTabId(
@@ -73,12 +73,17 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
         function(newTabId) {
           this.tabId = newTabId;
           window.beforeUnloadQueue.push(function() {
-            this.chrome.tabs.remove(newTabId);
+            this.chrome.tabs.remove(newTabId, function() {
+              if (debug) {
+                console.log('atopwi removed '+newTabId);
+              }
+            });
           }.bind(this));
           this.attach();
         }.bind(this)
       );
     },
+    
     attach: function() {
       this.chrome.debugger.attach(
         {tabId: this.tabId}, 
@@ -93,7 +98,11 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
       }
        
       window.beforeUnloadQueue.unshift(function() {
-          this.chrome.debugger.detach({tabId: this.tabId});
+          this.chrome.debugger.detach({tabId: this.tabId}, function() {
+            if (debug) {
+              console.log('atopwi detached from ' + this.tabId);
+            }
+          });
         }.bind(this));
             
       this.openInspector();
@@ -131,22 +140,22 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
       this.inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
         throw new Error("Should not be called");
       };
-    
-      this.inspectorWindow.WebInspector.attached = true; // small icons for embed in orion
+
+      var WebInspector = this.inspectorWindow.WebInspector;
+      WebInspector.attached = true; // small icons for embed in orion
     
       // Called asynchronously from WebInspector _initializeCapability
       this._doLoadedDoneWithCapabilities = 
-        this.inspectorWindow.WebInspector._doLoadedDoneWithCapabilities;
+        WebInspector._doLoadedDoneWithCapabilities;
     
-      this.inspectorWindow.WebInspector._doLoadedDoneWithCapabilities = function() {
+      WebInspector._doLoadedDoneWithCapabilities = function() {
         var args = Array.prototype.slice.call(arguments, 0);
-        this._doLoadedDoneWithCapabilities.apply(this, args);
+        this._doLoadedDoneWithCapabilities.apply(WebInspector, args);
       
         this.navigateToURL();
       }.bind(this);
     
-      var WebInspector = this.inspectorWindow.WebInspector;
-      WebInspector.doLoadedDone();
+      //WebInspector.doLoadedDone();
     },
     
     navigateToURL: function(inspectorReady) {
@@ -175,7 +184,7 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
         console.log(messageObject.id+" atopwi sendCommand "+messageObject.method);
       }
       this.chrome.debugger.sendCommand(
-        this.debuggee, 
+        {url: this.url, tabId: this.tabId}, 
         messageObject.method, 
         messageObject.params, 
         this.handleCommandResponse.bind(this, messageObject)
