@@ -12,7 +12,10 @@ function(  )  {
   function appendFrame(id, url, onload) {
     var iframe = window.document.createElement('iframe');
     iframe.setAttribute('src', url);
-    var elt = window.document.getElementById(id);
+    var elt = id;
+    if (!id.ownerDocument) {
+      elt = window.document.getElementById(id);
+    }
     elt.appendChild(iframe);
     return iframe;
   }
