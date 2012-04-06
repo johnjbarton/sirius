@@ -39,6 +39,12 @@ define([], function() {
     win.document.head.appendChild(elt);
   }
 
+  function injectIframe(win, iframeURL) {
+      var elt = win.document.createElement('iframe');
+      elt.setAttribute('src', iframeURL);
+      win.document.body.appendChild(elt);
+   }
+
   var overrides = {
     jsFiles: [
      '../../../../MetaObject/q/q.js',  // before require
@@ -51,6 +57,10 @@ define([], function() {
       '../../overrides/orion-editor.css'
     ],
 
+      iframes: [
+       // '../../../atopwi/extend.html'
+      ],
+
     injectAll: function(win, thenCall) {
       var file = this.jsFiles.shift();
 
@@ -61,6 +71,9 @@ define([], function() {
         this.cssFiles.forEach(function(file) {
           injectCSS(win, file);
         });
+          this.iframes.forEach(function(file) {
+              injectIframe(win, file);
+	  });
         thenCall();
       }
     }

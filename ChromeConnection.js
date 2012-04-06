@@ -73,6 +73,10 @@ function(  Q,   appendFrame,   openInspector, chromeExtensionPipe)  {
     return debuggee;
   }
 
+  function loadExtensions() {
+      appendFrame('loadExtensions', 'extend.html');
+  }
+
   function openDebuggee(debuggeeSpec) {
     // dynamically load the chrome proxy
     require({
@@ -100,6 +104,7 @@ function(  Q,   appendFrame,   openInspector, chromeExtensionPipe)  {
          
           var inspectorReady = openInspector(debuggee, chromeProxy);
           Q.when(inspectorReady, function(inspectorReady) {
+
             if (debuggee.url) {
               if (debug) {
                 console.log('atopwi setting URL:'+debuggee.url);
