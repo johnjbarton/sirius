@@ -38,13 +38,13 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
     connection.detach();
   });
 
-  function openNewTabId(chromeProxy, url, onNewTabId) {
+  function openNewTab(chromeProxy, url, onNewTab) {
     chromeProxy.openNewWindow( function(win) {
       var tabId = win.tabs[0].id;
       if (debug) {
-        console.log('atopwi openNewTabId '+tabId);
+        console.log('atopwi openNewTab '+tabId);
       }
-      onNewTabId(tabId);
+      onNewTab(tabId);
     });
   }
  
@@ -67,8 +67,7 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
     
     open: function(debuggeeSpec) {
       this.parseDebuggee(debuggeeSpec);
-      openNewTabId(
-        this.chrome,
+      this.chrome.openNewTab(
         this.url, 
         function(newTabId) {
           this.tabId = newTabId;
@@ -145,6 +144,7 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
       WebInspector.attached = true; // small icons for embed in orion
     
       // Called asynchronously from WebInspector _initializeCapability
+      // which is called byt the load event vai doLoadedDone()
       this._doLoadedDoneWithCapabilities = 
         WebInspector._doLoadedDoneWithCapabilities;
     
@@ -154,8 +154,6 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
       
         this.navigateToURL();
       }.bind(this);
-    
-      //WebInspector.doLoadedDone();
     },
     
     navigateToURL: function(inspectorReady) {
