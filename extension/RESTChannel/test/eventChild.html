@@ -1,0 +1,66 @@
+<html>
+<head>
+<script src="../RESTChannel.js"></script>
+<script>
+// Google BSD license http://code.google.com/google_bsd_license.html
+// Copyright 2011 Google Inc. johnjbarton@google.com
+
+
+/*globals RESTChannel window console */
+
+window.addEventListener('load', function() {
+
+  console.log(window.location.toString() + ' load ');
+
+  var connection = new RESTChannel.Connection();
+
+  function onAttach() {
+    
+    console.log(window.location + ' attach');
+
+    // Event Handler Defined
+    //
+    var handler =         // becomes {url: 'mouse.overed'}
+    connection.register(
+      'mouse.overed',     // URL for handler
+      {
+        // handle event
+        post: function (connection, obj) {
+          console.log("eventChild got event: ", obj);
+          return {message:'hey'};
+        }
+      }
+    );
+
+    function childErr(err) {
+      console.error("Child recvd err", err);
+    }
+
+    // addEventListener is put remote ref to event name
+    //
+    connection.putObject( 
+      'mouse.over',                // event name at this URL
+      handler,                     // remote ref
+      function(reply) {             // then call me
+        console.log("Child hears: "+reply.message, reply);
+      },        
+      childErr                      // or fail
+    );
+    
+    //connection.addEventListener('mouse.over', handler);
+    
+  }
+
+  console.log(window.location + ' talking ');
+
+  RESTChannel.talk(window.parent, connection, onAttach);
+});
+
+
+
+
+</script>
+</head>
+<body>
+</body>
+</html>
