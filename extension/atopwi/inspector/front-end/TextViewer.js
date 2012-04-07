@@ -68,7 +68,6 @@ WebInspector.TextViewer = function(textModel, platform, url, delegate)
     }
     this._gutterPanel.element.addEventListener("mousewheel", forwardWheelEvent.bind(this), false);
 
-    this.element.addEventListener("dblclick", this._doubleClick.bind(this), true);
     this.element.addEventListener("keydown", this._handleKeyDown.bind(this), false);
     this.element.addEventListener("contextmenu", this._contextMenu.bind(this), true);
 
@@ -86,6 +85,7 @@ WebInspector.TextViewer.prototype = {
         if (this._mainPanel.readOnly === readOnly)
             return;
         this._mainPanel.readOnly = readOnly;
+        WebInspector.markBeingEdited(this.element, !readOnly);
     },
 
     get readOnly()
@@ -236,7 +236,8 @@ WebInspector.TextViewer.prototype = {
         }
     },
 
-    _syncLineHeight: function(gutterRow) {
+    _syncLineHeight: function(gutterRow)
+    {
         if (this._lineHeightSynced)
             return;
         if (gutterRow && gutterRow.offsetHeight) {
@@ -246,19 +247,6 @@ WebInspector.TextViewer.prototype = {
         }
     },
 
-    _doubleClick: function(event)
-    {
-        if (!this.readOnly)
-            return;
-
-        var lineRow = event.target.enclosingNodeOrSelfWithClass("webkit-line-content");
-        if (!lineRow)
-            return;  // Do not trigger editing from line numbers.
-
-        this._delegate.doubleClick(lineRow.lineNumber);
-        window.getSelection().collapseToStart();
-    },
-
     _registerShortcuts: function()
     {
         var keys = WebInspector.KeyboardShortcut.Keys;
@@ -266,10 +254,7 @@ WebInspector.TextViewer.prototype = {
 
         this._shortcuts = {};
         var commitEditing = this._commitEditing.bind(this);
-        var cancelEditing = this._cancelEditing.bind(this);
         this._shortcuts[WebInspector.KeyboardShortcut.makeKey("s", modifiers.CtrlOrMeta)] = commitEditing;
-        this._shortcuts[WebInspector.KeyboardShortcut.makeKey(keys.Enter.code, modifiers.CtrlOrMeta)] = commitEditing;
-        this._shortcuts[WebInspector.KeyboardShortcut.makeKey(keys.Esc.code)] = cancelEditing;
 
         var handleEnterKey = this._mainPanel.handleEnterKey.bind(this._mainPanel);
         this._shortcuts[WebInspector.KeyboardShortcut.makeKey(keys.Enter.code, WebInspector.KeyboardShortcut.Modifiers.None)] = handleEnterKey;
@@ -292,10 +277,8 @@ WebInspector.TextViewer.prototype = {
 
         var shortcutKey = WebInspector.KeyboardShortcut.makeKeyFromEvent(e);
         var handler = this._shortcuts[shortcutKey];
-        if (handler && handler()) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
+        if (handler && handler())
+            e.consume();
     },
 
     _contextMenu: function(event)
@@ -324,13 +307,16 @@ WebInspector.TextViewer.prototype = {
         return true;
     },
 
-    _cancelEditing: function()
+    wasShown: function()
     {
-        if (this.readOnly)
-            return false;
+        if (!this.readOnly)
+            WebInspector.markBeingEdited(this.element, true);
+    },
 
-        this._delegate.cancelEditing();
-        return true;
+    willHide: function()
+    {
+        if (!this.readOnly)
+            WebInspector.markBeingEdited(this.element, false);
     }
 }
 
@@ -344,15 +330,11 @@ WebInspector.TextViewerDelegate = function()
 }
 
 WebInspector.TextViewerDelegate.prototype = {
-    doubleClick: function(lineNumber) { },
-
     beforeTextChanged: function() { },
 
     afterTextChanged: function(oldRange, newRange) { },
 
     commitEditing: function() { },
-
-    cancelEditing: function() { },
 
     populateLineGutterContextMenu: function(contextMenu, lineNumber) { },
 
@@ -658,6 +640,7 @@ WebInspector.TextEditorGutterPanel = function(textModel, syncDecorationsForLineL
 
     this.freeCachedElements();
     this._buildChunks();
+    this._decorations = {};
 }
 
 WebInspector.TextEditorGutterPanel.prototype = {
@@ -693,11 +676,34 @@ WebInspector.TextEditorGutterPanel.prototype = {
                 var lastChunk = this._textChunks[this._textChunks.length - 1];
                 totalLines = lastChunk.startLine + lastChunk.linesCount;
             }
+
             for (var i = totalLines; i < this._textModel.linesCount; i += this._defaultChunkSize) {
                 var chunk = this._createNewChunk(i, i + this._defaultChunkSize);
                 this._textChunks.push(chunk);
                 this._container.appendChild(chunk.element);
             }
+
+            // Shift decorations if necessary
+            for (var lineNumber in this._decorations) {
+                lineNumber = parseInt(lineNumber, 10);
+
+                // Do not move decorations before the start position.
+                if (lineNumber < oldRange.startLine)
+                    continue;
+
+                var lineDecorationsCopy = this._decorations[lineNumber].slice();
+                for (var i = 0; i < lineDecorationsCopy.length; ++i) {
+                    var decoration = lineDecorationsCopy[i];
+                    this.removeDecoration(lineNumber, decoration);
+
+                    // Do not restore the decorations before the end position.
+                    if (lineNumber < oldRange.endLine)
+                        continue;
+
+                    this.addDecoration(lineNumber + linesDiff, decoration);
+                }
+            }
+
             this._repaintAll();
         } else {
             // Decorations may have been removed, so we may have to sync those lines.
@@ -719,6 +725,28 @@ WebInspector.TextEditorGutterPanel.prototype = {
             this._container.style.setProperty("padding-bottom", (this.element.offsetHeight - clientHeight) + "px");
         else
             this._container.style.removeProperty("padding-bottom");
+    },
+
+    addDecoration: function(lineNumber, decoration)
+    {
+        WebInspector.TextEditorChunkedPanel.prototype.addDecoration.call(this, lineNumber, decoration);
+        var decorations = this._decorations[lineNumber];
+        if (!decorations) {
+            decorations = [];
+            this._decorations[lineNumber] = decorations;
+        }
+        decorations.push(decoration);
+    },
+
+    removeDecoration: function(lineNumber, decoration)
+    {
+        WebInspector.TextEditorChunkedPanel.prototype.removeDecoration.call(this, lineNumber, decoration);
+        var decorations = this._decorations[lineNumber];
+        if (decorations) {
+            decorations.remove(decoration);
+            if (!decorations.length)
+                delete this._decorations[lineNumber];
+        }
     }
 }
 
@@ -931,7 +959,7 @@ WebInspector.TextEditorMainPanel.prototype = {
         var selection = window.getSelection();
         if (selection.rangeCount) {
             var commonAncestorContainer = selection.getRangeAt(0).commonAncestorContainer;
-            if (this._container === commonAncestorContainer || this._container.isAncestor(commonAncestorContainer))
+            if (this._container.isSelfOrAncestor(commonAncestorContainer))
                 return;
         }
 
@@ -1013,6 +1041,10 @@ WebInspector.TextEditorMainPanel.prototype = {
         this.clearLineHighlight();
         this._highlightedLine = lineNumber;
         this.revealLine(lineNumber);
+
+        if (!this._readOnly)
+            this._restoreSelection(new WebInspector.TextRange(lineNumber, 0, lineNumber, 0), false);
+
         this.addDecoration(lineNumber, "webkit-highlighted-line");
     },
 
@@ -1039,17 +1071,18 @@ WebInspector.TextEditorMainPanel.prototype = {
         this.beginUpdates();
         this._enterTextChangeMode();
 
-        var callback = function(oldRange, newRange) {
+        function callback(oldRange, newRange)
+        {
             this._exitTextChangeMode(oldRange, newRange);
             this._enterTextChangeMode();
-        }.bind(this);
-
-        var range = redo ? this._textModel.redo(callback) : this._textModel.undo(callback);
-        if (range)
-            this._setCaretLocation(range.endLine, range.endColumn, true);
-
+        }
+        var range = redo ? this._textModel.redo(callback.bind(this)) : this._textModel.undo(callback.bind(this));
         this._exitTextChangeMode(null, null);
         this.endUpdates();
+
+        // Restore location post-repaint.
+        if (range)
+            this._setCaretLocation(range.endLine, range.endColumn, true);
 
         return true;
     },
@@ -1182,11 +1215,9 @@ WebInspector.TextEditorMainPanel.prototype = {
         } else
             newRange = this._setText(range, lineBreak + indent);
 
-        newRange = newRange.collapseToEnd();
-
         this._exitTextChangeMode(range, newRange);
         this.endUpdates();
-        this._restoreSelection(newRange, true);
+        this._restoreSelection(newRange.collapseToEnd(), true);
 
         return true;
     },
@@ -1653,7 +1684,7 @@ WebInspector.TextEditorMainPanel.prototype = {
         if (!lineRow)
             return;
 
-        if (lineRow.decorationsElement && (lineRow.decorationsElement === target || lineRow.decorationsElement.isAncestor(target))) {
+        if (lineRow.decorationsElement && lineRow.decorationsElement.isSelfOrAncestor(target)) {
             if (this._syncDecorationsForLineListener)
                 this._syncDecorationsForLineListener(lineRow.lineNumber);
             return;

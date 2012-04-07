@@ -28,8 +28,9 @@
 
 /**
  * @constructor
+ * @param {boolean=} nonFocusable
  */
-function TreeOutline(listNode)
+function TreeOutline(listNode, nonFocusable)
 {
     /**
      * @type {Array.<TreeElement>}
@@ -48,12 +49,20 @@ function TreeOutline(listNode)
     this.searchable = false;
     this.searchInputElement = null;
 
-    this._childrenListNode.tabIndex = 0;
+    this.setFocusable(!nonFocusable);
     this._childrenListNode.addEventListener("keydown", this._treeKeyDown.bind(this), true);
     this._childrenListNode.addEventListener("keypress", this._treeKeyPress.bind(this), true);
     
     this._treeElementsMap = new Map();
     this._expandedStateMap = new Map();
+}
+
+TreeOutline.prototype.setFocusable = function(focusable)
+{
+    if (focusable)
+        this._childrenListNode.setAttribute("tabIndex", 0);
+    else
+        this._childrenListNode.removeAttribute("tabIndex");
 }
 
 TreeOutline.prototype.appendChild = function(child)
@@ -237,7 +246,7 @@ TreeOutline.prototype._forgetChildrenRecursive = function(parentElement)
     var child = parentElement.children[0];
     while (child) {
         this._forgetTreeElement(child);
-        child = child.traverseNextTreeElement(false, this, true);
+        child = child.traverseNextTreeElement(false, parentElement, true);
     }
 }
 
@@ -335,8 +344,7 @@ TreeOutline.prototype._treeKeyPress = function(event)
         return;
 
     this._startSearch(searchText);
-    event.preventDefault();
-    event.stopPropagation();
+    event.consume();
 }
 
 TreeOutline.prototype._treeKeyDown = function(event)
@@ -407,10 +415,8 @@ TreeOutline.prototype._treeKeyDown = function(event)
         nextSelectedElement.select(false, true);
     }
 
-    if (handled) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
+    if (handled)
+        event.consume();
 }
 
 TreeOutline.prototype.expand = function()
@@ -530,16 +536,15 @@ TreeOutline.prototype._searchInputKeyDown = function(event)
     if (nextSelectedElement)
         this._showSearchMatchElement(nextSelectedElement);
         
-    if (handled) {
-        event.preventDefault();
-        event.stopPropagation();
-    } else
+    if (handled)
+        event.consume();
+    else
        window.setTimeout(this._boundSearchTextChanged, 0); 
 }
 
 /**
  * @param {string} searchText
- * @param {TreeElement=} startTreeElement
+ * @param {TreeElement} startTreeElement
  * @param {boolean} skipStartTreeElement
  */
 TreeOutline.prototype._nextSearchMatch = function(searchText, startTreeElement, skipStartTreeElement)
@@ -850,7 +855,7 @@ TreeElement.treeElementToggled = function(event)
         else
             element.treeElement.expand();
     }
-    event.stopPropagation();
+    event.consume();
 }
 
 TreeElement.treeElementDoubleClicked = function(event)
@@ -859,9 +864,11 @@ TreeElement.treeElementDoubleClicked = function(event)
     if (!element || !element.treeElement)
         return;
 
-    if (element.treeElement.ondblclick)
-        element.treeElement.ondblclick.call(element.treeElement, event);
-    else if (element.treeElement.hasChildren && !element.treeElement.expanded)
+    if (element.treeElement.ondblclick) {
+        var handled = element.treeElement.ondblclick.call(element.treeElement, event);
+        if (handled)
+            return;
+    } else if (element.treeElement.hasChildren && !element.treeElement.expanded)
         element.treeElement.expand();
 }
 
@@ -997,17 +1004,19 @@ TreeElement.prototype.revealed = function()
 
 TreeElement.prototype.selectOnMouseDown = function(event)
 {
-    this.select(false, true);
+    if (this.select(false, true))
+        event.consume();
 }
 
 /**
  * @param {boolean=} omitFocus
  * @param {boolean=} selectedByUser
+ * @return {boolean}
  */
 TreeElement.prototype.select = function(omitFocus, selectedByUser)
 {
     if (!this.treeOutline || !this.selectable || this.selected)
-        return;
+        return false;
 
     if (this.treeOutline.selectedTreeElement)
         this.treeOutline.selectedTreeElement.deselect();
@@ -1019,13 +1028,14 @@ TreeElement.prototype.select = function(omitFocus, selectedByUser)
 
     // Focusing on another node may detach "this" from tree.
     if (!this.treeOutline)
-        return;
+        return false;
     this.treeOutline.selectedTreeElement = this;
     if (this._listItemNode)
         this._listItemNode.classList.add("selected");
 
     if (this.onselect)
-        this.onselect(this, selectedByUser);
+        return this.onselect(this, selectedByUser);
+    return false;
 }
 
 /**

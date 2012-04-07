@@ -4,6 +4,7 @@
 
 
 <script src="chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/MetaObject/requirejs/require.js"></script>
+<script src="chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/RESTChannel/RESTChannel.js"></script>
 
 <script>
 /*globals window console require*/
@@ -69,10 +70,10 @@ console.log('window.crx2appBase ', window.crx2appBase);
      console.error(err+'', {stack: err.stack.split('\n')});
    };
   
-  require(['ChromeConnection'], function open(ChromeConnection) {
+  require(['openInspector'], function open(InspectorPatch) {
     var debuggeeSpec = getDebuggeeSpec();
     // connect to the chromeIframe
-    ChromeConnection.attach(debuggeeSpec);
+    InspectorPatch.openInspector(debuggeeSpec);
   });
   
 }
@@ -109,5 +110,6 @@ URL: <input id='debuggeeSpecURLElt' type='url' size='128'/>
 </div>
 <div class='hide' id="WebInspector"></div>
 <div class= 'hide' id="loadChromeIframe"></div>
+<div class= 'hide' id="loadExtensions"></div>
 </body>
 </html>

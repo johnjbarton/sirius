@@ -1,110 +1,103 @@
 // Google BSD license http://code.google.com/google_bsd_license.html
 // Copyright 2011 Google Inc. johnjbarton@google.com
 
-/*global define console window */
+/*global define console window RESTChannel*/
 
 
-define(['q/q', 'appendFrame', 'overrides/overrides'], 
-function(  Q,   appendFrame,             overrides)  {
+define(['appendFrame'], 
+function(appendFrame)  {
 
-var debug = true;
+  var debug = true;
 
-function showInspectorIframe() {
-  var inspectorElt = window.document.getElementById('WebInspector');
-  inspectorElt.classList.remove('hide');
-  return appendFrame('WebInspector', "inspector/front-end/devtools.html");
-}
+  var InspectorPatch = {
 
-function onDynamicLoad(debuggee, chromeProxy, inspectorWindow, deferred, doLoadedDone) {
-    var backend = inspectorWindow.InspectorBackend;
+    files: [
+        window.SiriusBase + '/MetaObject/requirejs/require.js',
+        window.SiriusBase + '/RESTChannel/RESTChannel.js',
+        '../../loadDebuggee.js'
+      ],
 
-    function sendMessageObject(messageObject) {
-      if (debug) {
-        console.log(messageObject.id+" atopwi sendCommand "+messageObject.method);
-      }
-      chromeProxy.debugger.sendCommand(
-        debuggee, 
-        messageObject.method, 
-        messageObject.params, 
-        function handleResponse(data) {
-          data.id = messageObject.id;
-          if (debug) {
-            var msg = data.id +
-               " atopwi response to sendCommand " + messageObject.method;
-            var obj = {messageObject: messageObject, data: data};
-            console.log(msg, obj);
-          }
-          backend.dispatch(data); 
-        }
-      );
-    }
+    openInspector: function(debuggee) {
+      this.debuggee = debuggee;
     
-    backend.sendMessageObjectToBackend = sendMessageObject;
-    
-    chromeProxy.jsonHandlers['chrome.debugger.remote'] = {
-      jsonObjectHandler:  function(data) {
-        if (debug) {
-          console.log("jsonObjectHandler "+data.method, data);
-        }
-        backend.dispatch.apply(backend, [data]);
-      }
-    };
-    
-    inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
-      throw new Error("Should not be called");
-    };
-    
-    inspectorWindow.WebInspector.attached = true; // small icons for embed in orion
-    
-    // Called asynchronously from WebInspector _initializeCapability
-    var stock_doLoadedDoneWithCapabilities = 
-        inspectorWindow.WebInspector._doLoadedDoneWithCapabilities;
-    
-    inspectorWindow.WebInspector._doLoadedDoneWithCapabilities = function() {
-      var args = Array.prototype.slice.call(arguments, 0);
-      stock_doLoadedDoneWithCapabilities.apply(this, args);
-      
-      deferred.resolve(inspectorWindow);
-    };
-    
-    doLoadedDone.call(inspectorWindow.WebInspector);
-}
-
-// Promise the inspectorWindow after the load event is processed
-
-function openInspector(debuggee, chromeProxy) {
-  var inspectorElt = showInspectorIframe();
-  var inspectorWindow = inspectorElt.contentWindow;
+      var inspectorElt = this.showInspectorIframe();
+      this.inspectorWindow = inspectorElt.contentWindow;
   
-  // Capture the DOMContentLoaded to monkey-patch inspectorWindow.
-  //
-  var deferred = Q.defer();
-  inspectorWindow.addEventListener('DOMContentLoaded', function(event){
+      // Capture the DOMContentLoaded to add our code
+      //
+      this.inspectorWindow.addEventListener(
+        'DOMContentLoaded', 
+        this.patchInspector.bind(this)
+      );
+      // At this point any async calls from this turn race WebInspector load
+    },
+ 
+    showInspectorIframe: function() {
+      var inspectorElt = window.document.getElementById('WebInspector');
+      inspectorElt.classList.remove('hide');
+      return appendFrame('WebInspector', "inspector/front-end/devtools.html");
+    },
+
+    patchInspector: function(event) {
+      var win = event.currentTarget;
+      win.WebInspector.delayLoaded = win.WebInspector.loaded;
+      win.WebInspector.loaded = function() {
+        console.log('WebInspector patched at load event');
+      };
+      this.insertScripts(win);
+    },
     
-    if (debug) {
-      console.log("DOMContentLoaded on inspectorWindow ", debuggee);
-    }
-
-    inspectorWindow.WebInspectorMonkeyPatchDeferred = Q.defer();
-
-    overrides.injectAll(inspectorWindow, function onStaticLoad() {
+    insertScripts: function(win) {
+      if(this.files.length) {
+        this.insertScript(this.files.shift(), win);
+      } else {
+        this.loadDebuggee(win);
+      }
+    },
     
-      // The static files for the override have been loaded, but require.js is
-      // still working. 
-
-      inspectorWindow.WebInspectorMonkeyPatchDeferred.promise.then(
-        onDynamicLoad.bind(null, debuggee, chromeProxy, inspectorWindow, deferred),
-        function(rejection) {
-          console.error("Monkey Patch rejection", rejection);
+    insertScript: function(file, win) {
+      var element = win.document.createElement('script');
+      element.setAttribute('src', file);
+    
+      function onError() {
+        var args = Array.prototype.slice.call(arguments, 0);
+        console.log("override script load error "+file, args);
+      }
+    
+      function onLoad() {
+        console.log("Load complete for "+file);
+        element.removeEventListener('load', onLoad, false);
+        element.removeEventListener('error', onError, false);
+        this.insertScripts(win);
+      }
+    
+      element.addEventListener('load', onLoad.bind(this), false);
+      element.addEventListener('error', onError, false);
+    
+      win.document.body.appendChild(element);
+    },
+    
+    loadDebuggee: function() {
+      this.devtools = new RESTChannel.Connection();
+      this.onUnload = RESTChannel.listen(
+        this.devtools, 
+        this.onChannel.bind(this)
+      );
+    },
+    
+    onChannel: function() {
+      this.devtools.putObject(
+        'debuggee', 
+        this.debuggee,
+        function(reply) {
+          console.log("atopwi puts debuggee and hears: "+reply.message, reply);
+        },
+        function(err) {
+          console.error("atopwi puts debuggee then err", err);
         }
       );
-    
-    });
-    
-  }, true);
-  return deferred.promise;
-}
-
-return openInspector;
-
+    }
+  };
+  
+  return InspectorPatch;
 });

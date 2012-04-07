@@ -126,7 +126,7 @@ EventSinkImpl.prototype = {
         if (this._listeners.length === 0)
             extensionServer.sendRequest({ command: commands.Subscribe, type: this._type });
         this._listeners.push(callback);
-        extensionServer.registerHandler("notify-" + this._type, bind(this._dispatch, this));
+        extensionServer.registerHandler("notify-" + this._type, this._dispatch.bind(this));
     },
 
     removeListener: function(callback)
@@ -280,7 +280,7 @@ function Panels()
         return panels[name];
     }
     for (var panel in panels)
-        this.__defineGetter__(panel, bind(panelGetter, null, panel));
+        this.__defineGetter__(panel, panelGetter.bind(null, panel));
 }
 
 Panels.prototype = {
@@ -294,7 +294,7 @@ Panels.prototype = {
             icon: icon,
             page: page
         };
-        extensionServer.sendRequest(request, callback && bind(callback, this, new ExtensionPanel(id)));
+        extensionServer.sendRequest(request, callback && callback.bind(this, new ExtensionPanel(id)));
     },
 
     setOpenResourceHandler: function(callback)
@@ -496,9 +496,9 @@ function AuditResultImpl(id)
 {
     this._id = id;
 
-    this.createURL = bind(this._nodeFactory, null, "url");
-    this.createSnippet = bind(this._nodeFactory, null, "snippet");
-    this.createText = bind(this._nodeFactory, null, "text");
+    this.createURL = this._nodeFactory.bind(null, "url");
+    this.createSnippet = this._nodeFactory.bind(null, "snippet");
+    this.createText = this._nodeFactory.bind(null, "text");
 }
 
 AuditResultImpl.prototype = {
@@ -678,11 +678,11 @@ function ExtensionServerClient()
     this._lastRequestId = 0;
     this._lastObjectId = 0;
 
-    this.registerHandler("callback", bind(this._onCallback, this));
+    this.registerHandler("callback", this._onCallback.bind(this));
 
     var channel = new MessageChannel();
     this._port = channel.port1;
-    this._port.addEventListener("message", bind(this._onMessage, this), false);
+    this._port.addEventListener("message", this._onMessage.bind(this), false);
     this._port.start();
 
     top.postMessage("registerExtension", [ channel.port2 ], "*");
@@ -741,15 +741,6 @@ ExtensionServerClient.prototype = {
     }
 }
 
-/**
- * @param {...*} vararg
- */
-function bind(func, thisObject, vararg)
-{
-    var args = Array.prototype.slice.call(arguments, 2);
-    return function() { return func.apply(thisObject, args.concat(Array.prototype.slice.call(arguments, 0))); };
-}
-
 function populateInterfaceClass(interface, implementation)
 {
     for (var member in implementation) {
@@ -762,9 +753,9 @@ function populateInterfaceClass(interface, implementation)
         if (!descriptor)
             continue;
         if (typeof descriptor.value === "function")
-            interface[member] = bind(descriptor.value, implementation);
+            interface[member] = descriptor.value.bind(implementation);
         else if (typeof descriptor.get === "function")
-            interface.__defineGetter__(member, bind(descriptor.get, implementation));
+            interface.__defineGetter__(member, descriptor.get.bind(implementation));
         else
             Object.defineProperty(interface, member, descriptor);
     }
@@ -830,6 +821,71 @@ function buildExtensionAPIInjectedScript(extensionInfo)
         "platformExtensionAPI(injectedExtensionAPI(injectedScriptId));" +
         "return {};" +
         "})";
+}
+/*
+ * Copyright (C) 2011 Google Inc. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ * notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above
+ * copyright notice, this list of conditions and the following disclaimer
+ * in the documentation and/or other materials provided with the
+ * distribution.
+ *     * Neither the name of Google Inc. nor the names of its
+ * contributors may be used to endorse or promote products derived from
+ * this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ * A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+function platformExtensionAPI(coreAPI)
+{
+    function getTabId()
+    {
+        return tabId;
+    }
+    chrome = window.chrome || {};
+    // Override chrome.devtools as a workaround for a error-throwing getter being exposed
+    // in extension pages loaded into a non-extension process (only happens for remote client
+    // extensions)
+    var devtools_descriptor = Object.getOwnPropertyDescriptor(chrome, "devtools");
+    if (!devtools_descriptor || devtools_descriptor.get)
+        Object.defineProperty(chrome, "devtools", { value: {}, enumerable: true });
+    // Only expose tabId on chrome.devtools.inspectedWindow, not webInspector.inspectedWindow.
+    chrome.devtools.inspectedWindow = {};
+    chrome.devtools.inspectedWindow.__defineGetter__("tabId", getTabId);
+    chrome.devtools.inspectedWindow.__proto__ = coreAPI.inspectedWindow;
+    chrome.devtools.network = coreAPI.network;
+    chrome.devtools.panels = coreAPI.panels;
+
+    // default to expose experimental APIs for now.
+    if (extensionInfo.exposeExperimentalAPIs !== false) {
+        chrome.experimental = chrome.experimental || {};
+        chrome.experimental.devtools = chrome.experimental.devtools || {};
+
+        var properties = Object.getOwnPropertyNames(coreAPI);
+        for (var i = 0; i < properties.length; ++i) {
+            var descriptor = Object.getOwnPropertyDescriptor(coreAPI, properties[i]);
+            Object.defineProperty(chrome.experimental.devtools, properties[i], descriptor);
+        }
+        chrome.experimental.devtools.inspectedWindow = chrome.devtools.inspectedWindow;
+    }
+    if (extensionInfo.exposeWebInspectorNamespace)
+        window.webInspector = coreAPI;
 }
 
         var tabId;

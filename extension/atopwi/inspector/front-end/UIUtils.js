@@ -183,7 +183,18 @@ WebInspector.animateStyle = function(animations, duration, callback)
 
 WebInspector.isBeingEdited = function(element)
 {
-    return element.__editing;
+    if (element.hasStyleClass("text-prompt") || element.nodeName === "INPUT")
+        return true;
+
+    if (!WebInspector.__editingCount)
+        return false;
+
+    while (element) {
+        if (element.__editing)
+            return true;
+        element = element.parentElement;
+    }
+    return false;
 }
 
 WebInspector.markBeingEdited = function(element, value)
@@ -200,11 +211,6 @@ WebInspector.markBeingEdited = function(element, value)
         --WebInspector.__editingCount;
     }
     return true;
-}
-
-WebInspector.isEditingAnyField = function()
-{
-    return !!WebInspector.__editingCount;
 }
 
 /**
@@ -262,7 +268,7 @@ WebInspector.EditingConfig.prototype = {
 WebInspector.startEditing = function(element, config)
 {
     if (!WebInspector.markBeingEdited(element, true))
-        return;
+        return null;
 
     config = config || new WebInspector.EditingConfig(function() {}, function() {});
     var committedCallback = config.commitHandler;
@@ -304,8 +310,7 @@ WebInspector.startEditing = function(element, config)
         if (pasteCallback)
             element.removeEventListener("paste", pasteEventListener, true);
 
-        if (element === WebInspector.currentFocusElement() || element.isAncestor(WebInspector.currentFocusElement()))
-            WebInspector.setCurrentFocusElement(WebInspector.previousFocusElement());
+        WebInspector.restoreFocusFromElement(element);
     }
 
     /** @this {Element} */
@@ -346,12 +351,10 @@ WebInspector.startEditing = function(element, config)
     {
         if (result === "commit") {
             editingCommitted.call(element);
-            event.preventDefault();
-            event.stopPropagation();
+            event.consume();
         } else if (result === "cancel") {
             editingCancelled.call(element);
-            event.preventDefault();
-            event.stopPropagation();
+            event.consume();
         } else if (result && result.indexOf("move-") === 0) {
             moveDirection = result.substring(5);
             if (event.keyIdentifier !== "U+0009")
@@ -435,6 +438,15 @@ Number.bytesToString = function(bytes, higherResolution)
         return WebInspector.UIString("%.2fMB", megabytes);
     else
         return WebInspector.UIString("%.0fMB", megabytes);
+}
+
+Number.withThousandsSeparator = function(num)
+{
+    var str = num + "";
+    var re = /(\d+)(\d{3})/;
+    while (str.match(re))
+        str = str.replace(re, "$1\u2009$2"); // \u2009 is a thin space.
+    return str;
 }
 
 WebInspector._missingLocalizedStrings = {};
@@ -587,6 +599,18 @@ WebInspector._focusChanged = function(event)
     WebInspector.setCurrentFocusElement(event.target);
 }
 
+WebInspector._textInputTypes = ["text", "search", "tel", "url", "email", "password"].keySet(); 
+WebInspector._isTextEditingElement = function(element)
+{
+    if (element instanceof HTMLInputElement)
+        return element.type in WebInspector._textInputTypes;
+
+    if (element instanceof HTMLTextAreaElement)
+        return true;
+
+    return false;
+}
+
 WebInspector.setCurrentFocusElement = function(x)
 {
     if (WebInspector._currentFocusElement !== x)
@@ -596,10 +620,11 @@ WebInspector.setCurrentFocusElement = function(x)
     if (WebInspector._currentFocusElement) {
         WebInspector._currentFocusElement.focus();
 
-        // Make a caret selection inside the new element if there isn't a range selection and
-        // there isn't already a caret selection inside.
+        // Make a caret selection inside the new element if there isn't a range selection and there isn't already a caret selection inside.
+        // This is needed (at least) to remove caret from console when focus is moved to some element in the panel.
+        // The code below should not be applied to text fields and text areas, hence _isTextEditingElement check.
         var selection = window.getSelection();
-        if (selection.isCollapsed && !WebInspector._currentFocusElement.isInsertionCaretInside()) {
+        if (!WebInspector._isTextEditingElement(WebInspector._currentFocusElement) && selection.isCollapsed && !WebInspector._currentFocusElement.isInsertionCaretInside()) {
             var selectionRange = WebInspector._currentFocusElement.ownerDocument.createRange();
             selectionRange.setStart(WebInspector._currentFocusElement, 0);
             selectionRange.setEnd(WebInspector._currentFocusElement, 0);
@@ -609,6 +634,12 @@ WebInspector.setCurrentFocusElement = function(x)
         }
     } else if (WebInspector._previousFocusElement)
         WebInspector._previousFocusElement.blur();
+}
+
+WebInspector.restoreFocusFromElement = function(element)
+{
+    if (element && element.isSelfOrAncestor(WebInspector.currentFocusElement()))
+        WebInspector.setCurrentFocusElement(WebInspector.previousFocusElement());
 }
 
 WebInspector.setToolbarColors = function(backgroundColor, color)

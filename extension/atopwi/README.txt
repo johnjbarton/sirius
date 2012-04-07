@@ -56,3 +56,12 @@ Non-Orion Install:
 
 Some things won't work because the Chrome remote debug protocol is not yet 
 completely exposing the capabilities of the socket protocol.
+
+Updating the Chrome Devtools Front end
+--------------------------------------
+mkdir 19.0.1081.2
+cd 19.0.1081.2
+gclient config http://src.chromium.org/svn/releases/19.0.1081.2
+gclient sync
+# wait a long time
+  

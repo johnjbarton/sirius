@@ -140,7 +140,7 @@ WebInspector.JavaScriptBreakpointsSidebarPane.prototype = {
     _breakpointCheckboxClicked: function(breakpoint, event)
     {
         // Breakpoint element has it's own click handler.
-        event.stopPropagation();
+        event.consume();
 
         this._model.setBreakpointEnabled(breakpoint.uiSourceCode, breakpoint.lineNumber, event.target.checked);
     },
@@ -286,7 +286,7 @@ WebInspector.XHRBreakpointsSidebarPane = function()
 WebInspector.XHRBreakpointsSidebarPane.prototype = {
     _addButtonClicked: function(event)
     {
-        event.stopPropagation();
+        event.consume();
 
         this.expanded = true;
 
@@ -461,20 +461,25 @@ WebInspector.EventListenerBreakpointsSidebarPane = function()
     this.bodyElement.appendChild(this.categoriesElement);
 
     this._breakpointItems = {};
-    this._createCategory(WebInspector.UIString("Keyboard"), "listener", ["keydown", "keyup", "keypress", "textInput"]);
-    this._createCategory(WebInspector.UIString("Mouse"), "listener", ["click", "dblclick", "mousedown", "mouseup", "mouseover", "mousemove", "mouseout", "mousewheel"]);
     // FIXME: uncomment following once inspector stops being drop targer in major ports.
     // Otherwise, inspector page reacts on drop event and tries to load the event data.
-    // this._createCategory(WebInspector.UIString("Drag"), "listener", ["drag", "drop", "dragstart", "dragend", "dragenter", "dragleave", "dragover"]);
-    this._createCategory(WebInspector.UIString("Control"), "listener", ["resize", "scroll", "zoom", "focus", "blur", "select", "change", "submit", "reset"]);
-    this._createCategory(WebInspector.UIString("Clipboard"), "listener", ["copy", "cut", "paste", "beforecopy", "beforecut", "beforepaste"]);
-    this._createCategory(WebInspector.UIString("Load"), "listener", ["load", "unload", "abort", "error"]);
-    this._createCategory(WebInspector.UIString("DOM Mutation"), "listener", ["DOMActivate", "DOMFocusIn", "DOMFocusOut", "DOMAttrModified", "DOMCharacterDataModified", "DOMNodeInserted", "DOMNodeInsertedIntoDocument", "DOMNodeRemoved", "DOMNodeRemovedFromDocument", "DOMSubtreeModified", "DOMContentLoaded"]);
-    this._createCategory(WebInspector.UIString("Device"), "listener", ["deviceorientation", "devicemotion"]);
-    this._createCategory(WebInspector.UIString("Timer"), "instrumentation", ["setTimer", "clearTimer", "timerFired"]);
+    // this._createCategory(WebInspector.UIString("Drag"), true, ["drag", "drop", "dragstart", "dragend", "dragenter", "dragleave", "dragover"]);
+    this._createCategory(WebInspector.UIString("Animation"), false, ["requestAnimationFrame", "cancelAnimationFrame", "animationFrameFired"]);
+    this._createCategory(WebInspector.UIString("Control"), true, ["resize", "scroll", "zoom", "focus", "blur", "select", "change", "submit", "reset"]);
+    this._createCategory(WebInspector.UIString("Clipboard"), true, ["copy", "cut", "paste", "beforecopy", "beforecut", "beforepaste"]);
+    this._createCategory(WebInspector.UIString("DOM Mutation"), true, ["DOMActivate", "DOMFocusIn", "DOMFocusOut", "DOMAttrModified", "DOMCharacterDataModified", "DOMNodeInserted", "DOMNodeInsertedIntoDocument", "DOMNodeRemoved", "DOMNodeRemovedFromDocument", "DOMSubtreeModified", "DOMContentLoaded"]);
+    this._createCategory(WebInspector.UIString("Device"), true, ["deviceorientation", "devicemotion"]);
+    this._createCategory(WebInspector.UIString("Keyboard"), true, ["keydown", "keyup", "keypress", "textInput"]);
+    this._createCategory(WebInspector.UIString("Load"), true, ["load", "unload", "abort", "error"]);
+    this._createCategory(WebInspector.UIString("Mouse"), true, ["click", "dblclick", "mousedown", "mouseup", "mouseover", "mousemove", "mouseout", "mousewheel"]);
+    this._createCategory(WebInspector.UIString("Timer"), false, ["setTimer", "clearTimer", "timerFired"]);
+    this._createCategory(WebInspector.UIString("Touch"), true, ["touchstart", "touchmove", "touchend", "touchcancel"]);
 
     this._restoreBreakpoints();
 }
+
+WebInspector.EventListenerBreakpointsSidebarPane.categotyListener = "listener:";
+WebInspector.EventListenerBreakpointsSidebarPane.categotyInstrumentation = "instrumentation:";
 
 WebInspector.EventListenerBreakpointsSidebarPane.eventNameForUI = function(eventName)
 {
@@ -482,14 +487,17 @@ WebInspector.EventListenerBreakpointsSidebarPane.eventNameForUI = function(event
         WebInspector.EventListenerBreakpointsSidebarPane._eventNamesForUI = {
             "instrumentation:setTimer": WebInspector.UIString("Set Timer"),
             "instrumentation:clearTimer": WebInspector.UIString("Clear Timer"),
-            "instrumentation:timerFired": WebInspector.UIString("Timer Fired")
+            "instrumentation:timerFired": WebInspector.UIString("Timer Fired"),
+            "instrumentation:requestAnimationFrame": WebInspector.UIString("Request Animation Frame"),
+            "instrumentation:cancelAnimationFrame": WebInspector.UIString("Cancel Animation Frame"),
+            "instrumentation:animationFrameFired": WebInspector.UIString("Animation Frame Fired")
         };
     }
     return WebInspector.EventListenerBreakpointsSidebarPane._eventNamesForUI[eventName] || eventName.substring(eventName.indexOf(":") + 1);
 }
 
 WebInspector.EventListenerBreakpointsSidebarPane.prototype = {
-    _createCategory: function(name, type, eventNames)
+    _createCategory: function(name, isDOMEvent, eventNames)
     {
         var categoryItem = {};
         categoryItem.element = new TreeElement(name);
@@ -502,7 +510,7 @@ WebInspector.EventListenerBreakpointsSidebarPane.prototype = {
 
         categoryItem.children = {};
         for (var i = 0; i < eventNames.length; ++i) {
-            var eventName = type + ":" + eventNames[i];
+            var eventName = (isDOMEvent ? WebInspector.EventListenerBreakpointsSidebarPane.categotyListener :  WebInspector.EventListenerBreakpointsSidebarPane.categotyInstrumentation) + eventNames[i];
 
             var breakpointItem = {};
             var title = WebInspector.EventListenerBreakpointsSidebarPane.eventNameForUI(eventName);
@@ -562,7 +570,10 @@ WebInspector.EventListenerBreakpointsSidebarPane.prototype = {
         if (!breakpointItem)
             return;
         breakpointItem.checkbox.checked = true;
-        DOMDebuggerAgent.setEventListenerBreakpoint(eventName);
+        if (eventName.indexOf(WebInspector.EventListenerBreakpointsSidebarPane.categotyListener) === 0)
+            DOMDebuggerAgent.setEventListenerBreakpoint(eventName.substring(WebInspector.EventListenerBreakpointsSidebarPane.categotyListener.length));
+        else if (eventName.indexOf(WebInspector.EventListenerBreakpointsSidebarPane.categotyInstrumentation) === 0)
+            DOMDebuggerAgent.setInstrumentationBreakpoint(eventName.substring(WebInspector.EventListenerBreakpointsSidebarPane.categotyInstrumentation.length));
         this._updateCategoryCheckbox(breakpointItem.parent);
     },
 
@@ -572,7 +583,10 @@ WebInspector.EventListenerBreakpointsSidebarPane.prototype = {
         if (!breakpointItem)
             return;
         breakpointItem.checkbox.checked = false;
-        DOMDebuggerAgent.removeEventListenerBreakpoint(eventName);
+        if (eventName.indexOf(WebInspector.EventListenerBreakpointsSidebarPane.categotyListener) === 0)
+            DOMDebuggerAgent.removeEventListenerBreakpoint(eventName.substring(WebInspector.EventListenerBreakpointsSidebarPane.categotyListener.length));
+        else if (eventName.indexOf(WebInspector.EventListenerBreakpointsSidebarPane.categotyInstrumentation) === 0)
+            DOMDebuggerAgent.removeInstrumentationBreakpoint(eventName.substring(WebInspector.EventListenerBreakpointsSidebarPane.categotyInstrumentation.length));
         this._updateCategoryCheckbox(breakpointItem.parent);
     },
 
