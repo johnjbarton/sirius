@@ -2,8 +2,9 @@
 // Copyright 2011 Google, Inc. johnjbarton@johnjbarton.com
 
 /*global define console */
-define(  ['crx2app/lib/MetaObject', 'crx2app/lib/q/q', 'crx2app/rpc/JSONMarshall', 'crx2app/rpc/chrome',  'crx2app/rpc/ChromeDebuggerProxy'],
-function(              MetaObject,                 Q,               JSONMarshall,               chrome,                ChromeDebuggerProxy) {
+
+define(  ['crx2app/lib/MetaObject', 'crx2app/rpc/JSONMarshall', 'crx2app/rpc/chrome',  'crx2app/rpc/ChromeDebuggerProxy'],
+function(              MetaObject,               JSONMarshall,               chrome,                ChromeDebuggerProxy) {
 
   var ChromeProxy = MetaObject.extend(JSONMarshall, {
     
@@ -33,18 +34,20 @@ function(              MetaObject,                 Q,               JSONMarshall
       JSONMarshall.detach.apply(this, [this.getConnection()]);
     },
   
-  
-    promiseNewWindow: function() {
-      var deferred = Q.defer();      
+    openNewWindow: function(onCreated) {
       //********** workaround for http://code.google.com/p/chromium/issues/detail?id=108519
       var fakeBlankURL = window.crx2appBase+"/workaroundBug108519.html";
       //**********
-      this.windows.create({url: fakeBlankURL},  function onCreated(win) {
-        deferred.resolve(win);
-      });
-      return deferred.promise;
+      this.windows.create({url: fakeBlankURL},  onCreated);
     },
     
+    openNewTab: function (url, onNewTab) {
+      this.openNewWindow( function(win) {
+        var tabId = win.tabs[0].id;
+        onNewTab(tabId);
+      });
+    },
+ 
     onPreAttach: function(debuggerEventHandlers, debuggerProxy) {
       debuggerProxy.registerHandlers(debuggerEventHandlers);
     },
@@ -54,7 +57,6 @@ function(              MetaObject,                 Q,               JSONMarshall
     },
     
     openDebuggerProxyOnTab: function (tabId, onPreAttach, onPostAttach) {
-      var deferred = Q.defer();
       var debuggerProxy = ChromeDebuggerProxy.new(this, {tabId: tabId});
       
       onPreAttach = onPreAttach || this.onPreAttach;
@@ -66,12 +68,10 @@ function(              MetaObject,                 Q,               JSONMarshall
         }
 
         onPostAttach = onPostAttach || this.onPostAttach;
-        var enabled = onPostAttach(debuggerProxy);
-        enabled.then(function () {
+        var enabled = onPostAttach(debuggerProxy, function () {
           if (this.debug) {
-                console.log("ChromeProxy openDebuggerProxy enabled", enabled);
+            console.log("ChromeProxy openDebuggerProxy enabled", enabled);
           }
-          deferred.resolve(debuggerProxy);
         });
       }
 
@@ -80,39 +80,33 @@ function(              MetaObject,                 Q,               JSONMarshall
       }
       
       this.debugger.attach({tabId: tabId}, "0.1", onAttach.bind(this), onRetry.bind(this));
-
-      return deferred.promise;
     },
     
     /*
      * create debugger for url in a new Chrome window 
      * @param url, string URL
      * @param chromeProxy, object representing "chrome" extension API
-     * @return promise for ChromeDebuggerProxy  
+     * @callback(ChromeDebuggerProxy)  
      */
-    openDebuggerProxy: function(url, debuggerEventHandlers) {
-      var deferred = Q.defer();
-      var win = this.promiseNewWindow();
-      win.then(
+    openDebuggerProxy: function(url, debuggerEventHandlers, callback) {
+      this.openNewWindow(
         function(win) {
           if (this.debug) {
             console.log("ChromeProxy openDebuggerProxy onCreated callback, trying connect", win);
           }
           var tabId = win.tabs[0].id;
       
-          
-          var debuggerProxy = this.openDebuggerProxyOnTab(tabId, this.onPreAttach.bind(this, debuggerEventHandlers));
-          debuggerProxy.then(
+          var debuggerProxy = this.openDebuggerProxyOnTab(
+            tabId, 
+            this.onPreAttach.bind(this, debuggerEventHandlers),
             function(debuggerProxy) {
               this.tabs.update(tabId, {url: url}, function(tab) {
-                return deferred.resolve(debuggerProxy);
+                callback(debuggerProxy);
               });
             }.bind(this)
-          ).end();
+          );
           
         }.bind(this));
-      
-      return deferred.promise;
     }
   });
   
