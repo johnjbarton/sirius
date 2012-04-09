@@ -13,7 +13,7 @@ require({
     }
 });
 
-require(['../../Debuggee'], function(Debuggee) {
+require(['../../devtoolsAdapter/Debuggee'], function(Debuggee) {
     var debuggee = new Debuggee(SiriusBase);
     debuggee.attachToParent();
 });

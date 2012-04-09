@@ -70,7 +70,7 @@ console.log('window.crx2appBase ', window.crx2appBase);
      console.error(err+'', {stack: err.stack.split('\n')});
    };
   
-  require(['openInspector'], function open(InspectorPatch) {
+  require(['devtoolsAdapter/openInspector'], function open(InspectorPatch) {
     var debuggeeSpec = getDebuggeeSpec();
     // connect to the chromeIframe
     InspectorPatch.openInspector(debuggeeSpec);

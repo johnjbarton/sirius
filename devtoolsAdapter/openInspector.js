@@ -4,17 +4,18 @@
 /*global define console window RESTChannel*/
 
 
-define(['appendFrame'], 
+define(['devtoolsAdapter/appendFrame'], 
 function(appendFrame)  {
 
   var debug = true;
 
   var InspectorPatch = {
 
+    // relative to atopwi/inspector/front-end
     files: [
         window.SiriusBase + '/MetaObject/requirejs/require.js',
         window.SiriusBase + '/RESTChannel/RESTChannel.js',
-        '../../loadDebuggee.js'
+        '../../devtoolsAdapter/loadDebuggee.js'
       ],
 
     openInspector: function(debuggee) {
@@ -47,11 +48,13 @@ function(appendFrame)  {
       this.insertScripts(win);
     },
     
+    // Recurse by chaining off the load event, 
+    // then wait for the connection event
     insertScripts: function(win) {
       if(this.files.length) {
         this.insertScript(this.files.shift(), win);
       } else {
-        this.loadDebuggee(win);
+        this.listenDebuggee(win);
       }
     },
     
@@ -68,7 +71,8 @@ function(appendFrame)  {
         console.log("Load complete for "+file);
         element.removeEventListener('load', onLoad, false);
         element.removeEventListener('error', onError, false);
-        this.insertScripts(win);
+        // Recurse
+        this.insertScripts(win);  
       }
     
       element.addEventListener('load', onLoad.bind(this), false);
@@ -77,15 +81,15 @@ function(appendFrame)  {
       win.document.body.appendChild(element);
     },
     
-    loadDebuggee: function() {
+    listenDebuggee: function() {
       this.devtools = new RESTChannel.Connection();
       this.onUnload = RESTChannel.listen(
         this.devtools, 
-        this.onChannel.bind(this)
+        this.sendDebuggeeSpec.bind(this)
       );
     },
     
-    onChannel: function() {
+    sendDebuggeeSpec: function() {
       this.devtools.putObject(
         'debuggee', 
         this.debuggee,
