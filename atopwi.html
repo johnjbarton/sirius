@@ -47,9 +47,9 @@ function getDebuggeeSpec() {
   } else {
     // TODO just for testing
     var defaultDebuggeeURL = 'http://johnjbarton.github.com/webdev-examples/simple/scriptTagJSProject/index.html';
-    if (window.confirm('Use '+defaultDebuggeeURL)) {
+    //if (window.confirm('Use '+defaultDebuggeeURL)) {
       return {url: defaultDebuggeeURL};
-    }
+    //}
   }
 }
 
@@ -70,10 +70,10 @@ console.log('window.crx2appBase ', window.crx2appBase);
      console.error(err+'', {stack: err.stack.split('\n')});
    };
   
-  require(['devtoolsAdapter/openInspector'], function open(InspectorPatch) {
+  require(['DevtoolsConnection'], function open(DevtoolsConnection) {
     var debuggeeSpec = getDebuggeeSpec();
     // connect to the chromeIframe
-    InspectorPatch.openInspector(debuggeeSpec);
+    DevtoolsConnection.openInspector(debuggeeSpec);
   });
   
 }

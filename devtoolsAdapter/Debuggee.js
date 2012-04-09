@@ -4,8 +4,8 @@
 /*global define console window */
 
 
-define(['atopwi/appendFrame', 'crx2app/appEnd/proxyChromePipe', 'crx2app/rpc/ChromeProxy'], 
-function(appendFrame,              chromeExtensionPipe,               ChromeProxy)  {
+define(['atopwi/appendFrame', 'crx2app/appEnd/appEnd', 'crx2app/appEnd/proxyChromePipe', 'crx2app/rpc/ChromeProxy'], 
+function(       appendFrame,                  appEnd,              chromeExtensionPipe,               ChromeProxy)  {
 
   var debug = true;
 
@@ -50,8 +50,13 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
     },
   
     attachToChrome: function(debuggeeSpec) {
-
-      var connection = chromeExtensionPipe.createFrom(this.iframeDomain);
+      
+      var connection;
+      if (chrome && chrome.extension) { // the we are in a chrome-extension:// 
+        connection = getChromeExtensionPipe();
+      } else {  // a web page
+        connection = chromeExtensionPipe.createFrom(this.iframeDomain);
+      }
       
       var tid = window.setTimeout(function offerExtension() {
         // TODO
@@ -77,11 +82,6 @@ function(appendFrame,              chromeExtensionPipe,               ChromeProx
         connection.detach();
       });
 
-      // dynamically load the chromeIframe, it will connect and fire the callback
-      // (if we load the iframe statically, 
-      // this outer load event will come *after* the iframe load event.)
-      var url = this.iframeDomain + '/crx2app/extension/appEnd/chromeIframe.html';
-      appendFrame(window.document.body, url);
     },
 
     parseDebuggee: function(debuggeeSpec) {
