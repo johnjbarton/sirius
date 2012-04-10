@@ -165,11 +165,22 @@ function(            ChromeProxy)  {
       WebInspector._doLoadedDoneWithCapabilities = function() {
         var args = Array.prototype.slice.call(arguments, 0);
         this._doLoadedDoneWithCapabilities.apply(WebInspector, args);
+        this.loadExtensions();
         this.navigateToURL();
       }.bind(this);
       this.completeLoad.call(this.inspectorWindow.WebInspector);
     },
     
+    // When called as a WebApp, devtools extensions are loaded.
+    loadExtensions: function() {
+	  var optionsString = localStorage.getItem('options');
+	  if (optionsString) {
+            var options = JSON.parse(optionsString);
+            WebInspector.addExtensions(options.extensionInfos);
+          } 
+          this.navigateToURL();
+    },
+  
     navigateToURL: function(inspectorReady) {
       if (this.url) { // then we started in a new tab, navigate
         if (debug) {
