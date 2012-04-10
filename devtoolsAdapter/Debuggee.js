@@ -4,8 +4,8 @@
 /*global define console window */
 
 
-define(['atopwi/appendFrame', 'crx2app/appEnd/appEnd', 'crx2app/appEnd/proxyChromePipe', 'crx2app/rpc/ChromeProxy'], 
-function(       appendFrame,                  appEnd,              chromeExtensionPipe,               ChromeProxy)  {
+define(['crx2app/rpc/ChromeProxy'], 
+function(            ChromeProxy)  {
 
   var debug = true;
 
@@ -50,13 +50,8 @@ function(       appendFrame,                  appEnd,              chromeExtensi
     },
   
     attachToChrome: function(debuggeeSpec) {
-      
-      var connection;
-      if (chrome && chrome.extension) { // the we are in a chrome-extension:// 
-        connection = getChromeExtensionPipe();
-      } else {  // a web page
-        connection = chromeExtensionPipe.createFrom(this.iframeDomain);
-      }
+
+      var connection = getChromeExtensionPipe()
       
       var tid = window.setTimeout(function offerExtension() {
         // TODO
