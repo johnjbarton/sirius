@@ -1,5 +1,9 @@
 <html><head>
 <script src='../inspector/front-end/ExtensionAPI.js'></script>
+<script src='../inspector/front-end/ExtensionAPI.js'></script>
+<script src='../../RESTChannel/RESTChannel.js'></script>
+<script src='../APIGeneration/trialAPI.js'></script>
+<script src='../devtoolsAdapter/extensionPanelRuntime.js'></script>
 <script>
 chrome.devtools = injectedExtensionAPI('log');
 chrome.devtools.panels.create("Log", '', '../Purple/log/log.html', function() {

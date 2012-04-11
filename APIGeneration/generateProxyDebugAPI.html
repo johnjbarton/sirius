@@ -1,8 +1,7 @@
 <html>
 <head>
 <title>Create Devtools API from JSON file</title>
-<script src="tailFeathers.js"></script>
-<script src="lib/js-beautify/beautify.js"></script>
+<script src="generateProxyDebugAPI.js"></script>
 <style>
 html, body, iframe {
   height: 100%;
@@ -25,7 +24,7 @@ body {
 <textarea rows="50" cols="120" id='src'></textarea>
 </body>
 <script>
-var inspectorBackend = tailFeathers.loadInspectorJSON("inspector/Inspector.json");
+var inspectorBackend = generateProxyDebugAPI.loadInspectorJSON("../inspector/Inspector.json");
 document.querySelector('#src').value = inspectorBackend;
 </script>
 </html>
