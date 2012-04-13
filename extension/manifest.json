@@ -31,6 +31,16 @@
      {
        "matches": ["http://*/mixloginstatic/LoginWindow.html*"],
        "js": ["superLogin.js"]
+     },
+     {
+       "matches": ["*://*/*/devtools/panels/*"],
+       "js": ["atopwi/devtoolsAdapter/ScriptInjector.js"],
+       "all_frames": true
+     },
+     {
+       "matches": ["*://*/*/devtools/panels/*"],
+       "js": ["atopwi/devtoolsAdapter/panelInjector.js"],
+       "all_frames": true
      }
    ]
 }
