@@ -8,13 +8,17 @@
 (function()  {
 
     // relative to atopwi/inspector/front-end
-    var files = [
-       '../inspector/front-end/ExtensionAPI.js',
+    var paths = [
+       '../atopwi/inspector/front-end/ExtensionAPI.js',
        '../../RESTChannel/RESTChannel.js',
-       '../APIGeneration/trialAPI.js',
-       '../devtoolsAdapter/extensionPanelRuntime.js'
+       '../atopwi/APIGeneration/trialAPI.js',
+       '../atopwi/devtoolsAdapter/extensionPanelRuntime.js'
       ];
 
-   ScriptInjector.injectScripts(files, window);
+    paths = paths.map(function(path) {
+      return chrome.extension.getURL(path);
+    });
+
+   ScriptInjector.injectScripts(paths, window);
     
 }());

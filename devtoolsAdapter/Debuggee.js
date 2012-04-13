@@ -7,15 +7,7 @@
 define(['crx2app/rpc/ChromeProxy'], 
 function(            ChromeProxy)  {
 
-  var debug = true;
-
-  window.beforeUnloadQueue = [];
-
-  window.onbeforeunload = function runQueue() {
-    window.beforeUnloadQueue.forEach(function(fnc) {
-      fnc();
-    });
-  };
+  var debug = false;
 
   function Debuggee(iframeDomain) {
     this.iframeDomain = iframeDomain;
@@ -23,12 +15,11 @@ function(            ChromeProxy)  {
   
   Debuggee.prototype = {
     attachToParent: function() {
-      var connection = new RESTChannel.Connection();
       console.log(window.location + ' talking ');
-      this.register(connection);
-      RESTChannel.talk(window.parent, connection, function() {
+      RESTChannel.talk(window.parent, function(connection) {
+        this.register(connection);
         console.log('Debuggee connected');
-      });
+      }.bind(this));
     },
     
     options: function() {
@@ -64,7 +55,12 @@ function(            ChromeProxy)  {
           // we have connected to the extension, so clear the offer
           window.clearTimeout(tid);
       
-          this.chrome = ChromeProxy.new(connection, {windows: {}, tabs: {}});
+          this.chrome = ChromeProxy.new(
+            connection, 
+            {
+              windows: {}, 
+              tabs: { onRemoved: function() { console.log('tab removed');}}
+            });
           this.open(debuggeeSpec);
     
         }.bind(this), 
@@ -73,9 +69,9 @@ function(            ChromeProxy)  {
         }
       );
       
-      window.beforeUnloadQueue.push(function detach() {
+      window.beforeUnload = function detach() {
         connection.detach();
-      });
+      };
 
     },
 
@@ -94,18 +90,21 @@ function(            ChromeProxy)  {
         this.url, 
         function(newTabId) {
           this.tabId = newTabId;
-          window.beforeUnloadQueue.push(function() {
-            this.chrome.tabs.remove(newTabId, function() {
-              if (debug) {
-                console.log('atopwi removed '+newTabId);
-              }
-            });
-          }.bind(this));
+          window.beforeUnload = this.close.bind(this);
           this.attach();
         }.bind(this)
       );
     },
     
+    close: function() {
+      this.chrome.tabs.remove(newTabId, function() {
+        if (debug) {
+          console.log('atopwi removed '+newTabId);
+        }
+        connection.detach();
+      });
+    },
+
     attach: function() {
       this.chrome.debugger.attach(
         {tabId: this.tabId}, 
@@ -119,17 +118,20 @@ function(            ChromeProxy)  {
         console.log('atopwi chrome.debugger.attach complete '+this.tabId);
       }
        
-      window.beforeUnloadQueue.unshift(function() {
-          this.chrome.debugger.detach({tabId: this.tabId}, function() {
-            if (debug) {
-              console.log('atopwi detached from ' + this.tabId);
-            }
-          });
-        }.bind(this));
+      window.beforeUnload = this.detach.bind(this);
         
        this.patchInspector();
     },
     
+    detach: function() {
+      this.chrome.debugger.detach({tabId: this.tabId}, function() {
+         if (debug) {
+            console.log('atopwi detached from ' + this.tabId);
+          }
+         this.close();
+       }.bind(this));
+    },
+
     patchInspector: function(event) {
       if (debug) {
         console.log("DOMContentLoaded on inspectorWindow ", this);
@@ -176,11 +178,23 @@ function(            ChromeProxy)  {
 	  var optionsString = localStorage.getItem('options');
 	  if (optionsString) {
             var options = JSON.parse(optionsString);
-            WebInspector.addExtensions(options.extensionInfos);
+            if (options.extensionInfos && options.extensionInfos.length) {
+	      this.startListener();
+              WebInspector.addExtensions(options.extensionInfos);
+            }
           } 
           this.navigateToURL();
     },
   
+    startListener: function() {
+      var disposer = RESTChannel.listen(window, this.panelProxySetup.bind(this));
+      window.addEventListener('unload', disposer);
+    },
+
+    panelProxySetup: function(connection) {
+	  console.error('implement ', connection);
+      },
+
     navigateToURL: function(inspectorReady) {
       if (this.url) { // then we started in a new tab, navigate
         if (debug) {

@@ -1,21 +1,20 @@
 // Google BSD license http://code.google.com/google_bsd_license.html
 // Copyright 2011 Google Inc. johnjbarton@google.com
 
-var chrome = chrome || {};
-chrome.devtools = chrome.devtools || {};
+var ChromeDevtools = ChromeDevtools || {};
 
 RESTChannel.talk(window.parent, function onAttach(connection) {
   
   function logError() {
-    console.error('chrome.devtools.proxy ERROR', arguments);
+    console.error('ChromeDevtools.proxy ERROR', arguments);
   }
   
   // underlying API for generated API functions
-  chrome.devtools.proxy = {
+  ChromeDevtools.proxy = {
   
     // Proxy debugger commands to our parent window
     sendCommand: function(domain, method, params, callback, errback) {
-      var url = 'chrome.devtools.proxy.' + domain + '.' + method;
+      var url = 'ChromeDevtools.' + domain + '.' + method;
       callback = callback || function() {};
       errback = errback || logError;
       connection.postObject(url, params, callback, errback);
@@ -24,7 +23,7 @@ RESTChannel.talk(window.parent, function onAttach(connection) {
     // Dispatch debugger events from our parent window
     // Similar to WebInspector.registerDomainDispatcher
     onEvent: function(domain, listenerObject) {
-      var url = 'chrome.devtools.proxy.onEvent.'+domain;
+      var url = 'ChromeDevtools.onEvent.'+domain;
       connection.register(url, {
         post: function(messageObject) {
           var method = messageObject.method;
