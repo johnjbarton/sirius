@@ -1,7 +1,7 @@
 // Google BSD license http://code.google.com/google_bsd_license.html
 // Copyright 2011 Google Inc. johnjbarton@google.com
 
-/*global define console window */
+/*global define console WebInspector RESTChannel window */
 
 
 define(['crx2app/rpc/ChromeProxy'], 
@@ -175,7 +175,7 @@ function(            ChromeProxy)  {
     
     // When called as a WebApp, devtools extensions are loaded.
     loadExtensions: function() {
-	  var optionsString = localStorage.getItem('options');
+	  var optionsString = window.localStorage.getItem('options');
 	  if (optionsString) {
             var options = JSON.parse(optionsString);
             if (options.extensionInfos && options.extensionInfos.length) {
@@ -192,8 +192,22 @@ function(            ChromeProxy)  {
     },
 
     panelProxySetup: function(connection) {
-	  console.error('implement ', connection);
-      },
+      connection.register('ChromeDevtools.sendCommand', {
+        post: function(messageObject) {
+          this.chrome.debugger.sendCommand(
+            {url: this.url, tabId: this.tabId}, 
+            messageObject.method, 
+            messageObject.params, 
+            connection.respond.bind(connection, messageObject.serial)
+          );
+        }.bind(this)
+      });
+      connection.register('ChromeDevtools.onEvent.addListener', {
+          put: function(messageObject) {
+            console.error('implement ', messageObject);
+          }
+      });
+    },
 
     navigateToURL: function(inspectorReady) {
       if (this.url) { // then we started in a new tab, navigate
@@ -201,9 +215,9 @@ function(            ChromeProxy)  {
           console.log('atopwi setting URL:'+this.url);
         }
         this.chrome.tabs.update(
-         this.tabId, 
-         {url: this.url}, 
-         this.onTabUpdate.bind(this)
+          this.tabId, 
+          {url: this.url}, 
+          this.onTabUpdate.bind(this)
         );
       }
     },

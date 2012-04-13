@@ -1,6 +1,8 @@
 // Google BSD license http://code.google.com/google_bsd_license.html
 // Copyright 2011 Google Inc. johnjbarton@google.com
 
+/*globals console window RESTChannel*/
+
 var ChromeDevtools = ChromeDevtools || {};
 
 RESTChannel.talk(window.parent, function onAttach(connection) {
@@ -11,38 +13,54 @@ RESTChannel.talk(window.parent, function onAttach(connection) {
   
   // underlying API for generated API functions
   ChromeDevtools.proxy = {
-  
+    debug: true,
+    
     // Proxy debugger commands to our parent window
-    sendCommand: function(domain, method, params, callback, errback) {
-      var url = 'ChromeDevtools.' + domain + '.' + method;
+    sendCommand: function(domainMethod, params, callback, errback) {
+      var url = 'ChromeDevtools.sendCommand';
+      var obj = {
+        method: domainMethod,
+        params: params
+      };
       callback = callback || function() {};
       errback = errback || logError;
-      connection.postObject(url, params, callback, errback);
+      connection.postObject(url, obj, callback, errback);
     },
     
     // Dispatch debugger events from our parent window
     // Similar to WebInspector.registerDomainDispatcher
     onEvent: function(domain, listenerObject) {
-      var url = 'ChromeDevtools.onEvent.'+domain;
-      connection.register(url, {
-        post: function(messageObject) {
-          var method = messageObject.method;
-          var params = [];
-          if (messageObject.params) {
-            var paramNames = this._eventArgs[domain + '.' + method];
-            for (var i = 0; i < paramNames.length; ++i) {
-              params.push(messageObject.params[paramNames[i]]);
+      var remoteRef = connection.register('ChromeDevtools.onEvent.' + domain, {
+          post: function(messageObject) {
+            var method = messageObject.method;
+            var params = [];
+            if (messageObject.params) {
+              var paramNames = this._eventArgs[method];
+              for (var i = 0; i < paramNames.length; ++i) {
+                params.push(messageObject.params[paramNames[i]]);
+              }
             }
+            listenerObject[method].apply(listenerObject, params);
           }
-          listenerObject[method].apply(listenerObject, params);
-        }
       });
+      connection.putObject(
+        'ChromeDevtools.onEvent.addListener',
+        remoteRef,
+        function eatReply() {
+          if (ChromeDevtools.proxy.debug) {
+            console.log('ChromeDevtools.onEvent.addListener succeeds');
+          }
+        },
+        function fail() {
+          console.error('ChromeDevtools.onEvent.addListener ERROR ', arguments);
+        }
+      );
     },
     
     _eventArgs: {},
     // Called by generated API to build argument name lists.
-    registerEvent: function(domain, method, params) {
-      this._eventArgs[domain + '.' + method] = params;
+    registerEvent: function(domainMethod, params) {
+      this._eventArgs[domainMethod] = params;
     }
   };
 
