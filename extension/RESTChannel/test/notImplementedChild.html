@@ -12,46 +12,37 @@ window.addEventListener('load', function() {
 
   console.log(window.location.toString() + ' load ');
 
+  // Callback fires as soon as possible.
+  //
   function onAttach(connection) {
     
     console.log(window.location + ' attach');
-
-    // Event Handler Defined
-    //
-    var handler =         // becomes {url: 'mouse.overed'}
-    connection.register(
-      'mouse.overed',     // URL for handler
-      {
-        // handle event
-        post: function (connection, obj) {
-          console.log("eventChild got event: ", obj);
-          return {message:'hey'};
-        }
-      }
-    );
 
     function childErr(err) {
       console.error("Child recvd err", err);
     }
 
-    // addEventListener is put remote ref to event name
+    // Send something to the 'parent'
     //
     connection.putObject( 
-      'mouse.over',                // event name at this URL
-      handler,                     // remote ref
+      'hello',                      // at this URL
+      {message:'I am your child'},  // store this object
       function(reply) {             // then call me
+        // Just log for the demo
         console.log("Child hears: "+reply.message, reply);
       },        
       childErr                      // or fail
     );
-    
-    //connection.addEventListener('mouse.over', handler);
-    
+
   }
 
   console.log(window.location + ' talking ');
 
-  RESTChannel.talk(window.parent, onAttach);
+  var disposer =  RESTChannel.talk(window.parent, onAttach);
+  window.addEventListener('unload', function unload() {
+    disposer();
+    window.removeEventListener('unload', unload);
+  });
 });
 
 

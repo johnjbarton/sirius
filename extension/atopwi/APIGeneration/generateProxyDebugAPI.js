@@ -28,17 +28,15 @@ var generateProxyDebugAPI = {
         var result = [];
         var version = schema.version.major + '.' +schema.version.minor;
         result.push("/* Machine generated from "+inspectorJSONUrl+' version: '+version+" on "+new Date()+" */\n");
-        result.push('(function () {');
-        result.push('var chrome = chrome || {};');
-        result.push('chrome.devtools = chrome.devtools || {};');
-        result.push('chrome.devtools.proxy = chrome.devtools.proxy || {};');
-        result.push("chrome.devtools.proxy.version = "+version+';\n');
+        result.push('var ChromeDevtools = (function () {');
+        result.push('\nvar ChromeDevtools = ChromeDevtools || {};');
+        result.push("ChromeDevtools.version = "+version+';\n');
         
         for (var i = 0; i < domains.length; ++i) {
             var domain = domains[i];
             var unsupported = domain.hidden ? '/* unsupported */ ' : '';
-            result.push(unsupported+"\nchrome.devtools.proxy." + domain.domain + ' = {};');
-            result.push('chrome.devtools.proxy.' + domain.domain + '.prototype = {');
+            result.push(unsupported+"\nChromeDevtools." + domain.domain + ' = {};');
+            result.push('ChromeDevtools.' + domain.domain + '.prototype = {');
             
             result.push("\n    // Commands: ");
             var commands = domain["commands"] || [];    
@@ -87,11 +85,11 @@ var generateProxyDebugAPI = {
                   result.push('             \'' + param + '\': ' + param +',');
                 });
                 result.push('         };');
-                result.push('        chrome.devtools.proxy.sendCommand(\'' + domain.domain + '\', \'' + command.name + '\', paramObject, opt_callback);');
+                result.push('        ChromeDevtools.proxy.sendCommand(\'' + domain.domain + '.' + command.name + '\', paramObject, opt_callback);');
                 result.push('    },');
             }
             if (domain.events && domain.events.length) {
-                result.push('\n    // Event handlers to override, then call initialize');
+                result.push('\n    // Event handlers to override, then call addListeners');
                 var eventRegistrations = [];
                 for (var j = 0; domain.events && j < domain.events.length; ++j) {
                     var event = domain.events[j];
@@ -103,21 +101,20 @@ var generateProxyDebugAPI = {
                     var unsupported = event.hidden ? '/* unsupported */ ' : '';
                     result.push('    '+unsupported+event.name + ": function(" + paramsText.join(", ") + ") {},");
                     
-                    eventRegistrations.push('        chrome.devtools.proxy.registerEvent(');
-                    eventRegistrations.push('            \''+domain.domain + '\', ');
-                    eventRegistrations.push('            \''+event.name + '\', ');
+                    eventRegistrations.push('        ChromeDevtools.registerEvent(');
+                    eventRegistrations.push('            \''+domain.domain + '.' + event.name + '\', ');
                     eventRegistrations.push('            [\'' + paramsText.join('\', \'') + '\']);');
                 }
                 result.push('\n    // Call in your constructor to register for this events in domain');
-                result.push('    initialize: function() {');
-                result.push('        chrome.devtools.proxy.onEvent(\'' + domain.domain + '\', this);');
+                result.push('    addListeners: function() {');
+                result.push('        ChromeDevtools.proxy.onEvent(\'' + domain.domain + '\', this);');
                 result = result.concat(eventRegistrations);
                 result.push('    },');
             }
             
             result.push("};\n");
         }
-        result.push("return chrome.devtools.proxy;\n");
+        result.push("return ChromeDevtools;\n");
         
         result.push("/* copyright 2011 Google, inc. johnjbarton@google.com Google BSD License */");
         result.push("/* See https://github.com/johnjbarton/atopwi/blob/master/APIGeneration/generateRemoteDebugAPI.html */");

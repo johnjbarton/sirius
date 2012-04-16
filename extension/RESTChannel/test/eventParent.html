@@ -10,7 +10,6 @@
 
 console.log(window.location + ' listening ');
 
-var connection = new RESTChannel.Connection();
 
 function cloneOwn(obj) {
   var result = {};
@@ -46,7 +45,7 @@ var Mouse = {
   }
 };
 
-function onAttach() {
+function onAttach(connection) {
 
   console.log(window.location + ' attach');
 
@@ -54,7 +53,7 @@ function onAttach() {
   connection.register('mouse.over', Mouse.over());
 }
 
-var onUnload = RESTChannel.listen(connection, onAttach);
+var onUnload = RESTChannel.listen(window, onAttach);
 window.addEventListener('unload', onUnload);
 
 window.addEventListener('load', function() {

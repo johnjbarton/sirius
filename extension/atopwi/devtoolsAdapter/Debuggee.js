@@ -1,21 +1,23 @@
 // Google BSD license http://code.google.com/google_bsd_license.html
 // Copyright 2011 Google Inc. johnjbarton@google.com
 
-/*global define console window */
+/*global define console WebInspector RESTChannel getChromeExtensionPipe window */
 
 
 define(['crx2app/rpc/ChromeProxy'], 
 function(            ChromeProxy)  {
 
   var debug = true;
-
-  window.beforeUnloadQueue = [];
-
-  window.onbeforeunload = function runQueue() {
-    window.beforeUnloadQueue.forEach(function(fnc) {
-      fnc();
-    });
-  };
+  
+  function echoOk() {
+    if (debug) {
+      console.log('ok ', arguments);
+    }
+  }
+  
+  function echoErr() {
+    console.error('ERROR ', arguments);
+  }
 
   function Debuggee(iframeDomain) {
     this.iframeDomain = iframeDomain;
@@ -23,12 +25,11 @@ function(            ChromeProxy)  {
   
   Debuggee.prototype = {
     attachToParent: function() {
-      var connection = new RESTChannel.Connection();
       console.log(window.location + ' talking ');
-      this.register(connection);
-      RESTChannel.talk(window.parent, connection, function() {
+      RESTChannel.talk(window.parent, function(atopwi) {
+        this.register(atopwi);
         console.log('Debuggee connected');
-      });
+      }.bind(this));
     },
     
     options: function() {
@@ -37,13 +38,13 @@ function(            ChromeProxy)  {
       };
     },
         
-    put: function (connection, obj) {
+    put: function (atopwi, obj) {
       this.attachToChrome(obj);
       return {message:'hey'};
     },
     
-    register: function(connection) {
-      connection.register(
+    register: function(atopwi) {
+      atopwi.register(
         'debuggee',
         { options: this.options.bind(this), put: this.put.bind(this) }
       );
@@ -51,7 +52,7 @@ function(            ChromeProxy)  {
   
     attachToChrome: function(debuggeeSpec) {
 
-      var connection = getChromeExtensionPipe()
+      this.chromeConnection = getChromeExtensionPipe();
       
       var tid = window.setTimeout(function offerExtension() {
         // TODO
@@ -59,12 +60,18 @@ function(            ChromeProxy)  {
       }, 2000);
   
       // listen for a connection.
-      connection.attach(
+      this.chromeConnection.attach(
         function onConnectedToChrome() {
           // we have connected to the extension, so clear the offer
           window.clearTimeout(tid);
-      
-          this.chrome = ChromeProxy.new(connection, {windows: {}, tabs: {}});
+                
+          this.chrome = ChromeProxy.new(
+            this.chromeConnection, 
+            {
+              windows: {}, 
+              tabs: { onRemoved: function() { console.log('tab removed');}}
+              //debugger event listeners are added during load
+            });
           this.open(debuggeeSpec);
     
         }.bind(this), 
@@ -73,9 +80,9 @@ function(            ChromeProxy)  {
         }
       );
       
-      window.beforeUnloadQueue.push(function detach() {
-        connection.detach();
-      });
+      window.beforeUnload = function detach() {
+        this.chromeConnection.detach();
+      }.bind(this);
 
     },
 
@@ -94,18 +101,20 @@ function(            ChromeProxy)  {
         this.url, 
         function(newTabId) {
           this.tabId = newTabId;
-          window.beforeUnloadQueue.push(function() {
-            this.chrome.tabs.remove(newTabId, function() {
-              if (debug) {
-                console.log('atopwi removed '+newTabId);
-              }
-            });
-          }.bind(this));
+          window.beforeUnload = this.close.bind(this);
           this.attach();
         }.bind(this)
       );
     },
     
+    close: function(newTabId) {
+      this.chrome.tabs.remove(newTabId, function() {
+        if (debug) {
+          console.log('atopwi removed '+newTabId);
+        }
+      });
+    },
+
     attach: function() {
       this.chrome.debugger.attach(
         {tabId: this.tabId}, 
@@ -119,17 +128,20 @@ function(            ChromeProxy)  {
         console.log('atopwi chrome.debugger.attach complete '+this.tabId);
       }
        
-      window.beforeUnloadQueue.unshift(function() {
-          this.chrome.debugger.detach({tabId: this.tabId}, function() {
-            if (debug) {
-              console.log('atopwi detached from ' + this.tabId);
-            }
-          });
-        }.bind(this));
+      window.beforeUnload = this.detach.bind(this);
         
-       this.patchInspector();
+      this.patchInspector();
     },
     
+    detach: function() {
+      this.chrome.debugger.detach({tabId: this.tabId}, function() {
+         if (debug) {
+            console.log('atopwi detached from ' + this.tabId);
+          }
+         this.close(this.tabId);
+       }.bind(this));
+    },
+
     patchInspector: function(event) {
       if (debug) {
         console.log("DOMContentLoaded on inspectorWindow ", this);
@@ -145,7 +157,8 @@ function(            ChromeProxy)  {
             console.log("jsonObjectHandler "+data.method, data);
           }
           backend.dispatch.apply(backend, [data]);
-        }
+          this.onEvent(this.panelConnection, data);
+        }.bind(this)
       };
     
       this.inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
@@ -173,23 +186,93 @@ function(            ChromeProxy)  {
     
     // When called as a WebApp, devtools extensions are loaded.
     loadExtensions: function() {
-	  var optionsString = localStorage.getItem('options');
+	  var optionsString = window.localStorage.getItem('options');
 	  if (optionsString) {
             var options = JSON.parse(optionsString);
-            WebInspector.addExtensions(options.extensionInfos);
+            if (options.extensionInfos && options.extensionInfos.length) {
+	      this.startListener();
+              WebInspector.addExtensions(options.extensionInfos);
+            }
           } 
           this.navigateToURL();
     },
   
+    startListener: function() {
+      var disposer = RESTChannel.listen(window, this.panelProxySetup.bind(this));
+      window.addEventListener('unload', disposer);
+    },
+
+    domains: [
+        "Inspector",
+         "Memory",
+         "Page",
+         "Runtime",
+         "Console",
+         "Network",
+         "Database",
+         "DOMStorage",
+         "ApplicationCache",
+         "FileSystem",
+         "DOM",
+         "CSS",
+         "Timeline",
+         "Debugger",
+         "DOMDebugger",
+         "Profiler",
+         "Worker"
+    ],
+    
+    _eventListenersByDomain: {},
+
+    panelProxySetup: function(connection) {
+      this.panelConnection = connection;
+      this.panelConnection.register('ChromeDevtools.sendCommand', {
+        post: this.proxySendCommand.bind(this, this.panelConnection)
+      });
+
+      // To avoid dispatching every event to every panel we create one listener for each domain
+      this.domains.forEach(function(domain) {
+        this.panelConnection.register('ChromeDevtools.onEvent.addListener.'+domain, {
+            put: function(connection, messageObject) {
+              this._eventListenersByDomain[domain] = messageObject.url;
+              console.log("Debuggee addListener "+messageObject.url, messageObject);
+            }.bind(this)
+        });
+      }.bind(this));
+      
+    },
+    
+    proxySendCommand: function(panelConnection, messageObject) {
+      this.chrome.debugger.sendCommand(
+          {url: this.url, tabId: this.tabId}, 
+           messageObject.method, 
+           messageObject.params, 
+           panelConnection.respond.bind(panelConnection, messageObject.serial)
+      );
+    },
+    
+    onEvent:function(panelConnection, messageObject) {
+      var domainMethod = messageObject.method;
+      var domain = domainMethod.split('.')[0];
+      var handler = this._eventListenersByDomain[domain];
+      if (handler) {
+        panelConnection.postObject(handler, messageObject, echoOk, echoErr);
+      } else {
+        if (debug) {
+          console.log('Debuggee.onEvent: no handler for ' + domain);
+        }
+      }
+    },
+
     navigateToURL: function(inspectorReady) {
       if (this.url) { // then we started in a new tab, navigate
         if (debug) {
           console.log('atopwi setting URL:'+this.url);
         }
         this.chrome.tabs.update(
-         this.tabId, 
-         {url: this.url}, 
-         this.onTabUpdate.bind(this)
+          this.tabId, 
+          {url: this.url}, 
+          this.onTabUpdate.bind(this)
         );
       }
     },

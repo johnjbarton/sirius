@@ -10,38 +10,11 @@
 
 console.log(window.location + ' listening ');
 
-
 function onAttach(connection) {
 
   console.log(window.location + ' attach');
   
-  connection.register('hello', {
-      put: function (obj) {
-        return {message:'Did you do your homework?'};
-      }
-    }
-  );
-  
-  connection.putObject(
-    'hello', 
-    {message:'I am your parent'},
-    function(reply) {
-      console.log("Parent hears: "+reply.message, reply);
-    },
-    function(err) {
-      console.error("Parent recvd err", err);
-    }
-  );
-  
-  connection.optionsObject(
-    '*', 
-    function(reply) {
-      console.log("Parent finds options: ", reply);
-    },
-    function(err) {
-      console.error("Parent recvd err", err);
-    }
-  );
+  // Nothing here, child put should fail
 }
 
 var onUnload = RESTChannel.listen(window, onAttach);
@@ -56,6 +29,6 @@ window.addEventListener('load', function() {
 </head>
 <body>
 <p>Open the debugging console to see the conversation logged</p>
-<iframe class='RESTChannelClient' src="childFrame.html"></iframe>
+<iframe class='RESTChannelClient' src="notImplementedChild.html"></iframe>
 </body>
 </html>

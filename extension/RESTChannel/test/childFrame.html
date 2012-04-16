@@ -12,13 +12,9 @@ window.addEventListener('load', function() {
 
   console.log(window.location.toString() + ' load ');
 
-  // This object will be our 'parent' connection
-  //
-  var connection = new RESTChannel.Connection();
-
   // Callback fires as soon as possible.
   //
-  function onAttach() {
+  function onAttach(connection) {
     
     console.log(window.location + ' attach');
 
@@ -87,7 +83,11 @@ window.addEventListener('load', function() {
 
   console.log(window.location + ' talking ');
 
-  RESTChannel.talk(window.parent, connection, onAttach);
+  var disposer =  RESTChannel.talk(window.parent, onAttach);
+  window.addEventListener('unload', function unload() {
+    disposer();
+    window.removeEventListener('unload', unload);
+  });
 });
 
 

@@ -14,8 +14,8 @@ function(appendFrame)  {
     openInspector: function(debuggee) {
       this.debuggee = debuggee;
     
-      var inspectorElt = this.showInspectorIframe();
-      this.listenDebuggee(inspectorElt.contentWindow);
+      this.listenDebuggee();
+      this.showInspectorIframe();
     },
  
     showInspectorIframe: function() {
@@ -26,14 +26,17 @@ function(appendFrame)  {
     },
 
     listenDebuggee: function() {
-      this.devtools = new RESTChannel.Connection();
+      if (debug) {
+        console.log("DevtoolsConnection listening ");
+      }
       this.onUnload = RESTChannel.listen(
-        this.devtools, 
+        window, 
         this.sendDebuggeeSpec.bind(this)
       );
     },
     
-    sendDebuggeeSpec: function() {
+    sendDebuggeeSpec: function(connection) {
+      this.devtools = connection;
       this.devtools.putObject(
         'debuggee', 
         this.debuggee,

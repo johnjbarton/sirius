@@ -12,8 +12,21 @@ window.RESTChannel = (function() {
 
   var msgNumber = 0;
   var pending = {};
+  
+  var methods = [
+    'REPLY',
+    'OPTIONS', 
+    'GET',
+    'PUT',
+    'POST',
+    'DELETE'
+  ];
 
-  function Connection() {
+
+  function Connection(port) {
+    this.port = port;
+    port.onmessage = this._onmessage.bind(this);
+    port.start();
     this.registry = {};
   }
   
@@ -83,11 +96,12 @@ window.RESTChannel = (function() {
       });
     },
     
-    respond: function(serial, obj) {
+    respond: function(serial, obj, status) {
+      status = status || 200;
       this.port.postMessage({
           method: 'REPLY',
           url: '/',
-          status: 200,
+          status: status,
           serial: serial,
           body: obj
       });
@@ -121,44 +135,35 @@ window.RESTChannel = (function() {
       var service = this.registry[msgObj.url];
       if (service && (method in service) ) {
         // Call service with the connection and the object sent (if any).
-        return service[method](this, msgObj.body);
+        try {
+          return service[method](this, msgObj.body) || {}
+        } catch(exc) {
+          return this._internalServerError(msgObj, exc);
+        }
       } else {
         if (method === 'options') {
           return this.options(msgObj);
         }
       }
-    }
-  };
+    },
 
-  function RESTChannel(port, connection) {
-    this.connection = connection;
-    port.onmessage = this._onmessage.bind(this);
-    port.start();
-    this.connection.attach(port);
-  }
+    _internalServerError: function(msgObj, exc) {
+      var errInfo = {
+        message: exc.toString(),
+        stack: exc.stack 
+      };
+      this.respond(msgObj.serial, errInfo, 500);
+    },
 
-  var methods = [
-    'REPLY',
-    'OPTIONS', 
-    'GET',
-    'PUT',
-    'POST',
-    'DELETE'
-  ];
-
-  RESTChannel.prototype = {
-  
     _badRequest: function(obj) {
-      obj.status = 400;
       obj.reason = 'Bad Request';
-      this.connection.respond(null, obj);
-      this.connection.close(); // you had your chance, you blew it.
+      this.respond(null, obj, 400);
+      this.close(); // you had your chance, you blew it.
     },
     
     _notImplemented: function(serial, obj) {
-      obj.status = 501;
       obj.reason = "Not Implemented";
-      this.connection.respond(serial, obj);
+      this.respond(serial, obj, 501);
     },
     
     _envelop: function(obj) {
@@ -186,16 +191,16 @@ window.RESTChannel = (function() {
             } else if (callbacks.err) {
               callbacks.err(msgObj);
             } else {
-              console.error("RESTChannel response but no handlers", msgObj);
+              console.error("PortBinding response but no handlers", msgObj);
             }
           } else {
-            console.error("RESTChannel response but no pending message", msgObj);
+            console.error("PortBinding response but no pending message", msgObj);
           }
         } else {
           var envelop = this._envelop(msgObj);
-          var response = this.connection.dispatch(msgObj);
+          var response = this.dispatch(msgObj);
           if (response) {
-            this.connection.respond(envelop.serial, response);
+            this.respond(envelop.serial, response);
           } else {
             return this._notImplemented(envelop.serial, envelop);
           }
@@ -236,31 +241,31 @@ window.RESTChannel = (function() {
     
   };
 
-  function accept(connection, onAttach, event) {
+  function accept(onAttach, event) {
     if (event.data && event.data === "RESTChannel") {
       if (debug) {
         console.log(window.location + " RESTChannel accept ", event);
       }
       var port = event.ports[0];
-      onAttach( new RESTChannel(port, connection) );
+      onAttach(  new Connection(port) );
     } // else not for us
   }
 
-  function listen(connection, onAttach) {
-    var onIntroduction = accept.bind(null, connection, onAttach);
-    window.addEventListener('message', onIntroduction);
+  function listen(listeningWindow, onAttach) {
+    var onIntroduction = accept.bind(null, onAttach);
+    listeningWindow.addEventListener('message', onIntroduction);
     return function dispose() {
-      window.removeEventListener('message', onIntroduction);
+      listeningWindow.removeEventListener('message', onIntroduction);
     };
   }
   
-  function talk(listenerWindow, connection, onAttach) {
+  function talk(listenerWindow, onAttach) {
     var channel = new window.MessageChannel();
     if (debug) {
       console.log('talk post');
     }
     listenerWindow.postMessage('RESTChannel', '*', [channel.port2]);
-    onAttach( new RESTChannel(channel.port1, connection) );
+    onAttach( new Connection(channel.port1) );
     return function dispose() {
       channel.port1.close();
     };
@@ -268,8 +273,8 @@ window.RESTChannel = (function() {
   
   return {
     talk: talk,
-    listen: listen,
-    Connection: Connection
+    listen: listen
   };
 
 }());
+

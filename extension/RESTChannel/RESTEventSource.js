@@ -14,7 +14,7 @@ function makeEventSource(errBack) {
           listener.connection.postObject(
             body.url,   // callback addr
             {
-              event: jsonEvent  // Should not send all of this...
+              event: jsonEvent  
             },
             errBack
           );
