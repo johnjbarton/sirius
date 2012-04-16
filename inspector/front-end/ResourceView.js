@@ -116,11 +116,6 @@ WebInspector.ResourceSourceFrame.prototype = {
         this.resource.requestContent(contentLoaded.bind(this));
     },
 
-    suggestedFileName: function()
-    {
-        return this.resource.displayName;
-    },
-
     _contentChanged: function(event)
     {
         this.setContent(WebInspector.ResourceSourceFrame.mimeTypeForResource[this._resource], this._resource.content);
@@ -136,6 +131,10 @@ WebInspector.ResourceSourceFrame.prototype.__proto__ = WebInspector.SourceFrame.
 WebInspector.EditableResourceSourceFrame = function(resource)
 {
     WebInspector.ResourceSourceFrame.call(this, resource);
+}
+
+WebInspector.EditableResourceSourceFrame.Events = {
+    TextEdited: "TextEdited"
 }
 
 WebInspector.EditableResourceSourceFrame.prototype = {
@@ -164,6 +163,7 @@ WebInspector.EditableResourceSourceFrame.prototype = {
         {
             var majorChange = false;
             this.resource.setContent(this._textModel.text, majorChange, function() {});
+            this.dispatchEventToListeners(WebInspector.EditableResourceSourceFrame.Events.TextEdited, this);
         }
         const updateTimeout = 200;
         this._incrementalUpdateTimer = setTimeout(commitIncrementalEdit.bind(this), updateTimeout);
@@ -180,6 +180,11 @@ WebInspector.EditableResourceSourceFrame.prototype = {
     {
         if (!this._settingContent)
             WebInspector.ResourceSourceFrame.prototype._contentChanged.call(this, event);
+    },
+
+    isDirty: function()
+    {
+        return this._resource.content !== this.textModel.text;
     }
 }
 

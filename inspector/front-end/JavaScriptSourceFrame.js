@@ -40,7 +40,6 @@ WebInspector.JavaScriptSourceFrame = function(scriptsPanel, model, uiSourceCode)
     this._scriptsPanel = scriptsPanel;
     this._model = model;
     this._uiSourceCode = uiSourceCode;
-    this._breakpoints = {};
 
     WebInspector.SourceFrame.call(this, uiSourceCode.url);
 
@@ -50,7 +49,10 @@ WebInspector.JavaScriptSourceFrame = function(scriptsPanel, model, uiSourceCode)
     this.textViewer.element.addEventListener("mousedown", this._onMouseDown.bind(this), true);
     this.textViewer.element.addEventListener("keydown", this._onKeyDown.bind(this), true);
     this._uiSourceCode.addEventListener(WebInspector.UISourceCode.Events.ContentChanged, this._onContentChanged, this);
-    this.addEventListener(WebInspector.SourceFrame.Events.Loaded, this._onTextViewerContentLoaded, this);
+    this._uiSourceCode.addEventListener(WebInspector.UISourceCode.Events.BreakpointAdded, this._breakpointAdded, this);
+    this._uiSourceCode.addEventListener(WebInspector.UISourceCode.Events.BreakpointRemoved, this._breakpointRemoved, this);
+    this._uiSourceCode.addEventListener(WebInspector.UISourceCode.Events.ConsoleMessageAdded, this._consoleMessageAdded, this);
+    this._uiSourceCode.addEventListener(WebInspector.UISourceCode.Events.ConsoleMessagesCleared, this._consoleMessagesCleared, this);
 }
 
 WebInspector.JavaScriptSourceFrame.prototype = {
@@ -82,11 +84,6 @@ WebInspector.JavaScriptSourceFrame.prototype = {
         return this._model.canEditScriptSource(this._uiSourceCode);
     },
 
-    suggestedFileName: function()
-    {
-        return this._uiSourceCode.fileName || "untitled.js";
-    },
-
     editContent: function(newContent, callback)
     {
         this._editingContent = true;
@@ -110,10 +107,10 @@ WebInspector.JavaScriptSourceFrame.prototype = {
 
             function addConditionalBreakpoint()
             {
-                this.addBreakpoint(lineNumber, true, true, true);
+                this._addBreakpointDecoration(lineNumber, true, true, true, false);
                 function didEditBreakpointCondition(committed, condition)
                 {
-                    this.removeBreakpoint(lineNumber);
+                    this._removeBreakpointDecoration(lineNumber);
                     if (committed)
                         this._setBreakpoint(lineNumber, condition, true);
                 }
@@ -159,68 +156,53 @@ WebInspector.JavaScriptSourceFrame.prototype = {
 
     afterTextChanged: function(oldRange, newRange)
     {
-        if (!oldRange || !newRange)
-            return;
-
-        // Adjust execution line number.
-        if (typeof this._executionLineNumber === "number") {
-            var newExecutionLineNumber = this._lineNumberAfterEditing(this._executionLineNumber, oldRange, newRange);
-            this.clearExecutionLine();
-            this.setExecutionLine(newExecutionLineNumber);
-        }
-
-        // Adjust breakpoints.
-        var oldBreakpoints = this._breakpoints;
-        this._breakpoints = {};
-        for (var lineNumber in oldBreakpoints) {
-            lineNumber = Number(lineNumber);
-            var breakpoint = oldBreakpoints[lineNumber];
-            var newLineNumber = this._lineNumberAfterEditing(lineNumber, oldRange, newRange);
-            if (lineNumber === newLineNumber)
-                this._breakpoints[lineNumber] = breakpoint;
-            else {
-                this.removeBreakpoint(lineNumber);
-                this.addBreakpoint(newLineNumber, breakpoint.resolved, breakpoint.conditional, breakpoint.enabled);
-            }
-        }
-
-        this._scriptsPanel.setScriptSourceIsDirty(this._uiSourceCode, this.textModel.copyRange() !== this._originalContent);
+        var isDirty = this.textModel.text !== this._originalContent;
+        if (isDirty)
+            this._scriptsPanel.setScriptSourceIsDirty(this._uiSourceCode, true);
+        else
+            this.didEditContent(null, this._originalContent);
     },
 
     beforeTextChanged: function()
     {
-        if (!this._javaScriptSourceFrameState) {
-            this._javaScriptSourceFrameState = {
-                executionLineNumber: this._executionLineNumber,
-                breakpoints: this._breakpoints
+        if (!this._isDirty) {
+            // Disable all breakpoints in the model, store them as muted breakpoints.
+            for (var lineNumber = 0; lineNumber < this.textModel.linesCount; ++lineNumber) {
+                var breakpoint = this.textModel.getAttribute(lineNumber, "breakpoint");
+                if (breakpoint) {
+                    this._model.removeBreakpoint(this._uiSourceCode, lineNumber);
+                    // Re-adding decoration only.
+                    this._addBreakpointDecoration(lineNumber, breakpoint.resolved, breakpoint.conditional, breakpoint.enabled, true);
+                }
             }
         }
+
+        this._isDirty = true;
         WebInspector.SourceFrame.prototype.beforeTextChanged.call(this);
     },
 
     didEditContent: function(error, content)
     {
         delete this._editingContent;
+
         WebInspector.SourceFrame.prototype.didEditContent.call(this, error, content);
         if (error)
             return;
 
         this._originalContent = content;
-        var newBreakpoints = {};
-        for (var lineNumber in this._breakpoints) {
-            newBreakpoints[lineNumber] = this._breakpoints[lineNumber];
-            this.removeBreakpoint(Number(lineNumber));
-        }
+        this._isDirty = false;
 
-        for (var lineNumber in this._javaScriptSourceFrameState.breakpoints)
-            this._model.removeBreakpoint(this._uiSourceCode, Number(lineNumber));
-
-        for (var lineNumber in newBreakpoints) {
-            var breakpoint = newBreakpoints[lineNumber];
-            this._setBreakpoint(Number(lineNumber), breakpoint.condition, breakpoint.enabled);
+        // Restore all muted breakpoints.
+        for (var lineNumber = 0; lineNumber < this.textModel.linesCount; ++lineNumber) {
+            var breakpoint = this.textModel.getAttribute(lineNumber, "breakpoint");
+            if (breakpoint) {
+                // Remove fake decoration
+                this._removeBreakpointDecoration(lineNumber);
+                // Set new breakpoint
+                this._setBreakpoint(lineNumber, breakpoint.condition, breakpoint.enabled);
+            }
         }
         this._scriptsPanel.setScriptSourceIsDirty(this._uiSourceCode, false);
-        delete this._javaScriptSourceFrameState;
     },
 
     _getPopoverAnchor: function(element, event)
@@ -332,25 +314,27 @@ WebInspector.JavaScriptSourceFrame.prototype = {
         return container;
     },
 
-    addBreakpoint: function(lineNumber, resolved, conditional, enabled)
+    _addBreakpointDecoration: function(lineNumber, resolved, conditional, enabled, mutedWhileEditing)
     {
-        this._breakpoints[lineNumber] = {
+        var breakpoint = {
             resolved: resolved,
             conditional: conditional,
             enabled: enabled
         };
+        this.textModel.setAttribute(lineNumber, "breakpoint", breakpoint);
+
         this.textViewer.beginUpdates();
         this.textViewer.addDecoration(lineNumber, "webkit-breakpoint");
-        if (!enabled)
+        if (!enabled || mutedWhileEditing)
             this.textViewer.addDecoration(lineNumber, "webkit-breakpoint-disabled");
         if (conditional)
             this.textViewer.addDecoration(lineNumber, "webkit-breakpoint-conditional");
         this.textViewer.endUpdates();
     },
 
-    removeBreakpoint: function(lineNumber)
+    _removeBreakpointDecoration: function(lineNumber)
     {
-        delete this._breakpoints[lineNumber];
+        this.textModel.removeAttribute(lineNumber, "breakpoint");
         this.textViewer.beginUpdates();
         this.textViewer.removeDecoration(lineNumber, "webkit-breakpoint");
         this.textViewer.removeDecoration(lineNumber, "webkit-breakpoint-disabled");
@@ -366,6 +350,9 @@ WebInspector.JavaScriptSourceFrame.prototype = {
 
     _onMouseDown: function(event)
     {
+        if (this._isDirty)
+            return;
+
         if (event.button != 0 || event.altKey || event.ctrlKey || event.metaKey)
             return;
         var target = event.target.enclosingNodeOrSelfWithClass("webkit-line-number");
@@ -440,8 +427,10 @@ WebInspector.JavaScriptSourceFrame.prototype = {
     setExecutionLine: function(lineNumber)
     {
         this._executionLineNumber = lineNumber;
-        if (this.loaded)
+        if (this.loaded) {
             this.textViewer.addDecoration(lineNumber, "webkit-execution-line");
+            this.revealLine(this._executionLineNumber);
+        }
     },
 
     clearExecutionLine: function()
@@ -472,10 +461,48 @@ WebInspector.JavaScriptSourceFrame.prototype = {
         return newLineNumber;
     },
 
-    _onTextViewerContentLoaded: function()
+    _breakpointAdded: function(event)
+    {
+        var breakpoint = /** @type {WebInspector.UIBreakpoint} */ event.data;
+        if (this.loaded)
+            this._addBreakpointDecoration(breakpoint.lineNumber, breakpoint.resolved, breakpoint.condition, breakpoint.enabled, false);
+    },
+
+    _breakpointRemoved: function(event)
+    {
+        var breakpoint = /** @type {WebInspector.UIBreakpoint} */ event.data;
+        if (this.loaded)
+            this._removeBreakpointDecoration(breakpoint.lineNumber);
+    },
+
+    _consoleMessageAdded: function(event)
+    {
+        var message = event.data;
+        if (this.loaded)
+            this.addMessageToSource(message.lineNumber, message.originalMessage);
+    },
+
+    _consoleMessagesCleared: function(event)
+    {
+        this.clearMessages();
+    },
+
+    onTextViewerContentLoaded: function()
     {
         if (typeof this._executionLineNumber === "number")
             this.setExecutionLine(this._executionLineNumber);
+
+        var breakpoints = this._uiSourceCode.breakpoints();
+        for (var lineNumber in breakpoints) {
+            var breakpoint = breakpoints[lineNumber];
+            this._addBreakpointDecoration(breakpoint.lineNumber, breakpoint.resolved, breakpoint.condition, breakpoint.enabled, false);
+        }
+
+        var messages = this._uiSourceCode.consoleMessages();
+        for (var i = 0; i < messages.length; ++i) {
+            var message = messages[i];
+            this.addMessageToSource(message.lineNumber, message.originalMessage);
+        }
     }
 }
 

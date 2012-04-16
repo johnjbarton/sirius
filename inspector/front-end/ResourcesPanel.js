@@ -52,10 +52,8 @@ WebInspector.ResourcesPanel = function(database)
     this.databasesListTreeElement = new WebInspector.StorageCategoryTreeElement(this, WebInspector.UIString("Databases"), "Databases", ["database-storage-tree-item"]);
     this.sidebarTree.appendChild(this.databasesListTreeElement);
 
-    if (WebInspector.experimentsSettings.showIndexedDB.isEnabled()) {
-        this.indexedDBListTreeElement = new WebInspector.IndexedDBTreeElement(this);
-        this.sidebarTree.appendChild(this.indexedDBListTreeElement);
-    }
+    this.indexedDBListTreeElement = new WebInspector.IndexedDBTreeElement(this);
+    this.sidebarTree.appendChild(this.indexedDBListTreeElement);
 
     this.localStorageListTreeElement = new WebInspector.StorageCategoryTreeElement(this, WebInspector.UIString("Local Storage"), "LocalStorage", ["domstorage-storage-tree-item", "local-storage"]);
     this.sidebarTree.appendChild(this.localStorageListTreeElement);
@@ -1253,6 +1251,7 @@ WebInspector.FrameResourceTreeElement.prototype = {
     {
         var contextMenu = new WebInspector.ContextMenu();
         contextMenu.appendItem(WebInspector.openLinkExternallyLabel(), WebInspector.openResource.bind(WebInspector, this._resource.url, false));
+        contextMenu.appendItem(WebInspector.copyLinkAddressLabel(), InspectorFrontendHost.copyText.bind(InspectorFrontendHost, this._resource.url));
         this._appendOpenInNetworkPanelAction(contextMenu, event);
         WebInspector.populateResourceContextMenu(contextMenu, this._resource.url, null);
         this._appendSaveAsAction(contextMenu, event);
@@ -1269,7 +1268,7 @@ WebInspector.FrameResourceTreeElement.prototype = {
 
     _appendSaveAsAction: function(contextMenu, event)
     {
-        if (!InspectorFrontendHost.canSaveAs())
+        if (!InspectorFrontendHost.canSave())
             return;
 
         if (this._resource.type !== WebInspector.Resource.Type.Document &&
@@ -1277,14 +1276,19 @@ WebInspector.FrameResourceTreeElement.prototype = {
             this._resource.type !== WebInspector.Resource.Type.Script)
             return;
 
-        function save()
+        function doSave(forceSaveAs, content)
         {
-            var fileName = this._resource.displayName;
-            this._resource.requestContent(InspectorFrontendHost.saveAs.bind(InspectorFrontendHost, fileName));
+            WebInspector.save(this._resource.url, content, forceSaveAs);
+        }
+
+        function save(forceSaveAs)
+        {
+            this._resource.requestContent(doSave.bind(this, forceSaveAs));
         }
 
         contextMenu.appendSeparator();
-        contextMenu.appendItem(WebInspector.UIString(WebInspector.useLowerCaseMenuTitles() ? "Save as..." : "Save As..."), save.bind(this));
+        contextMenu.appendItem(WebInspector.UIString("Save"), save.bind(this, false));
+        contextMenu.appendItem(WebInspector.UIString(WebInspector.useLowerCaseMenuTitles() ? "Save as..." : "Save As..."), save.bind(this, true));
     },
 
     _setBubbleText: function(x)
@@ -1383,6 +1387,7 @@ WebInspector.FrameResourceTreeElement.prototype = {
 
     _appendRevision: function(revision)
     {
+        this.subtitleText = "";
         this.insertChild(new WebInspector.ResourceRevisionTreeElement(this._storagePanel, revision), 0);
         if (this._sourceView === this._storagePanel.visibleView)
             this._storagePanel._showResourceView(this._resource);
@@ -1391,35 +1396,20 @@ WebInspector.FrameResourceTreeElement.prototype = {
     sourceView: function()
     {
         if (!this._sourceView) {
-            this._sourceView = this._createSourceView();
+            this._sourceView = new WebInspector.EditableResourceSourceFrame(this._resource);
             if (this._resource.messages) {
                 for (var i = 0; i < this._resource.messages.length; i++)
                     this._sourceView.addMessage(this._resource.messages[i]);
             }
+            this._sourceView.addEventListener(WebInspector.EditableResourceSourceFrame.Events.TextEdited, this._sourceViewTextEdited, this);
         }
         return this._sourceView;
     },
 
-    _createSourceView: function()
+    _sourceViewTextEdited: function(event)
     {
-        return new WebInspector.EditableResourceSourceFrame(this._resource);
-    },
-
-    _recreateSourceView: function()
-    {
-        var oldView = this._sourceView;
-        var newView = this._createSourceView();
-
-        var oldViewParentNode = oldView.isShowing() ? oldView.element.parentNode : null;
-        newView.inheritScrollPositions(oldView);
-
-        this._sourceView.detach();
-        this._sourceView = newView;
-
-        if (oldViewParentNode)
-            newView.show(oldViewParentNode);
-
-        return newView;
+        var sourceFrame = event.data;
+        this.subtitleText = sourceFrame.isDirty() ? "*" : "";
     }
 }
 
@@ -2056,14 +2046,20 @@ WebInspector.ResourceRevisionTreeElement.prototype = {
         var contextMenu = new WebInspector.ContextMenu();
         contextMenu.appendItem(WebInspector.UIString("Revert to this revision"), this._revision.revertToThis.bind(this._revision));
 
-        if (InspectorFrontendHost.canSaveAs()) {
-            function save()
+        if (InspectorFrontendHost.canSave()) {
+            function doSave(forceSaveAs, content)
             {
-                var fileName = this._revision.resource.displayName;
-                this._revision.requestContent(InspectorFrontendHost.saveAs.bind(InspectorFrontendHost, fileName));
+                WebInspector.save(this._revision.resource.url, content, forceSaveAs);
             }
+
+            function save(forceSaveAs)
+            {
+                this._revision.requestContent(doSave.bind(this, forceSaveAs));
+            }
+
             contextMenu.appendSeparator();
-            contextMenu.appendItem(WebInspector.UIString(WebInspector.useLowerCaseMenuTitles() ? "Save as..." : "Save As..."), save.bind(this));
+            contextMenu.appendItem(WebInspector.UIString("Save"), save.bind(this, false));
+            contextMenu.appendItem(WebInspector.UIString(WebInspector.useLowerCaseMenuTitles() ? "Save as..." : "Save As..."), save.bind(this, true));
         }
 
         contextMenu.show(event);
