@@ -21,25 +21,25 @@ ChromeDevtools.Inspector.prototype = {
         ChromeDevtools.proxy.sendCommand('Inspector.disable', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     evaluateForTestInFrontend: function(testCallId, script) {},
     inspect: function(object, hints) {},
     didCreateWorker: function(id, url, isShared) {},
     didDestroyWorker: function(id) {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('Inspector', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Inspector.evaluateForTestInFrontend', 
             ['testCallId', 'script']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Inspector.inspect', 
             ['object', 'hints']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Inspector.didCreateWorker', 
             ['id', 'url', 'isShared']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Inspector.didDestroyWorker', 
             ['id']);
     },
@@ -141,25 +141,25 @@ ChromeDevtools.Page.prototype = {
         ChromeDevtools.proxy.sendCommand('Page.searchInResources', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     domContentEventFired: function(timestamp) {},
     loadEventFired: function(timestamp) {},
     /* unsupported */ frameNavigated: function(frame) {},
     /* unsupported */ frameDetached: function(frameId) {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('Page', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Page.domContentEventFired', 
             ['timestamp']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Page.loadEventFired', 
             ['timestamp']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Page.frameNavigated', 
             ['frame']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Page.frameDetached', 
             ['frameId']);
     },
@@ -249,21 +249,21 @@ ChromeDevtools.Console.prototype = {
         ChromeDevtools.proxy.sendCommand('Console.addInspectedNode', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     messageAdded: function(message) {},
     messageRepeatCountUpdated: function(count) {},
     messagesCleared: function() {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('Console', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Console.messageAdded', 
             ['message']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Console.messageRepeatCountUpdated', 
             ['count']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Console.messagesCleared', 
             ['']);
     },
@@ -329,7 +329,7 @@ ChromeDevtools.Network.prototype = {
         ChromeDevtools.proxy.sendCommand('Network.setCacheDisabled', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     requestWillBeSent: function(requestId, frameId, loaderId, documentURL, request, timestamp, initiator, stackTrace, redirectResponse) {},
     requestServedFromCache: function(requestId) {},
     responseReceived: function(requestId, frameId, loaderId, timestamp, type, response) {},
@@ -343,39 +343,39 @@ ChromeDevtools.Network.prototype = {
     /* unsupported */ webSocketClosed: function(requestId, timestamp) {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('Network', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Network.requestWillBeSent', 
             ['requestId', 'frameId', 'loaderId', 'documentURL', 'request', 'timestamp', 'initiator', 'stackTrace', 'redirectResponse']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Network.requestServedFromCache', 
             ['requestId']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Network.responseReceived', 
             ['requestId', 'frameId', 'loaderId', 'timestamp', 'type', 'response']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Network.dataReceived', 
             ['requestId', 'timestamp', 'dataLength', 'encodedDataLength']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Network.loadingFinished', 
             ['requestId', 'timestamp']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Network.loadingFailed', 
             ['requestId', 'timestamp', 'errorText', 'canceled']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Network.requestServedFromMemoryCache', 
             ['requestId', 'frameId', 'loaderId', 'documentURL', 'timestamp', 'initiator', 'resource']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Network.webSocketWillSendHandshakeRequest', 
             ['requestId', 'timestamp', 'request']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Network.webSocketHandshakeResponseReceived', 
             ['requestId', 'timestamp', 'response']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Network.webSocketCreated', 
             ['requestId', 'url']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Network.webSocketClosed', 
             ['requestId', 'timestamp']);
     },
@@ -410,21 +410,21 @@ ChromeDevtools.Database.prototype = {
         ChromeDevtools.proxy.sendCommand('Database.executeSQL', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     addDatabase: function(database) {},
     sqlTransactionSucceeded: function(transactionId, columnNames, values) {},
     sqlTransactionFailed: function(transactionId, sqlError) {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('Database', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Database.addDatabase', 
             ['database']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Database.sqlTransactionSucceeded', 
             ['transactionId', 'columnNames', 'values']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Database.sqlTransactionFailed', 
             ['transactionId', 'sqlError']);
     },
@@ -467,17 +467,17 @@ ChromeDevtools.DOMStorage.prototype = {
         ChromeDevtools.proxy.sendCommand('DOMStorage.removeDOMStorageItem', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     addDOMStorage: function(storage) {},
     updateDOMStorage: function(storageId) {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('DOMStorage', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'DOMStorage.addDOMStorage', 
             ['storage']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'DOMStorage.updateDOMStorage', 
             ['storageId']);
     },
@@ -511,17 +511,17 @@ ChromeDevtools.ApplicationCache.prototype = {
         ChromeDevtools.proxy.sendCommand('ApplicationCache.getApplicationCacheForFrame', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     applicationCacheStatusUpdated: function(frameId, manifestURL, status) {},
     networkStateUpdated: function(isNowOnline) {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('ApplicationCache', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'ApplicationCache.applicationCacheStatusUpdated', 
             ['frameId', 'manifestURL', 'status']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'ApplicationCache.networkStateUpdated', 
             ['isNowOnline']);
     },
@@ -734,7 +734,7 @@ ChromeDevtools.DOM.prototype = {
         ChromeDevtools.proxy.sendCommand('DOM.moveTo', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     documentUpdated: function() {},
     setChildNodes: function(parentId, nodes) {},
     attributeModified: function(nodeId, name, value) {},
@@ -746,33 +746,33 @@ ChromeDevtools.DOM.prototype = {
     childNodeRemoved: function(parentNodeId, nodeId) {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('DOM', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'DOM.documentUpdated', 
             ['']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'DOM.setChildNodes', 
             ['parentId', 'nodes']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'DOM.attributeModified', 
             ['nodeId', 'name', 'value']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'DOM.attributeRemoved', 
             ['nodeId', 'name']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'DOM.inlineStyleInvalidated', 
             ['nodeIds']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'DOM.characterDataModified', 
             ['nodeId', 'characterData']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'DOM.childNodeCountUpdated', 
             ['nodeId', 'childNodeCount']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'DOM.childNodeInserted', 
             ['parentNodeId', 'previousNodeId', 'node']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'DOM.childNodeRemoved', 
             ['parentNodeId', 'nodeId']);
     },
@@ -886,13 +886,13 @@ ChromeDevtools.CSS.prototype = {
         ChromeDevtools.proxy.sendCommand('CSS.stopSelectorProfiler', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     mediaQueryResultChanged: function() {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('CSS', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'CSS.mediaQueryResultChanged', 
             ['']);
     },
@@ -915,13 +915,13 @@ ChromeDevtools.Timeline.prototype = {
         ChromeDevtools.proxy.sendCommand('Timeline.stop', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     eventRecorded: function(record) {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('Timeline', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Timeline.eventRecorded', 
             ['record']);
     },
@@ -1063,7 +1063,7 @@ ChromeDevtools.Debugger.prototype = {
         ChromeDevtools.proxy.sendCommand('Debugger.evaluateOnCallFrame', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     globalObjectCleared: function() {},
     scriptParsed: function(scriptId, url, startLine, startColumn, endLine, endColumn, isContentScript, sourceMapURL) {},
     scriptFailedToParse: function(url, scriptSource, startLine, errorLine, errorMessage) {},
@@ -1072,24 +1072,24 @@ ChromeDevtools.Debugger.prototype = {
     resumed: function() {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('Debugger', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Debugger.globalObjectCleared', 
             ['']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Debugger.scriptParsed', 
             ['scriptId', 'url', 'startLine', 'startColumn', 'endLine', 'endColumn', 'isContentScript', 'sourceMapURL']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Debugger.scriptFailedToParse', 
             ['url', 'scriptSource', 'startLine', 'errorLine', 'errorMessage']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Debugger.breakpointResolved', 
             ['breakpointId', 'location']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Debugger.paused', 
             ['callFrames', 'reason', 'data']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Debugger.resumed', 
             ['']);
     },
@@ -1221,7 +1221,7 @@ ChromeDevtools.Profiler.prototype = {
         ChromeDevtools.proxy.sendCommand('Profiler.getObjectByHeapObjectId', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     addProfileHeader: function(header) {},
     addHeapSnapshotChunk: function(uid, chunk) {},
     finishHeapSnapshot: function(uid) {},
@@ -1230,24 +1230,24 @@ ChromeDevtools.Profiler.prototype = {
     reportHeapSnapshotProgress: function(done, total) {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('Profiler', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Profiler.addProfileHeader', 
             ['header']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Profiler.addHeapSnapshotChunk', 
             ['uid', 'chunk']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Profiler.finishHeapSnapshot', 
             ['uid']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Profiler.setRecordingProfile', 
             ['isProfiling']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Profiler.resetProfiles', 
             ['']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Profiler.reportHeapSnapshotProgress', 
             ['done', 'total']);
     },
@@ -1290,25 +1290,25 @@ ChromeDevtools.Worker.prototype = {
         ChromeDevtools.proxy.sendCommand('Worker.setAutoconnectToWorkers', paramObject, opt_callback);
     },
 
-    // Event handlers to override, then call addListeners
+    // Event handlers to override, then call initialize
     workerCreated: function(workerId, url, inspectorConnected) {},
     workerTerminated: function(workerId) {},
     dispatchMessageFromWorker: function(workerId, message) {},
     disconnectedFromWorker: function() {},
 
     // Call in your constructor to register for this events in domain
-    addListeners: function() {
+    initialize: function() {
         ChromeDevtools.proxy.onEvent('Worker', this);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Worker.workerCreated', 
             ['workerId', 'url', 'inspectorConnected']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Worker.workerTerminated', 
             ['workerId']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Worker.dispatchMessageFromWorker', 
             ['workerId', 'message']);
-        ChromeDevtools.registerEvent(
+        ChromeDevtools.proxy.registerEvent(
             'Worker.disconnectedFromWorker', 
             ['']);
     },

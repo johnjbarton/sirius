@@ -31,10 +31,11 @@ RESTChannel.talk(window.parent, function onAttach(connection) {
     // Similar to WebInspector.registerDomainDispatcher
     onEvent: function(domain, listenerObject) {
       var remoteRef = connection.register('ChromeDevtools.onEvent.' + domain, {
-          post: function(messageObject) {
-            var method = messageObject.method;
+          post: function(connection, messageObject) {
+            var method = messageObject.method.split('.')[1];
             var params = [];
-            if (messageObject.params) {
+            var messageParams = messageObject.params;
+            if (messageParams && messageParams.length) {
               var paramNames = this._eventArgs[method];
               for (var i = 0; i < paramNames.length; ++i) {
                 params.push(messageObject.params[paramNames[i]]);
@@ -44,7 +45,7 @@ RESTChannel.talk(window.parent, function onAttach(connection) {
           }
       });
       connection.putObject(
-        'ChromeDevtools.onEvent.addListener',
+        'ChromeDevtools.onEvent.addListener.'+domain,
         remoteRef,
         function eatReply() {
           if (ChromeDevtools.proxy.debug) {
