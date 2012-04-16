@@ -101,7 +101,7 @@ var generateProxyDebugAPI = {
                     var unsupported = event.hidden ? '/* unsupported */ ' : '';
                     result.push('    '+unsupported+event.name + ": function(" + paramsText.join(", ") + ") {},");
                     
-                    eventRegistrations.push('        ChromeDevtools.registerEvent(');
+                    eventRegistrations.push('        ChromeDevtools.proxy.registerEvent(');
                     eventRegistrations.push('            \''+domain.domain + '.' + event.name + '\', ');
                     eventRegistrations.push('            [\'' + paramsText.join('\', \'') + '\']);');
                 }
