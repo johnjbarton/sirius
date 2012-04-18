@@ -32,17 +32,18 @@ RESTChannel.talk(window.parent, function onAttach(connection) {
     onEvent: function(domain, listenerObject) {
       var remoteRef = connection.register('ChromeDevtools.onEvent.' + domain, {
           post: function(connection, messageObject) {
-            var method = messageObject.method.split('.')[1];
+            var domainMethod = messageObject.method;
+            var method = domainMethod.split('.')[1];
             var params = [];
             var messageParams = messageObject.params;
-            if (messageParams && messageParams.length) {
-              var paramNames = this._eventArgs[method];
+            if (messageParams) {
+              var paramNames = this._eventArgs[domainMethod];
               for (var i = 0; i < paramNames.length; ++i) {
                 params.push(messageObject.params[paramNames[i]]);
               }
             }
             listenerObject[method].apply(listenerObject, params);
-          }
+          }.bind(this)
       });
       connection.putObject(
         'ChromeDevtools.onEvent.addListener.'+domain,

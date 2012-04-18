@@ -37,7 +37,8 @@ InspectorBackend.registerCommand("Page.getResourceContent", [{"name": "frameId",
 InspectorBackend.registerCommand("Page.searchInResource", [{"name": "frameId", "type": "string", "optional": false}, {"name": "url", "type": "string", "optional": false}, {"name": "query", "type": "string", "optional": false}, {"name": "caseSensitive", "type": "boolean", "optional": true}, {"name": "isRegex", "type": "boolean", "optional": true}], ["result"]);
 InspectorBackend.registerCommand("Page.searchInResources", [{"name": "text", "type": "string", "optional": false}, {"name": "caseSensitive", "type": "boolean", "optional": true}, {"name": "isRegex", "type": "boolean", "optional": true}], ["result"]);
 InspectorBackend.registerCommand("Page.setDocumentContent", [{"name": "frameId", "type": "string", "optional": false}, {"name": "html", "type": "string", "optional": false}], []);
-InspectorBackend.registerCommand("Page.setScreenSizeOverride", [{"name": "width", "type": "number", "optional": false}, {"name": "height", "type": "number", "optional": false}], []);
+InspectorBackend.registerCommand("Page.canOverrideDeviceMetrics", [], ["result"]);
+InspectorBackend.registerCommand("Page.setDeviceMetricsOverride", [{"name": "width", "type": "number", "optional": false}, {"name": "height", "type": "number", "optional": false}, {"name": "fontScaleFactor", "type": "number", "optional": false}], []);
 InspectorBackend.registerCommand("Page.setShowPaintRects", [{"name": "result", "type": "boolean", "optional": false}], []);
 
 // Runtime.
@@ -91,8 +92,8 @@ InspectorBackend.registerEvent("Database.sqlTransactionSucceeded", ["transaction
 InspectorBackend.registerEvent("Database.sqlTransactionFailed", ["transactionId", "sqlError"]);
 InspectorBackend.registerCommand("Database.enable", [], []);
 InspectorBackend.registerCommand("Database.disable", [], []);
-InspectorBackend.registerCommand("Database.getDatabaseTableNames", [{"name": "databaseId", "type": "number", "optional": false}], ["tableNames"]);
-InspectorBackend.registerCommand("Database.executeSQL", [{"name": "databaseId", "type": "number", "optional": false}, {"name": "query", "type": "string", "optional": false}], ["success", "transactionId"]);
+InspectorBackend.registerCommand("Database.getDatabaseTableNames", [{"name": "databaseId", "type": "string", "optional": false}], ["tableNames"]);
+InspectorBackend.registerCommand("Database.executeSQL", [{"name": "databaseId", "type": "string", "optional": false}, {"name": "query", "type": "string", "optional": false}], ["success", "transactionId"]);
 
 // IndexedDB.
 InspectorBackend.registerIndexedDBDispatcher = InspectorBackend.registerDomainDispatcher.bind(InspectorBackend, "IndexedDB");
@@ -112,9 +113,9 @@ InspectorBackend.registerEvent("DOMStorage.addDOMStorage", ["storage"]);
 InspectorBackend.registerEvent("DOMStorage.updateDOMStorage", ["storageId"]);
 InspectorBackend.registerCommand("DOMStorage.enable", [], []);
 InspectorBackend.registerCommand("DOMStorage.disable", [], []);
-InspectorBackend.registerCommand("DOMStorage.getDOMStorageEntries", [{"name": "storageId", "type": "number", "optional": false}], ["entries"]);
-InspectorBackend.registerCommand("DOMStorage.setDOMStorageItem", [{"name": "storageId", "type": "number", "optional": false}, {"name": "key", "type": "string", "optional": false}, {"name": "value", "type": "string", "optional": false}], ["success"]);
-InspectorBackend.registerCommand("DOMStorage.removeDOMStorageItem", [{"name": "storageId", "type": "number", "optional": false}, {"name": "key", "type": "string", "optional": false}], ["success"]);
+InspectorBackend.registerCommand("DOMStorage.getDOMStorageEntries", [{"name": "storageId", "type": "string", "optional": false}], ["entries"]);
+InspectorBackend.registerCommand("DOMStorage.setDOMStorageItem", [{"name": "storageId", "type": "string", "optional": false}, {"name": "key", "type": "string", "optional": false}, {"name": "value", "type": "string", "optional": false}], ["success"]);
+InspectorBackend.registerCommand("DOMStorage.removeDOMStorageItem", [{"name": "storageId", "type": "string", "optional": false}, {"name": "key", "type": "string", "optional": false}], ["success"]);
 
 // ApplicationCache.
 InspectorBackend.registerApplicationCacheDispatcher = InspectorBackend.registerDomainDispatcher.bind(InspectorBackend, "ApplicationCache");
