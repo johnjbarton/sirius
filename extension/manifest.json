@@ -32,12 +32,12 @@
        "matches": ["http://*/mixloginstatic/LoginWindow.html*"],
        "js": ["superLogin.js"]
      },
-     {
+     { // Common code for content-scripts
        "matches": ["*://*/*/devtools/panels/*"],
        "js": ["atopwi/devtoolsAdapter/ScriptInjector.js"],
        "all_frames": true
      },
-     {
+     { // Add scripts to extension panels giving remote debug API
        "matches": ["*://*/*/devtools/panels/*"],
        "js": ["atopwi/devtoolsAdapter/panelInjector.js"],
        "all_frames": true
