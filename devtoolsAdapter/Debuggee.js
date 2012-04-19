@@ -243,6 +243,7 @@ function(            ChromeProxy)  {
     },
     
     proxySendCommand: function(panelConnection, messageObject) {
+    // Call from ExtensionServer.sendCommand
       this.chrome.debugger.sendCommand(
           {url: this.url, tabId: this.tabId}, 
            messageObject.method, 
@@ -252,6 +253,7 @@ function(            ChromeProxy)  {
     },
     
     onEvent:function(panelConnection, messageObject) {
+    // Call ExtensionServer._notifyRemoteDebugEvent
       var domainMethod = messageObject.method;
       var domain = domainMethod.split('.')[0];
       var handler = this._eventListenersByDomain[domain];

@@ -58,12 +58,33 @@ function defineCommonExtensionSymbols(apiPrivate)
         OpenResource: "open-resource",
         PanelSearch: "panel-search-",
         Reload: "Reload",
+        RemoteDebug: "remote-debug-",
         ResourceAdded: "resource-added",
         ResourceContentCommitted: "resource-content-committed",
         TimelineEventRecorded: "timeline-event-recorded",
         ViewShown: "view-shown-",
         ViewHidden: "view-hidden-"
     };
+    apiPrivate.Domains = [
+        "Inspector",
+         "Memory",
+         "Page",
+         "Runtime",
+         "Console",
+         "Network",
+         "Database",
+         "DOMStorage",
+         "ApplicationCache",
+         "FileSystem",
+         "DOM",
+         "CSS",
+         "Timeline",
+         "Debugger",
+         "DOMDebugger",
+         "Profiler",
+         "Worker"
+    ];
+    
     apiPrivate.Commands = {
         AddAuditCategory: "addAuditCategory",
         AddAuditResult: "addAuditResult",
@@ -78,6 +99,7 @@ function defineCommonExtensionSymbols(apiPrivate)
         GetPageResources: "getPageResources",
         GetRequestContent: "getRequestContent",
         GetResourceContent: "getResourceContent",
+        RemoteDebugSendCommand: "remoteSendCommand", 
         Subscribe: "subscribe",
         SetOpenResourceHandler: "setOpenResourceHandler",
         SetResourceContent: "setResourceContent",
@@ -659,6 +681,23 @@ ResourceImpl.prototype = {
     }
 }
 
+/**
+ * @constructor
+ */
+function RemoteDebugImpl()
+{
+	this.onRemoteDebugEvent = {};
+	apiPrivate.Domains.forEach(function(domain) {
+  		this.onRemoteDebugEvent[domain] = new EventSink(events.RemoteDebugEvent + domain);
+	});
+}
+
+RemoteDebugImpl.prototype = {
+    remoteSendCommand: function(domainMethod, params, callback)
+    {
+        return extensionServer.sendRequest({ command: commands.RemoteDebugSendCommand, method: domainMethod, params: params }, callback);
+    }
+}
 /**
  * @constructor
  */
