@@ -517,6 +517,10 @@ WebInspector.ExtensionServer.prototype = {
             return this._status.E_NOTFOUND(message.resultId);
         auditRun.cancel();
     },
+    
+    _onRemoteDebugSendCommand: function(message) {
+      InspectorBackend.sendMessageObjectToBackend.call(InspectorBackend, message);
+    },
 
     _dispatchCallback: function(requestId, port, result)
     {
@@ -596,6 +600,11 @@ WebInspector.ExtensionServer.prototype = {
     _notifyTimelineEventRecorded: function(event)
     {
         this._postNotification(WebInspector.extensionAPI.Events.TimelineEventRecorded, event.data);
+    },
+
+    _notifyRemoteDebugEvent: function(event) {
+        var domain = event.data.method.split('.')[0];
+    	this._postNotification(WebInspector.extensionAPI.Events.RemoteDebugEvent + domain, event.data);	
     },
 
     /**
