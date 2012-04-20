@@ -1,24 +1,28 @@
-/* Machine generated from ../inspector/Inspector.json version: 1.0 on Mon Apr 16 2012 16:12:32 GMT-0700 (PDT) */
+/* Machine generated from ../inspector/Inspector.json version: 1.0 on Fri Apr 20 2012 16:48:11 GMT-0700 (PDT) */
 
-var ChromeDevtools = (function () {
+(function () {
+// create chrome.devtools
+window.extensionInfo = {};
+var uid = window.location.toString();
+platformExtensionAPI(injectedExtensionAPI(uid));
 
-var ChromeDevtools = ChromeDevtools || {};
-ChromeDevtools.version = 1.0;
+chrome.devtools.protocol = {};
+chrome.devtools.protocol.version = 1.0;
 
 /* unsupported */ 
-ChromeDevtools.Inspector = {};
-ChromeDevtools.Inspector.prototype = {
+chrome.devtools.protocol.Inspector = {};
+chrome.devtools.protocol.Inspector.prototype = {
 
     // Commands: 
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Inspector.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Inspector.enable', paramObject, opt_callback);
     },
     disable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Inspector.disable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Inspector.disable', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -29,97 +33,97 @@ ChromeDevtools.Inspector.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('Inspector', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Inspector.evaluateForTestInFrontend', 
             ['testCallId', 'script']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Inspector.inspect', 
             ['object', 'hints']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Inspector.didCreateWorker', 
             ['id', 'url', 'isShared']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Inspector.didDestroyWorker', 
             ['id']);
+        chrome.devtools.remoteDebug.addDomainListener('Inspector', this);
     },
 };
 
 /* unsupported */ 
-ChromeDevtools.Memory = {};
-ChromeDevtools.Memory.prototype = {
+chrome.devtools.protocol.Memory = {};
+chrome.devtools.protocol.Memory.prototype = {
 
     // Commands: 
     getDOMNodeCount: function(opt_callback/*(domGroups,strings)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Memory.getDOMNodeCount', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Memory.getDOMNodeCount', paramObject, opt_callback);
     },
 };
 
 
-ChromeDevtools.Page = {};
-ChromeDevtools.Page.prototype = {
+chrome.devtools.protocol.Page = {};
+chrome.devtools.protocol.Page.prototype = {
 
     // Commands: 
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Page.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.enable', paramObject, opt_callback);
     },
     disable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Page.disable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.disable', paramObject, opt_callback);
     },
     /* unsupported */ addScriptToEvaluateOnLoad: function(scriptSource, opt_callback/*(identifier)*/) {
         var paramObject = {
              'scriptSource': scriptSource,
          };
-        ChromeDevtools.proxy.sendCommand('Page.addScriptToEvaluateOnLoad', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.addScriptToEvaluateOnLoad', paramObject, opt_callback);
     },
     /* unsupported */ removeScriptToEvaluateOnLoad: function(identifier, opt_callback) {
         var paramObject = {
              'identifier': identifier,
          };
-        ChromeDevtools.proxy.sendCommand('Page.removeScriptToEvaluateOnLoad', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.removeScriptToEvaluateOnLoad', paramObject, opt_callback);
     },
     reload: function(ignoreCache, scriptToEvaluateOnLoad, opt_callback) {
         var paramObject = {
              'ignoreCache': ignoreCache,
              'scriptToEvaluateOnLoad': scriptToEvaluateOnLoad,
          };
-        ChromeDevtools.proxy.sendCommand('Page.reload', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.reload', paramObject, opt_callback);
     },
     navigate: function(url, opt_callback) {
         var paramObject = {
              'url': url,
          };
-        ChromeDevtools.proxy.sendCommand('Page.navigate', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.navigate', paramObject, opt_callback);
     },
     /* unsupported */ getCookies: function(opt_callback/*(cookies,cookiesString)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Page.getCookies', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.getCookies', paramObject, opt_callback);
     },
     /* unsupported */ deleteCookie: function(cookieName, domain, opt_callback) {
         var paramObject = {
              'cookieName': cookieName,
              'domain': domain,
          };
-        ChromeDevtools.proxy.sendCommand('Page.deleteCookie', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.deleteCookie', paramObject, opt_callback);
     },
     /* unsupported */ getResourceTree: function(opt_callback/*(frameTree)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Page.getResourceTree', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.getResourceTree', paramObject, opt_callback);
     },
     /* unsupported */ getResourceContent: function(frameId, url, opt_callback/*(content,base64Encoded)*/) {
         var paramObject = {
              'frameId': frameId,
              'url': url,
          };
-        ChromeDevtools.proxy.sendCommand('Page.getResourceContent', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.getResourceContent', paramObject, opt_callback);
     },
     /* unsupported */ searchInResource: function(frameId, url, query, caseSensitive, isRegex, opt_callback/*(result)*/) {
         var paramObject = {
@@ -129,7 +133,7 @@ ChromeDevtools.Page.prototype = {
              'caseSensitive': caseSensitive,
              'isRegex': isRegex,
          };
-        ChromeDevtools.proxy.sendCommand('Page.searchInResource', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.searchInResource', paramObject, opt_callback);
     },
     /* unsupported */ searchInResources: function(text, caseSensitive, isRegex, opt_callback/*(result)*/) {
         var paramObject = {
@@ -137,19 +141,19 @@ ChromeDevtools.Page.prototype = {
              'caseSensitive': caseSensitive,
              'isRegex': isRegex,
          };
-        ChromeDevtools.proxy.sendCommand('Page.searchInResources', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.searchInResources', paramObject, opt_callback);
     },
     /* unsupported */ setDocumentContent: function(frameId, html, opt_callback) {
         var paramObject = {
              'frameId': frameId,
              'html': html,
          };
-        ChromeDevtools.proxy.sendCommand('Page.setDocumentContent', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.setDocumentContent', paramObject, opt_callback);
     },
     /* unsupported */ canOverrideDeviceMetrics: function(opt_callback/*(result)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Page.canOverrideDeviceMetrics', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.canOverrideDeviceMetrics', paramObject, opt_callback);
     },
     /* unsupported */ setDeviceMetricsOverride: function(width, height, fontScaleFactor, opt_callback) {
         var paramObject = {
@@ -157,13 +161,13 @@ ChromeDevtools.Page.prototype = {
              'height': height,
              'fontScaleFactor': fontScaleFactor,
          };
-        ChromeDevtools.proxy.sendCommand('Page.setDeviceMetricsOverride', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.setDeviceMetricsOverride', paramObject, opt_callback);
     },
     /* unsupported */ setShowPaintRects: function(result, opt_callback) {
         var paramObject = {
              'result': result,
          };
-        ChromeDevtools.proxy.sendCommand('Page.setShowPaintRects', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Page.setShowPaintRects', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -174,25 +178,25 @@ ChromeDevtools.Page.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('Page', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Page.domContentEventFired', 
             ['timestamp']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Page.loadEventFired', 
             ['timestamp']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Page.frameNavigated', 
             ['frame']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Page.frameDetached', 
             ['frameId']);
+        chrome.devtools.remoteDebug.addDomainListener('Page', this);
     },
 };
 
 
-ChromeDevtools.Runtime = {};
-ChromeDevtools.Runtime.prototype = {
+chrome.devtools.protocol.Runtime = {};
+chrome.devtools.protocol.Runtime.prototype = {
 
     // Commands: 
     evaluate: function(expression, objectGroup, includeCommandLineAPI, doNotPauseOnExceptions, frameId, returnByValue, opt_callback/*(result,wasThrown)*/) {
@@ -204,7 +208,7 @@ ChromeDevtools.Runtime.prototype = {
              'frameId': frameId,
              'returnByValue': returnByValue,
          };
-        ChromeDevtools.proxy.sendCommand('Runtime.evaluate', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Runtime.evaluate', paramObject, opt_callback);
     },
     callFunctionOn: function(objectId, functionDeclaration, arguments, returnByValue, opt_callback/*(result,wasThrown)*/) {
         var paramObject = {
@@ -213,71 +217,71 @@ ChromeDevtools.Runtime.prototype = {
              'arguments': arguments,
              'returnByValue': returnByValue,
          };
-        ChromeDevtools.proxy.sendCommand('Runtime.callFunctionOn', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Runtime.callFunctionOn', paramObject, opt_callback);
     },
     getProperties: function(objectId, ownProperties, opt_callback/*(result)*/) {
         var paramObject = {
              'objectId': objectId,
              'ownProperties': ownProperties,
          };
-        ChromeDevtools.proxy.sendCommand('Runtime.getProperties', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Runtime.getProperties', paramObject, opt_callback);
     },
     releaseObject: function(objectId, opt_callback) {
         var paramObject = {
              'objectId': objectId,
          };
-        ChromeDevtools.proxy.sendCommand('Runtime.releaseObject', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Runtime.releaseObject', paramObject, opt_callback);
     },
     releaseObjectGroup: function(objectGroup, opt_callback) {
         var paramObject = {
              'objectGroup': objectGroup,
          };
-        ChromeDevtools.proxy.sendCommand('Runtime.releaseObjectGroup', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Runtime.releaseObjectGroup', paramObject, opt_callback);
     },
     /* unsupported */ run: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Runtime.run', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Runtime.run', paramObject, opt_callback);
     },
 };
 
 
-ChromeDevtools.Console = {};
-ChromeDevtools.Console.prototype = {
+chrome.devtools.protocol.Console = {};
+chrome.devtools.protocol.Console.prototype = {
 
     // Commands: 
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Console.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Console.enable', paramObject, opt_callback);
     },
     disable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Console.disable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Console.disable', paramObject, opt_callback);
     },
     clearMessages: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Console.clearMessages', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Console.clearMessages', paramObject, opt_callback);
     },
     /* unsupported */ setMonitoringXHREnabled: function(enabled, opt_callback) {
         var paramObject = {
              'enabled': enabled,
          };
-        ChromeDevtools.proxy.sendCommand('Console.setMonitoringXHREnabled', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Console.setMonitoringXHREnabled', paramObject, opt_callback);
     },
     /* unsupported */ addInspectedNode: function(nodeId, opt_callback) {
         var paramObject = {
              'nodeId': nodeId,
          };
-        ChromeDevtools.proxy.sendCommand('Console.addInspectedNode', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Console.addInspectedNode', paramObject, opt_callback);
     },
     addInspectedHeapObject: function(heapObjectId, opt_callback) {
         var paramObject = {
              'heapObjectId': heapObjectId,
          };
-        ChromeDevtools.proxy.sendCommand('Console.addInspectedHeapObject', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Console.addInspectedHeapObject', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -287,77 +291,77 @@ ChromeDevtools.Console.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('Console', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Console.messageAdded', 
             ['message']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Console.messageRepeatCountUpdated', 
             ['count']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Console.messagesCleared', 
             ['']);
+        chrome.devtools.remoteDebug.addDomainListener('Console', this);
     },
 };
 
 
-ChromeDevtools.Network = {};
-ChromeDevtools.Network.prototype = {
+chrome.devtools.protocol.Network = {};
+chrome.devtools.protocol.Network.prototype = {
 
     // Commands: 
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Network.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Network.enable', paramObject, opt_callback);
     },
     disable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Network.disable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Network.disable', paramObject, opt_callback);
     },
     setUserAgentOverride: function(userAgent, opt_callback) {
         var paramObject = {
              'userAgent': userAgent,
          };
-        ChromeDevtools.proxy.sendCommand('Network.setUserAgentOverride', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Network.setUserAgentOverride', paramObject, opt_callback);
     },
     setExtraHTTPHeaders: function(headers, opt_callback) {
         var paramObject = {
              'headers': headers,
          };
-        ChromeDevtools.proxy.sendCommand('Network.setExtraHTTPHeaders', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Network.setExtraHTTPHeaders', paramObject, opt_callback);
     },
     getResponseBody: function(requestId, opt_callback/*(body,base64Encoded)*/) {
         var paramObject = {
              'requestId': requestId,
          };
-        ChromeDevtools.proxy.sendCommand('Network.getResponseBody', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Network.getResponseBody', paramObject, opt_callback);
     },
     canClearBrowserCache: function(opt_callback/*(result)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Network.canClearBrowserCache', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Network.canClearBrowserCache', paramObject, opt_callback);
     },
     clearBrowserCache: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Network.clearBrowserCache', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Network.clearBrowserCache', paramObject, opt_callback);
     },
     canClearBrowserCookies: function(opt_callback/*(result)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Network.canClearBrowserCookies', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Network.canClearBrowserCookies', paramObject, opt_callback);
     },
     clearBrowserCookies: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Network.clearBrowserCookies', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Network.clearBrowserCookies', paramObject, opt_callback);
     },
     setCacheDisabled: function(cacheDisabled, opt_callback) {
         var paramObject = {
              'cacheDisabled': cacheDisabled,
          };
-        ChromeDevtools.proxy.sendCommand('Network.setCacheDisabled', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Network.setCacheDisabled', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -375,70 +379,70 @@ ChromeDevtools.Network.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('Network', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Network.requestWillBeSent', 
             ['requestId', 'frameId', 'loaderId', 'documentURL', 'request', 'timestamp', 'initiator', 'stackTrace', 'redirectResponse']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Network.requestServedFromCache', 
             ['requestId']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Network.responseReceived', 
             ['requestId', 'frameId', 'loaderId', 'timestamp', 'type', 'response']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Network.dataReceived', 
             ['requestId', 'timestamp', 'dataLength', 'encodedDataLength']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Network.loadingFinished', 
             ['requestId', 'timestamp']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Network.loadingFailed', 
             ['requestId', 'timestamp', 'errorText', 'canceled']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Network.requestServedFromMemoryCache', 
             ['requestId', 'frameId', 'loaderId', 'documentURL', 'timestamp', 'initiator', 'resource']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Network.webSocketWillSendHandshakeRequest', 
             ['requestId', 'timestamp', 'request']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Network.webSocketHandshakeResponseReceived', 
             ['requestId', 'timestamp', 'response']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Network.webSocketCreated', 
             ['requestId', 'url']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Network.webSocketClosed', 
             ['requestId', 'timestamp']);
+        chrome.devtools.remoteDebug.addDomainListener('Network', this);
     },
 };
 
 /* unsupported */ 
-ChromeDevtools.Database = {};
-ChromeDevtools.Database.prototype = {
+chrome.devtools.protocol.Database = {};
+chrome.devtools.protocol.Database.prototype = {
 
     // Commands: 
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Database.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Database.enable', paramObject, opt_callback);
     },
     disable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Database.disable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Database.disable', paramObject, opt_callback);
     },
     getDatabaseTableNames: function(databaseId, opt_callback/*(tableNames)*/) {
         var paramObject = {
              'databaseId': databaseId,
          };
-        ChromeDevtools.proxy.sendCommand('Database.getDatabaseTableNames', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Database.getDatabaseTableNames', paramObject, opt_callback);
     },
     executeSQL: function(databaseId, query, opt_callback/*(success,transactionId)*/) {
         var paramObject = {
              'databaseId': databaseId,
              'query': query,
          };
-        ChromeDevtools.proxy.sendCommand('Database.executeSQL', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Database.executeSQL', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -448,40 +452,40 @@ ChromeDevtools.Database.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('Database', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Database.addDatabase', 
             ['database']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Database.sqlTransactionSucceeded', 
             ['transactionId', 'columnNames', 'values']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Database.sqlTransactionFailed', 
             ['transactionId', 'sqlError']);
+        chrome.devtools.remoteDebug.addDomainListener('Database', this);
     },
 };
 
 /* unsupported */ 
-ChromeDevtools.IndexedDB = {};
-ChromeDevtools.IndexedDB.prototype = {
+chrome.devtools.protocol.IndexedDB = {};
+chrome.devtools.protocol.IndexedDB.prototype = {
 
     // Commands: 
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('IndexedDB.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('IndexedDB.enable', paramObject, opt_callback);
     },
     disable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('IndexedDB.disable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('IndexedDB.disable', paramObject, opt_callback);
     },
     requestDatabaseNamesForFrame: function(requestId, frameId, opt_callback) {
         var paramObject = {
              'requestId': requestId,
              'frameId': frameId,
          };
-        ChromeDevtools.proxy.sendCommand('IndexedDB.requestDatabaseNamesForFrame', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('IndexedDB.requestDatabaseNamesForFrame', paramObject, opt_callback);
     },
     requestDatabase: function(requestId, frameId, databaseName, opt_callback) {
         var paramObject = {
@@ -489,7 +493,7 @@ ChromeDevtools.IndexedDB.prototype = {
              'frameId': frameId,
              'databaseName': databaseName,
          };
-        ChromeDevtools.proxy.sendCommand('IndexedDB.requestDatabase', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('IndexedDB.requestDatabase', paramObject, opt_callback);
     },
     requestData: function(requestId, frameId, databaseName, objectStoreName, indexName, skipCount, pageSize, keyRange, opt_callback) {
         var paramObject = {
@@ -502,7 +506,7 @@ ChromeDevtools.IndexedDB.prototype = {
              'pageSize': pageSize,
              'keyRange': keyRange,
          };
-        ChromeDevtools.proxy.sendCommand('IndexedDB.requestData', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('IndexedDB.requestData', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -513,42 +517,42 @@ ChromeDevtools.IndexedDB.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('IndexedDB', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'IndexedDB.databaseNamesLoaded', 
             ['requestId', 'securityOriginWithDatabaseNames']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'IndexedDB.databaseLoaded', 
             ['requestId', 'databaseWithObjectStores']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'IndexedDB.objectStoreDataLoaded', 
             ['requestId', 'objectStoreDataEntries', 'hasMore']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'IndexedDB.indexDataLoaded', 
             ['requestId', 'indexDataEntries', 'hasMore']);
+        chrome.devtools.remoteDebug.addDomainListener('IndexedDB', this);
     },
 };
 
 /* unsupported */ 
-ChromeDevtools.DOMStorage = {};
-ChromeDevtools.DOMStorage.prototype = {
+chrome.devtools.protocol.DOMStorage = {};
+chrome.devtools.protocol.DOMStorage.prototype = {
 
     // Commands: 
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('DOMStorage.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMStorage.enable', paramObject, opt_callback);
     },
     disable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('DOMStorage.disable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMStorage.disable', paramObject, opt_callback);
     },
     getDOMStorageEntries: function(storageId, opt_callback/*(entries)*/) {
         var paramObject = {
              'storageId': storageId,
          };
-        ChromeDevtools.proxy.sendCommand('DOMStorage.getDOMStorageEntries', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMStorage.getDOMStorageEntries', paramObject, opt_callback);
     },
     setDOMStorageItem: function(storageId, key, value, opt_callback/*(success)*/) {
         var paramObject = {
@@ -556,14 +560,14 @@ ChromeDevtools.DOMStorage.prototype = {
              'key': key,
              'value': value,
          };
-        ChromeDevtools.proxy.sendCommand('DOMStorage.setDOMStorageItem', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMStorage.setDOMStorageItem', paramObject, opt_callback);
     },
     removeDOMStorageItem: function(storageId, key, opt_callback/*(success)*/) {
         var paramObject = {
              'storageId': storageId,
              'key': key,
          };
-        ChromeDevtools.proxy.sendCommand('DOMStorage.removeDOMStorageItem', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMStorage.removeDOMStorageItem', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -572,42 +576,42 @@ ChromeDevtools.DOMStorage.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('DOMStorage', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOMStorage.addDOMStorage', 
             ['storage']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOMStorage.updateDOMStorage', 
             ['storageId']);
+        chrome.devtools.remoteDebug.addDomainListener('DOMStorage', this);
     },
 };
 
 /* unsupported */ 
-ChromeDevtools.ApplicationCache = {};
-ChromeDevtools.ApplicationCache.prototype = {
+chrome.devtools.protocol.ApplicationCache = {};
+chrome.devtools.protocol.ApplicationCache.prototype = {
 
     // Commands: 
     getFramesWithManifests: function(opt_callback/*(frameIds)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('ApplicationCache.getFramesWithManifests', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('ApplicationCache.getFramesWithManifests', paramObject, opt_callback);
     },
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('ApplicationCache.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('ApplicationCache.enable', paramObject, opt_callback);
     },
     getManifestForFrame: function(frameId, opt_callback/*(manifestURL)*/) {
         var paramObject = {
              'frameId': frameId,
          };
-        ChromeDevtools.proxy.sendCommand('ApplicationCache.getManifestForFrame', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('ApplicationCache.getManifestForFrame', paramObject, opt_callback);
     },
     getApplicationCacheForFrame: function(frameId, opt_callback/*(applicationCache)*/) {
         var paramObject = {
              'frameId': frameId,
          };
-        ChromeDevtools.proxy.sendCommand('ApplicationCache.getApplicationCacheForFrame', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('ApplicationCache.getApplicationCacheForFrame', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -616,82 +620,82 @@ ChromeDevtools.ApplicationCache.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('ApplicationCache', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'ApplicationCache.applicationCacheStatusUpdated', 
             ['frameId', 'manifestURL', 'status']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'ApplicationCache.networkStateUpdated', 
             ['isNowOnline']);
+        chrome.devtools.remoteDebug.addDomainListener('ApplicationCache', this);
     },
 };
 
 /* unsupported */ 
-ChromeDevtools.FileSystem = {};
-ChromeDevtools.FileSystem.prototype = {
+chrome.devtools.protocol.FileSystem = {};
+chrome.devtools.protocol.FileSystem.prototype = {
 
     // Commands: 
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('FileSystem.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('FileSystem.enable', paramObject, opt_callback);
     },
     disable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('FileSystem.disable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('FileSystem.disable', paramObject, opt_callback);
     },
 };
 
 
-ChromeDevtools.DOM = {};
-ChromeDevtools.DOM.prototype = {
+chrome.devtools.protocol.DOM = {};
+chrome.devtools.protocol.DOM.prototype = {
 
     // Commands: 
     getDocument: function(opt_callback/*(root)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('DOM.getDocument', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.getDocument', paramObject, opt_callback);
     },
     requestChildNodes: function(nodeId, opt_callback) {
         var paramObject = {
              'nodeId': nodeId,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.requestChildNodes', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.requestChildNodes', paramObject, opt_callback);
     },
     querySelector: function(nodeId, selector, opt_callback/*(nodeId)*/) {
         var paramObject = {
              'nodeId': nodeId,
              'selector': selector,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.querySelector', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.querySelector', paramObject, opt_callback);
     },
     querySelectorAll: function(nodeId, selector, opt_callback/*(nodeIds)*/) {
         var paramObject = {
              'nodeId': nodeId,
              'selector': selector,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.querySelectorAll', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.querySelectorAll', paramObject, opt_callback);
     },
     setNodeName: function(nodeId, name, opt_callback/*(nodeId)*/) {
         var paramObject = {
              'nodeId': nodeId,
              'name': name,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.setNodeName', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.setNodeName', paramObject, opt_callback);
     },
     setNodeValue: function(nodeId, value, opt_callback) {
         var paramObject = {
              'nodeId': nodeId,
              'value': value,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.setNodeValue', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.setNodeValue', paramObject, opt_callback);
     },
     removeNode: function(nodeId, opt_callback) {
         var paramObject = {
              'nodeId': nodeId,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.removeNode', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.removeNode', paramObject, opt_callback);
     },
     setAttributeValue: function(nodeId, name, value, opt_callback) {
         var paramObject = {
@@ -699,7 +703,7 @@ ChromeDevtools.DOM.prototype = {
              'name': name,
              'value': value,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.setAttributeValue', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.setAttributeValue', paramObject, opt_callback);
     },
     setAttributesAsText: function(nodeId, text, name, opt_callback) {
         var paramObject = {
@@ -707,39 +711,39 @@ ChromeDevtools.DOM.prototype = {
              'text': text,
              'name': name,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.setAttributesAsText', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.setAttributesAsText', paramObject, opt_callback);
     },
     removeAttribute: function(nodeId, name, opt_callback) {
         var paramObject = {
              'nodeId': nodeId,
              'name': name,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.removeAttribute', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.removeAttribute', paramObject, opt_callback);
     },
     /* unsupported */ getEventListenersForNode: function(nodeId, opt_callback/*(listeners)*/) {
         var paramObject = {
              'nodeId': nodeId,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.getEventListenersForNode', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.getEventListenersForNode', paramObject, opt_callback);
     },
     getOuterHTML: function(nodeId, opt_callback/*(outerHTML)*/) {
         var paramObject = {
              'nodeId': nodeId,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.getOuterHTML', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.getOuterHTML', paramObject, opt_callback);
     },
     setOuterHTML: function(nodeId, outerHTML, opt_callback) {
         var paramObject = {
              'nodeId': nodeId,
              'outerHTML': outerHTML,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.setOuterHTML', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.setOuterHTML', paramObject, opt_callback);
     },
     /* unsupported */ performSearch: function(query, opt_callback/*(searchId,resultCount)*/) {
         var paramObject = {
              'query': query,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.performSearch', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.performSearch', paramObject, opt_callback);
     },
     /* unsupported */ getSearchResults: function(searchId, fromIndex, toIndex, opt_callback/*(nodeIds)*/) {
         var paramObject = {
@@ -747,26 +751,26 @@ ChromeDevtools.DOM.prototype = {
              'fromIndex': fromIndex,
              'toIndex': toIndex,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.getSearchResults', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.getSearchResults', paramObject, opt_callback);
     },
     /* unsupported */ discardSearchResults: function(searchId, opt_callback) {
         var paramObject = {
              'searchId': searchId,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.discardSearchResults', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.discardSearchResults', paramObject, opt_callback);
     },
     requestNode: function(objectId, opt_callback/*(nodeId)*/) {
         var paramObject = {
              'objectId': objectId,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.requestNode', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.requestNode', paramObject, opt_callback);
     },
     /* unsupported */ setInspectModeEnabled: function(enabled, highlightConfig, opt_callback) {
         var paramObject = {
              'enabled': enabled,
              'highlightConfig': highlightConfig,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.setInspectModeEnabled', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.setInspectModeEnabled', paramObject, opt_callback);
     },
     highlightRect: function(x, y, width, height, color, outlineColor, opt_callback) {
         var paramObject = {
@@ -777,19 +781,19 @@ ChromeDevtools.DOM.prototype = {
              'color': color,
              'outlineColor': outlineColor,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.highlightRect', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.highlightRect', paramObject, opt_callback);
     },
     highlightNode: function(nodeId, highlightConfig, opt_callback) {
         var paramObject = {
              'nodeId': nodeId,
              'highlightConfig': highlightConfig,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.highlightNode', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.highlightNode', paramObject, opt_callback);
     },
     hideHighlight: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('DOM.hideHighlight', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.hideHighlight', paramObject, opt_callback);
     },
     /* unsupported */ highlightFrame: function(frameId, contentColor, contentOutlineColor, opt_callback) {
         var paramObject = {
@@ -797,26 +801,26 @@ ChromeDevtools.DOM.prototype = {
              'contentColor': contentColor,
              'contentOutlineColor': contentOutlineColor,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.highlightFrame', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.highlightFrame', paramObject, opt_callback);
     },
     /* unsupported */ pushNodeByPathToFrontend: function(path, opt_callback/*(nodeId)*/) {
         var paramObject = {
              'path': path,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.pushNodeByPathToFrontend', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.pushNodeByPathToFrontend', paramObject, opt_callback);
     },
     resolveNode: function(nodeId, objectGroup, opt_callback/*(object)*/) {
         var paramObject = {
              'nodeId': nodeId,
              'objectGroup': objectGroup,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.resolveNode', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.resolveNode', paramObject, opt_callback);
     },
     getAttributes: function(nodeId, opt_callback/*(attributes)*/) {
         var paramObject = {
              'nodeId': nodeId,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.getAttributes', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.getAttributes', paramObject, opt_callback);
     },
     moveTo: function(nodeId, targetNodeId, insertBeforeNodeId, opt_callback/*(nodeId)*/) {
         var paramObject = {
@@ -824,28 +828,28 @@ ChromeDevtools.DOM.prototype = {
              'targetNodeId': targetNodeId,
              'insertBeforeNodeId': insertBeforeNodeId,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.moveTo', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.moveTo', paramObject, opt_callback);
     },
     /* unsupported */ setTouchEmulationEnabled: function(enabled, opt_callback) {
         var paramObject = {
              'enabled': enabled,
          };
-        ChromeDevtools.proxy.sendCommand('DOM.setTouchEmulationEnabled', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.setTouchEmulationEnabled', paramObject, opt_callback);
     },
     /* unsupported */ undo: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('DOM.undo', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.undo', paramObject, opt_callback);
     },
     /* unsupported */ redo: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('DOM.redo', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.redo', paramObject, opt_callback);
     },
     /* unsupported */ markUndoableState: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('DOM.markUndoableState', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOM.markUndoableState', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -863,57 +867,57 @@ ChromeDevtools.DOM.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('DOM', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOM.documentUpdated', 
             ['']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOM.setChildNodes', 
             ['parentId', 'nodes']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOM.attributeModified', 
             ['nodeId', 'name', 'value']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOM.attributeRemoved', 
             ['nodeId', 'name']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOM.inlineStyleInvalidated', 
             ['nodeIds']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOM.characterDataModified', 
             ['nodeId', 'characterData']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOM.childNodeCountUpdated', 
             ['nodeId', 'childNodeCount']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOM.childNodeInserted', 
             ['parentNodeId', 'previousNodeId', 'node']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOM.childNodeRemoved', 
             ['parentNodeId', 'nodeId']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOM.shadowRootPushed', 
             ['hostId', 'root']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'DOM.shadowRootPopped', 
             ['hostId', 'rootId']);
+        chrome.devtools.remoteDebug.addDomainListener('DOM', this);
     },
 };
 
 /* unsupported */ 
-ChromeDevtools.CSS = {};
-ChromeDevtools.CSS.prototype = {
+chrome.devtools.protocol.CSS = {};
+chrome.devtools.protocol.CSS.prototype = {
 
     // Commands: 
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('CSS.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.enable', paramObject, opt_callback);
     },
     disable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('CSS.disable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.disable', paramObject, opt_callback);
     },
     getMatchedStylesForNode: function(nodeId, forcedPseudoClasses, includePseudo, includeInherited, opt_callback/*(matchedCSSRules,pseudoElements,inherited)*/) {
         var paramObject = {
@@ -922,44 +926,44 @@ ChromeDevtools.CSS.prototype = {
              'includePseudo': includePseudo,
              'includeInherited': includeInherited,
          };
-        ChromeDevtools.proxy.sendCommand('CSS.getMatchedStylesForNode', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.getMatchedStylesForNode', paramObject, opt_callback);
     },
     getInlineStylesForNode: function(nodeId, opt_callback/*(inlineStyle,attributesStyle)*/) {
         var paramObject = {
              'nodeId': nodeId,
          };
-        ChromeDevtools.proxy.sendCommand('CSS.getInlineStylesForNode', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.getInlineStylesForNode', paramObject, opt_callback);
     },
     getComputedStyleForNode: function(nodeId, forcedPseudoClasses, opt_callback/*(computedStyle)*/) {
         var paramObject = {
              'nodeId': nodeId,
              'forcedPseudoClasses': forcedPseudoClasses,
          };
-        ChromeDevtools.proxy.sendCommand('CSS.getComputedStyleForNode', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.getComputedStyleForNode', paramObject, opt_callback);
     },
     getAllStyleSheets: function(opt_callback/*(headers)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('CSS.getAllStyleSheets', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.getAllStyleSheets', paramObject, opt_callback);
     },
     getStyleSheet: function(styleSheetId, opt_callback/*(styleSheet)*/) {
         var paramObject = {
              'styleSheetId': styleSheetId,
          };
-        ChromeDevtools.proxy.sendCommand('CSS.getStyleSheet', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.getStyleSheet', paramObject, opt_callback);
     },
     getStyleSheetText: function(styleSheetId, opt_callback/*(text)*/) {
         var paramObject = {
              'styleSheetId': styleSheetId,
          };
-        ChromeDevtools.proxy.sendCommand('CSS.getStyleSheetText', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.getStyleSheetText', paramObject, opt_callback);
     },
     setStyleSheetText: function(styleSheetId, text, opt_callback) {
         var paramObject = {
              'styleSheetId': styleSheetId,
              'text': text,
          };
-        ChromeDevtools.proxy.sendCommand('CSS.setStyleSheetText', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.setStyleSheetText', paramObject, opt_callback);
     },
     setPropertyText: function(styleId, propertyIndex, text, overwrite, opt_callback/*(style)*/) {
         var paramObject = {
@@ -968,7 +972,7 @@ ChromeDevtools.CSS.prototype = {
              'text': text,
              'overwrite': overwrite,
          };
-        ChromeDevtools.proxy.sendCommand('CSS.setPropertyText', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.setPropertyText', paramObject, opt_callback);
     },
     toggleProperty: function(styleId, propertyIndex, disable, opt_callback/*(style)*/) {
         var paramObject = {
@@ -976,36 +980,36 @@ ChromeDevtools.CSS.prototype = {
              'propertyIndex': propertyIndex,
              'disable': disable,
          };
-        ChromeDevtools.proxy.sendCommand('CSS.toggleProperty', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.toggleProperty', paramObject, opt_callback);
     },
     setRuleSelector: function(ruleId, selector, opt_callback/*(rule)*/) {
         var paramObject = {
              'ruleId': ruleId,
              'selector': selector,
          };
-        ChromeDevtools.proxy.sendCommand('CSS.setRuleSelector', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.setRuleSelector', paramObject, opt_callback);
     },
     addRule: function(contextNodeId, selector, opt_callback/*(rule)*/) {
         var paramObject = {
              'contextNodeId': contextNodeId,
              'selector': selector,
          };
-        ChromeDevtools.proxy.sendCommand('CSS.addRule', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.addRule', paramObject, opt_callback);
     },
     getSupportedCSSProperties: function(opt_callback/*(cssProperties)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('CSS.getSupportedCSSProperties', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.getSupportedCSSProperties', paramObject, opt_callback);
     },
     startSelectorProfiler: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('CSS.startSelectorProfiler', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.startSelectorProfiler', paramObject, opt_callback);
     },
     stopSelectorProfiler: function(opt_callback/*(profile)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('CSS.stopSelectorProfiler', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('CSS.stopSelectorProfiler', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -1014,37 +1018,37 @@ ChromeDevtools.CSS.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('CSS', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'CSS.mediaQueryResultChanged', 
             ['']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'CSS.styleSheetChanged', 
             ['styleSheetId']);
+        chrome.devtools.remoteDebug.addDomainListener('CSS', this);
     },
 };
 
 
-ChromeDevtools.Timeline = {};
-ChromeDevtools.Timeline.prototype = {
+chrome.devtools.protocol.Timeline = {};
+chrome.devtools.protocol.Timeline.prototype = {
 
     // Commands: 
     start: function(maxCallStackDepth, opt_callback) {
         var paramObject = {
              'maxCallStackDepth': maxCallStackDepth,
          };
-        ChromeDevtools.proxy.sendCommand('Timeline.start', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Timeline.start', paramObject, opt_callback);
     },
     stop: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Timeline.stop', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Timeline.stop', paramObject, opt_callback);
     },
     /* unsupported */ setIncludeMemoryDetails: function(enabled, opt_callback) {
         var paramObject = {
              'enabled': enabled,
          };
-        ChromeDevtools.proxy.sendCommand('Timeline.setIncludeMemoryDetails', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Timeline.setIncludeMemoryDetails', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -1052,43 +1056,43 @@ ChromeDevtools.Timeline.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('Timeline', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Timeline.eventRecorded', 
             ['record']);
+        chrome.devtools.remoteDebug.addDomainListener('Timeline', this);
     },
 };
 
 
-ChromeDevtools.Debugger = {};
-ChromeDevtools.Debugger.prototype = {
+chrome.devtools.protocol.Debugger = {};
+chrome.devtools.protocol.Debugger.prototype = {
 
     // Commands: 
     /* unsupported */ causesRecompilation: function(opt_callback/*(result)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.causesRecompilation', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.causesRecompilation', paramObject, opt_callback);
     },
     /* unsupported */ supportsNativeBreakpoints: function(opt_callback/*(result)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.supportsNativeBreakpoints', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.supportsNativeBreakpoints', paramObject, opt_callback);
     },
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.enable', paramObject, opt_callback);
     },
     disable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.disable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.disable', paramObject, opt_callback);
     },
     setBreakpointsActive: function(active, opt_callback) {
         var paramObject = {
              'active': active,
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.setBreakpointsActive', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.setBreakpointsActive', paramObject, opt_callback);
     },
     setBreakpointByUrl: function(lineNumber, url, urlRegex, columnNumber, condition, opt_callback/*(breakpointId,locations)*/) {
         var paramObject = {
@@ -1098,51 +1102,51 @@ ChromeDevtools.Debugger.prototype = {
              'columnNumber': columnNumber,
              'condition': condition,
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.setBreakpointByUrl', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.setBreakpointByUrl', paramObject, opt_callback);
     },
     setBreakpoint: function(location, condition, opt_callback/*(breakpointId,actualLocation)*/) {
         var paramObject = {
              'location': location,
              'condition': condition,
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.setBreakpoint', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.setBreakpoint', paramObject, opt_callback);
     },
     removeBreakpoint: function(breakpointId, opt_callback) {
         var paramObject = {
              'breakpointId': breakpointId,
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.removeBreakpoint', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.removeBreakpoint', paramObject, opt_callback);
     },
     continueToLocation: function(location, opt_callback) {
         var paramObject = {
              'location': location,
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.continueToLocation', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.continueToLocation', paramObject, opt_callback);
     },
     stepOver: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.stepOver', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.stepOver', paramObject, opt_callback);
     },
     stepInto: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.stepInto', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.stepInto', paramObject, opt_callback);
     },
     stepOut: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.stepOut', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.stepOut', paramObject, opt_callback);
     },
     pause: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.pause', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.pause', paramObject, opt_callback);
     },
     resume: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.resume', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.resume', paramObject, opt_callback);
     },
     searchInContent: function(scriptId, query, caseSensitive, isRegex, opt_callback/*(result)*/) {
         var paramObject = {
@@ -1151,12 +1155,12 @@ ChromeDevtools.Debugger.prototype = {
              'caseSensitive': caseSensitive,
              'isRegex': isRegex,
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.searchInContent', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.searchInContent', paramObject, opt_callback);
     },
     canSetScriptSource: function(opt_callback/*(result)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.canSetScriptSource', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.canSetScriptSource', paramObject, opt_callback);
     },
     setScriptSource: function(scriptId, scriptSource, preview, opt_callback/*(callFrames,result)*/) {
         var paramObject = {
@@ -1164,25 +1168,25 @@ ChromeDevtools.Debugger.prototype = {
              'scriptSource': scriptSource,
              'preview': preview,
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.setScriptSource', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.setScriptSource', paramObject, opt_callback);
     },
     getScriptSource: function(scriptId, opt_callback/*(scriptSource)*/) {
         var paramObject = {
              'scriptId': scriptId,
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.getScriptSource', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.getScriptSource', paramObject, opt_callback);
     },
     /* unsupported */ getFunctionDetails: function(functionId, opt_callback/*(details)*/) {
         var paramObject = {
              'functionId': functionId,
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.getFunctionDetails', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.getFunctionDetails', paramObject, opt_callback);
     },
     setPauseOnExceptions: function(state, opt_callback) {
         var paramObject = {
              'state': state,
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.setPauseOnExceptions', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.setPauseOnExceptions', paramObject, opt_callback);
     },
     evaluateOnCallFrame: function(callFrameId, expression, objectGroup, includeCommandLineAPI, returnByValue, opt_callback/*(result,wasThrown)*/) {
         var paramObject = {
@@ -1192,7 +1196,7 @@ ChromeDevtools.Debugger.prototype = {
              'includeCommandLineAPI': includeCommandLineAPI,
              'returnByValue': returnByValue,
          };
-        ChromeDevtools.proxy.sendCommand('Debugger.evaluateOnCallFrame', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Debugger.evaluateOnCallFrame', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -1205,31 +1209,31 @@ ChromeDevtools.Debugger.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('Debugger', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Debugger.globalObjectCleared', 
             ['']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Debugger.scriptParsed', 
             ['scriptId', 'url', 'startLine', 'startColumn', 'endLine', 'endColumn', 'isContentScript', 'sourceMapURL']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Debugger.scriptFailedToParse', 
             ['url', 'scriptSource', 'startLine', 'errorLine', 'errorMessage']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Debugger.breakpointResolved', 
             ['breakpointId', 'location']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Debugger.paused', 
             ['callFrames', 'reason', 'data']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Debugger.resumed', 
             ['']);
+        chrome.devtools.remoteDebug.addDomainListener('Debugger', this);
     },
 };
 
 
-ChromeDevtools.DOMDebugger = {};
-ChromeDevtools.DOMDebugger.prototype = {
+chrome.devtools.protocol.DOMDebugger = {};
+chrome.devtools.protocol.DOMDebugger.prototype = {
 
     // Commands: 
     setDOMBreakpoint: function(nodeId, type, opt_callback) {
@@ -1237,133 +1241,133 @@ ChromeDevtools.DOMDebugger.prototype = {
              'nodeId': nodeId,
              'type': type,
          };
-        ChromeDevtools.proxy.sendCommand('DOMDebugger.setDOMBreakpoint', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMDebugger.setDOMBreakpoint', paramObject, opt_callback);
     },
     removeDOMBreakpoint: function(nodeId, type, opt_callback) {
         var paramObject = {
              'nodeId': nodeId,
              'type': type,
          };
-        ChromeDevtools.proxy.sendCommand('DOMDebugger.removeDOMBreakpoint', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMDebugger.removeDOMBreakpoint', paramObject, opt_callback);
     },
     setEventListenerBreakpoint: function(eventName, opt_callback) {
         var paramObject = {
              'eventName': eventName,
          };
-        ChromeDevtools.proxy.sendCommand('DOMDebugger.setEventListenerBreakpoint', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMDebugger.setEventListenerBreakpoint', paramObject, opt_callback);
     },
     removeEventListenerBreakpoint: function(eventName, opt_callback) {
         var paramObject = {
              'eventName': eventName,
          };
-        ChromeDevtools.proxy.sendCommand('DOMDebugger.removeEventListenerBreakpoint', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMDebugger.removeEventListenerBreakpoint', paramObject, opt_callback);
     },
     /* unsupported */ setInstrumentationBreakpoint: function(eventName, opt_callback) {
         var paramObject = {
              'eventName': eventName,
          };
-        ChromeDevtools.proxy.sendCommand('DOMDebugger.setInstrumentationBreakpoint', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMDebugger.setInstrumentationBreakpoint', paramObject, opt_callback);
     },
     /* unsupported */ removeInstrumentationBreakpoint: function(eventName, opt_callback) {
         var paramObject = {
              'eventName': eventName,
          };
-        ChromeDevtools.proxy.sendCommand('DOMDebugger.removeInstrumentationBreakpoint', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMDebugger.removeInstrumentationBreakpoint', paramObject, opt_callback);
     },
     setXHRBreakpoint: function(url, opt_callback) {
         var paramObject = {
              'url': url,
          };
-        ChromeDevtools.proxy.sendCommand('DOMDebugger.setXHRBreakpoint', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMDebugger.setXHRBreakpoint', paramObject, opt_callback);
     },
     removeXHRBreakpoint: function(url, opt_callback) {
         var paramObject = {
              'url': url,
          };
-        ChromeDevtools.proxy.sendCommand('DOMDebugger.removeXHRBreakpoint', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('DOMDebugger.removeXHRBreakpoint', paramObject, opt_callback);
     },
 };
 
 /* unsupported */ 
-ChromeDevtools.Profiler = {};
-ChromeDevtools.Profiler.prototype = {
+chrome.devtools.protocol.Profiler = {};
+chrome.devtools.protocol.Profiler.prototype = {
 
     // Commands: 
     causesRecompilation: function(opt_callback/*(result)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.causesRecompilation', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.causesRecompilation', paramObject, opt_callback);
     },
     isSampling: function(opt_callback/*(result)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.isSampling', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.isSampling', paramObject, opt_callback);
     },
     hasHeapProfiler: function(opt_callback/*(result)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.hasHeapProfiler', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.hasHeapProfiler', paramObject, opt_callback);
     },
     enable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.enable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.enable', paramObject, opt_callback);
     },
     disable: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.disable', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.disable', paramObject, opt_callback);
     },
     start: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.start', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.start', paramObject, opt_callback);
     },
     stop: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.stop', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.stop', paramObject, opt_callback);
     },
     getProfileHeaders: function(opt_callback/*(headers)*/) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.getProfileHeaders', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.getProfileHeaders', paramObject, opt_callback);
     },
     getProfile: function(type, uid, opt_callback/*(profile)*/) {
         var paramObject = {
              'type': type,
              'uid': uid,
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.getProfile', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.getProfile', paramObject, opt_callback);
     },
     removeProfile: function(type, uid, opt_callback) {
         var paramObject = {
              'type': type,
              'uid': uid,
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.removeProfile', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.removeProfile', paramObject, opt_callback);
     },
     clearProfiles: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.clearProfiles', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.clearProfiles', paramObject, opt_callback);
     },
     takeHeapSnapshot: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.takeHeapSnapshot', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.takeHeapSnapshot', paramObject, opt_callback);
     },
     collectGarbage: function(opt_callback) {
         var paramObject = {
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.collectGarbage', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.collectGarbage', paramObject, opt_callback);
     },
     getObjectByHeapObjectId: function(objectId, objectGroup, opt_callback/*(result)*/) {
         var paramObject = {
              'objectId': objectId,
              'objectGroup': objectGroup,
          };
-        ChromeDevtools.proxy.sendCommand('Profiler.getObjectByHeapObjectId', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Profiler.getObjectByHeapObjectId', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -1376,63 +1380,63 @@ ChromeDevtools.Profiler.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('Profiler', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Profiler.addProfileHeader', 
             ['header']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Profiler.addHeapSnapshotChunk', 
             ['uid', 'chunk']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Profiler.finishHeapSnapshot', 
             ['uid']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Profiler.setRecordingProfile', 
             ['isProfiling']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Profiler.resetProfiles', 
             ['']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Profiler.reportHeapSnapshotProgress', 
             ['done', 'total']);
+        chrome.devtools.remoteDebug.addDomainListener('Profiler', this);
     },
 };
 
 /* unsupported */ 
-ChromeDevtools.Worker = {};
-ChromeDevtools.Worker.prototype = {
+chrome.devtools.protocol.Worker = {};
+chrome.devtools.protocol.Worker.prototype = {
 
     // Commands: 
     setWorkerInspectionEnabled: function(value, opt_callback) {
         var paramObject = {
              'value': value,
          };
-        ChromeDevtools.proxy.sendCommand('Worker.setWorkerInspectionEnabled', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Worker.setWorkerInspectionEnabled', paramObject, opt_callback);
     },
     sendMessageToWorker: function(workerId, message, opt_callback) {
         var paramObject = {
              'workerId': workerId,
              'message': message,
          };
-        ChromeDevtools.proxy.sendCommand('Worker.sendMessageToWorker', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Worker.sendMessageToWorker', paramObject, opt_callback);
     },
     connectToWorker: function(workerId, opt_callback) {
         var paramObject = {
              'workerId': workerId,
          };
-        ChromeDevtools.proxy.sendCommand('Worker.connectToWorker', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Worker.connectToWorker', paramObject, opt_callback);
     },
     disconnectFromWorker: function(workerId, opt_callback) {
         var paramObject = {
              'workerId': workerId,
          };
-        ChromeDevtools.proxy.sendCommand('Worker.disconnectFromWorker', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Worker.disconnectFromWorker', paramObject, opt_callback);
     },
     setAutoconnectToWorkers: function(value, opt_callback) {
         var paramObject = {
              'value': value,
          };
-        ChromeDevtools.proxy.sendCommand('Worker.setAutoconnectToWorkers', paramObject, opt_callback);
+        chrome.devtools.remoteDebug.sendCommand('Worker.setAutoconnectToWorkers', paramObject, opt_callback);
     },
 
     // Event handlers to override, then call addListeners
@@ -1443,23 +1447,21 @@ ChromeDevtools.Worker.prototype = {
 
     // Call in your constructor to register for this events in domain
     addListeners: function() {
-        ChromeDevtools.proxy.onEvent('Worker', this);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Worker.workerCreated', 
             ['workerId', 'url', 'inspectorConnected']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Worker.workerTerminated', 
             ['workerId']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Worker.dispatchMessageFromWorker', 
             ['workerId', 'message']);
-        ChromeDevtools.proxy.registerEvent(
+        chrome.devtools.remoteDebug.registerEvent(
             'Worker.disconnectedFromWorker', 
             ['']);
+        chrome.devtools.remoteDebug.addDomainListener('Worker', this);
     },
 };
-
-return ChromeDevtools;
 
 /* copyright 2011 Google, inc. johnjbarton@google.com Google BSD License */
 /* See https://github.com/johnjbarton/atopwi/blob/master/APIGeneration/generateRemoteDebugAPI.html */
