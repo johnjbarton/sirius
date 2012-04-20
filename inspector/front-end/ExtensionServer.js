@@ -61,6 +61,7 @@ WebInspector.ExtensionServer = function()
     this._registerHandler(commands.GetResourceContent, this._onGetResourceContent.bind(this));
     this._registerHandler(commands.Log, this._onLog.bind(this));
     this._registerHandler(commands.Reload, this._onReload.bind(this));
+    this._registerHandler(commands.SendCommand, this._onSendCommand.bind(this));
     this._registerHandler(commands.SetOpenResourceHandler, this._onSetOpenResourceHandler.bind(this));
     this._registerHandler(commands.SetResourceContent, this._onSetResourceContent.bind(this));
     this._registerHandler(commands.SetSidebarHeight, this._onSetSidebarHeight.bind(this));
@@ -531,7 +532,7 @@ WebInspector.ExtensionServer.prototype = {
         auditRun.cancel();
     },
     
-    _onRemoteDebugSendCommand: function(message) {
+    _onSendCommand: function(message) {
       InspectorBackend.sendMessageObjectToBackend.call(InspectorBackend, message);
     },
 
