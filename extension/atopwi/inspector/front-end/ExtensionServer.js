@@ -61,6 +61,7 @@ WebInspector.ExtensionServer = function()
     this._registerHandler(commands.GetResourceContent, this._onGetResourceContent.bind(this));
     this._registerHandler(commands.Log, this._onLog.bind(this));
     this._registerHandler(commands.Reload, this._onReload.bind(this));
+    this._registerHandler(commands.SendCommand, this._onSendCommand.bind(this));
     this._registerHandler(commands.SetOpenResourceHandler, this._onSetOpenResourceHandler.bind(this));
     this._registerHandler(commands.SetResourceContent, this._onSetResourceContent.bind(this));
     this._registerHandler(commands.SetSidebarHeight, this._onSetSidebarHeight.bind(this));
@@ -517,6 +518,10 @@ WebInspector.ExtensionServer.prototype = {
             return this._status.E_NOTFOUND(message.resultId);
         auditRun.cancel();
     },
+    
+    _onSendCommand: function(message) {
+      InspectorBackend.sendMessageObjectToBackend.call(InspectorBackend, message);
+    },
 
     _dispatchCallback: function(requestId, port, result)
     {
@@ -596,6 +601,11 @@ WebInspector.ExtensionServer.prototype = {
     _notifyTimelineEventRecorded: function(event)
     {
         this._postNotification(WebInspector.extensionAPI.Events.TimelineEventRecorded, event.data);
+    },
+
+    _notifyRemoteDebugEvent: function(event) {
+        var domain = event.data.method.split('.')[0];
+    	this._postNotification(WebInspector.extensionAPI.Events.RemoteDebugEvent + domain, event.data);	
     },
 
     /**
