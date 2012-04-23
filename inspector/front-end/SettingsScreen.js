@@ -78,7 +78,6 @@ WebInspector.SettingsScreen = function()
     p.appendChild(this._createCheckboxSetting(WebInspector.UIString("Emulate touch events"), WebInspector.settings.emulateTouchEvents));
 
     p = this._appendSection(WebInspector.UIString("Scripts"), true);
-    p.appendChild(this._createCheckboxSetting(WebInspector.UIString("Use file navigator and tabbed editor container in scripts panel"), WebInspector.settings.useScriptsNavigator));
     p.appendChild(this._createCheckboxSetting(WebInspector.UIString("Show script folders"), WebInspector.settings.showScriptFolders));
     p.appendChild(this._createCheckboxSetting(WebInspector.UIString("Search in content scripts"), WebInspector.settings.searchInContentScripts));
     p.appendChild(this._createCheckboxSetting(WebInspector.UIString("Enable source maps"), WebInspector.settings.sourceMapsEnabled));
@@ -149,22 +148,29 @@ WebInspector.SettingsScreen.prototype = {
         return right ? this._rightColumnElement : this._leftColumnElement;
     },
 
-    _createCheckboxSetting: function(name, setting)
+    /**
+     * @param {boolean=} omitParagraphElement
+     */
+    _createCheckboxSetting: function(name, setting, omitParagraphElement)
     {
         var input = document.createElement("input");
         input.type = "checkbox";
         input.name = name;
         input.checked = setting.get();
+
         function listener()
         {
             setting.set(input.checked);
         }
         input.addEventListener("click", listener, false);
 
-        var p = document.createElement("p");
         var label = document.createElement("label");
         label.appendChild(input);
         label.appendChild(document.createTextNode(name));
+        if (omitParagraphElement)
+            return label;
+
+        var p = document.createElement("p");
         p.appendChild(label);
         return p;
     },
@@ -319,6 +325,7 @@ WebInspector.SettingsScreen.prototype = {
             ["iPad \u2014 iOS 4", "Mozilla/5.0 (iPad; CPU OS 4_3_2 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8H7 Safari/6533.18.5", "1024x768x1"],
 
             ["Android 2.3 \u2014 Nexus S", "Mozilla/5.0 (Linux; U; Android 2.3.6; en-us; Nexus S Build/GRK39F) AppleWebKit/533.1 (KHTML, like Gecko) Version/4.0 Mobile Safari/533.1", "480x800x1.1"],
+            ["Android 4.0.2 \u2014 Galaxy Nexus", "Mozilla/5.0 (Linux; U; Android 4.0.2; en-us; Galaxy Nexus Build/ICL53F) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30", "720x1280x1.1"],
 
             ["BlackBerry \u2014 PlayBook 1.0","Mozilla/5.0 (PlayBook; U; RIM Tablet OS 1.0.0; en-US) AppleWebKit/534.11+ (KHTML, like Gecko) Version/7.1.0.7 Safari/534.11+", "1024x600x1"],
             ["BlackBerry \u2014 PlayBook 2.0", "Mozilla/5.0 (PlayBook; U; RIM Tablet OS 2.0.0; en-US) AppleWebKit/535.8+ (KHTML, like Gecko) Version/7.2.0.0 Safari/535.8+", "1024x600x1"],
@@ -504,6 +511,14 @@ WebInspector.SettingsScreen.prototype = {
             return element;
         }
 
+        function swapDimensionsClicked(event)
+        {
+            var widthValue = this._widthOverrideElement.value;
+            this._widthOverrideElement.value = this._heightOverrideElement.value;
+            this._heightOverrideElement.value = widthValue;
+            this._applyDeviceMetricsUserInput();
+        }
+
         var tableElement = fieldsetElement.createChild("table");
 
         var rowElement = tableElement.createChild("tr");
@@ -511,14 +526,25 @@ WebInspector.SettingsScreen.prototype = {
         cellElement.appendChild(document.createTextNode(WebInspector.UIString("Screen resolution:")));
         cellElement = rowElement.createChild("td");
         this._widthOverrideElement = createInput.call(this, cellElement, "metrics-override-width", String(metrics.width || screen.width));
-        cellElement.appendChild(document.createTextNode(" \u00D7 "));
+        cellElement.appendChild(document.createTextNode(" \u00D7 ")); // MULTIPLICATION SIGN.
         this._heightOverrideElement = createInput.call(this, cellElement, "metrics-override-height", String(metrics.height || screen.height));
+        cellElement.appendChild(document.createTextNode(" \u2014 ")); // EM DASH.
+        var swapDimensionsElement = cellElement.createChild("button");
+        swapDimensionsElement.appendChild(document.createTextNode(" \u21C4 ")); // RIGHTWARDS ARROW OVER LEFTWARDS ARROW.
+        swapDimensionsElement.title = WebInspector.UIString("Swap dimensions");
+        swapDimensionsElement.addEventListener("click", swapDimensionsClicked.bind(this), false);
 
         rowElement = tableElement.createChild("tr");
         cellElement = rowElement.createChild("td");
         cellElement.appendChild(document.createTextNode(WebInspector.UIString("Font scale factor:")));
         cellElement = rowElement.createChild("td");
         this._fontScaleFactorOverrideElement = createInput.call(this, cellElement, "metrics-override-font-scale", String(metrics.fontScaleFactor || 1));
+
+        rowElement = tableElement.createChild("tr");
+        cellElement = rowElement.createChild("td");
+        cellElement.colspan = 2;
+        cellElement.appendChild(this._createCheckboxSetting(WebInspector.UIString("Fit window"), WebInspector.settings.deviceFitWindow, true));
+
         return fieldsetElement;
     }
 }

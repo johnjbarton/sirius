@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,46 +28,37 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-Object.defineProperty(Array.prototype, "sortRange", { value: 
-/** @this {Array} */
-function(comparator, leftBound, rightBound, k)
-{
-    function swap(array, i1, i2)
-    {
-        var temp = array[i1];
-        array[i1] = array[i2];
-        array[i2] = temp;
-    }
+/**
+ * @interface
+ */
+WebInspector.ContentProvider = function() { }
 
-    function partition(array, comparator, left, right, pivotIndex)
-    {
-        var pivotValue = array[pivotIndex];
-        swap(array, right, pivotIndex);
-        var storeIndex = left;
-        for (var i = left; i < right; ++i) {
-            if (comparator(array[i], pivotValue) < 0) {
-                swap(array, storeIndex, i);
-                ++storeIndex;
-            }
-        }
-        swap(array, right, storeIndex);
-        return storeIndex;
-    }
+WebInspector.ContentProvider.prototype = {
+    /**
+     * @return {?string}
+     */
+    contentURL: function() { },
 
-    function quickSortFirstK(array, comparator, left, right, k)
-    {
-        if (right <= left)
-            return;
-        var pivotIndex = Math.floor(Math.random() * (right - left)) + left;
-        var pivotNewIndex = partition(array, comparator, left, right, pivotIndex);
-        quickSortFirstK(array, comparator, left, pivotNewIndex - 1, k);
-        if (pivotNewIndex < left + k - 1)
-            quickSortFirstK(array, comparator, pivotNewIndex + 1, right, k);
-    }
+    /**
+     * @param {function(?string,boolean,string)} callback
+     */
+    requestContent: function(callback) { },
 
-    if (leftBound === 0 && rightBound === (this.length - 1) && k === this.length)
-        this.sort(comparator);
-    else
-        quickSortFirstK(this, comparator, leftBound, rightBound, k);
-    return this;
-}});
+    /**
+     * @param {string} query
+     * @param {boolean} caseSensitive
+     * @param {boolean} isRegex
+     * @param {function(Array.<WebInspector.ContentProvider.SearchMatch>)} callback
+     */
+    searchInContent: function(query, caseSensitive, isRegex, callback) { }
+}
+
+/**
+ * @constructor
+ * @param {number} lineNumber
+ * @param {string} lineContent
+ */
+WebInspector.ContentProvider.SearchMatch = function(lineNumber, lineContent) {
+    this.lineNumber = lineNumber;
+    this.lineContent = lineContent;
+}

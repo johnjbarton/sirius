@@ -68,13 +68,20 @@ WebInspector.JavaScriptSourceFrame.prototype = {
         this._popoverHelper.hidePopover();
     },
 
-    // SourceFrame overrides
+    /**
+     * @param {function(?string, boolean, string)} callback
+     */
     requestContent: function(callback)
     {
-        function mycallback(mimeType, content)
+        /**
+         * @param {?string} content
+         * @param {boolean} contentEncoded
+         * @param {string} mimeType
+         */
+        function mycallback(content, contentEncoded, mimeType)
         {
             this._originalContent = content;
-            callback(mimeType, content);
+            callback(content, contentEncoded, mimeType);
         }
         this._uiSourceCode.requestContent(mycallback.bind(this));
     },
@@ -239,7 +246,7 @@ WebInspector.JavaScriptSourceFrame.prototype = {
 
         // 2. 'highlight' them with artificial style to detect word boundaries
         var changes = [];
-        highlightRangesWithStyleClass(lineElement, ranges, "source-frame-token", changes);
+        WebInspector.highlightRangesWithStyleClass(lineElement, ranges, "source-frame-token", changes);
         var lineOffsetLeft = lineElement.totalOffsetLeft();
         for (var child = lineElement.firstChild; child; child = child.nextSibling) {
             if (child.nodeType !== Node.ELEMENT_NODE || !child.hasStyleClass("source-frame-token"))
@@ -345,7 +352,6 @@ WebInspector.JavaScriptSourceFrame.prototype = {
     _setBreakpoint: function(lineNumber, condition, enabled)
     {
         this._model.setBreakpoint(this._uiSourceCode, lineNumber, condition, enabled);
-        this._scriptsPanel.activateBreakpoints();
     },
 
     _onMouseDown: function(event)

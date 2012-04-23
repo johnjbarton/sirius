@@ -1081,7 +1081,7 @@ WebInspector.FrameTreeElement.prototype = {
         this._frameId = frame.id;
 
         this.titleText = frame.name;
-        this.subtitleText = WebInspector.Resource.displayName(frame.url);
+        this.subtitleText = new WebInspector.ParsedURL(frame.url).displayName;
 
         this._categoryElements = {};
         this._treeElementForResource = {};
@@ -1116,11 +1116,11 @@ WebInspector.FrameTreeElement.prototype = {
 
     appendResource: function(resource)
     {
-        var categoryName = resource.category.name;
-        var categoryElement = resource.category === WebInspector.resourceCategories.documents ? this : this._categoryElements[categoryName];
+        var categoryName = resource.type.name();
+        var categoryElement = resource.type === WebInspector.resourceTypes.Document ? this : this._categoryElements[categoryName];
         if (!categoryElement) {
-            categoryElement = new WebInspector.StorageCategoryTreeElement(this._storagePanel, resource.category.title, categoryName, null, true);
-            this._categoryElements[resource.category.name] = categoryElement;
+            categoryElement = new WebInspector.StorageCategoryTreeElement(this._storagePanel, resource.type.categoryTitle(), categoryName, null, true);
+            this._categoryElements[resource.type.name()] = categoryElement;
             this._insertInPresentationOrder(this, categoryElement);
         }
         var resourceTreeElement = new WebInspector.FrameResourceTreeElement(this._storagePanel, resource);
@@ -1189,7 +1189,7 @@ WebInspector.FrameTreeElement.prototype.__proto__ = WebInspector.BaseStorageTree
  */
 WebInspector.FrameResourceTreeElement = function(storagePanel, resource)
 {
-    WebInspector.BaseStorageTreeElement.call(this, storagePanel, resource, resource.displayName, ["resource-sidebar-tree-item", "resources-category-" + resource.category.name]);
+    WebInspector.BaseStorageTreeElement.call(this, storagePanel, resource, resource.displayName, ["resource-sidebar-tree-item", "resources-type-" + resource.type.name()]);
     this._resource = resource;
     this._resource.addEventListener(WebInspector.Resource.Events.MessageAdded, this._consoleMessageAdded, this);
     this._resource.addEventListener(WebInspector.Resource.Events.MessagesCleared, this._consoleMessagesCleared, this);
@@ -1218,7 +1218,7 @@ WebInspector.FrameResourceTreeElement.prototype = {
     {
         WebInspector.BaseStorageTreeElement.prototype.onattach.call(this);
 
-        if (this._resource.category === WebInspector.resourceCategories.images) {
+        if (this._resource.type === WebInspector.resourceTypes.Image) {
             var previewImage = document.createElement("img");
             previewImage.className = "image-resource-icon-preview";
             this._resource.populateImageSource(previewImage);
@@ -1260,10 +1260,10 @@ WebInspector.FrameResourceTreeElement.prototype = {
 
     _appendOpenInNetworkPanelAction: function(contextMenu, event)
     {
-        if (!this._resource.requestId)
+        if (!this._resource.request)
             return;
 
-        contextMenu.appendItem(WebInspector.openInNetworkPanelLabel(), WebInspector.openRequestInNetworkPanel.bind(WebInspector, this._resource));
+        contextMenu.appendItem(WebInspector.openInNetworkPanelLabel(), WebInspector.openRequestInNetworkPanel.bind(WebInspector, this._resource.request));
     },
 
     _appendSaveAsAction: function(contextMenu, event)
@@ -1271,9 +1271,9 @@ WebInspector.FrameResourceTreeElement.prototype = {
         if (!InspectorFrontendHost.canSave())
             return;
 
-        if (this._resource.type !== WebInspector.Resource.Type.Document &&
-            this._resource.type !== WebInspector.Resource.Type.Stylesheet &&
-            this._resource.type !== WebInspector.Resource.Type.Script)
+        if (this._resource.type !== WebInspector.resourceTypes.Document &&
+            this._resource.type !== WebInspector.resourceTypes.Stylesheet &&
+            this._resource.type !== WebInspector.resourceTypes.Script)
             return;
 
         function doSave(forceSaveAs, content)
@@ -1922,7 +1922,7 @@ WebInspector.CookieTreeElement.prototype.__proto__ = WebInspector.BaseStorageTre
  */
 WebInspector.ApplicationCacheManifestTreeElement = function(storagePanel, manifestURL)
 {
-    var title = WebInspector.Resource.displayName(manifestURL);
+    var title = new WebInspector.ParsedURL(manifestURL).displayName;
     WebInspector.BaseStorageTreeElement.call(this, storagePanel, null, title, ["application-cache-storage-tree-item"]);
     this.tooltip = manifestURL;
     this._manifestURL = manifestURL;
@@ -1983,7 +1983,7 @@ WebInspector.ApplicationCacheFrameTreeElement.prototype = {
             return;
         }
         this.titleText = frame.name;
-        this.subtitleText = WebInspector.Resource.displayName(frame.url);
+        this.subtitleText = new WebInspector.ParsedURL(frame.url).displayName;
     },
 
     frameNavigated: function()
@@ -2006,7 +2006,7 @@ WebInspector.ApplicationCacheFrameTreeElement.prototype.__proto__ = WebInspector
 WebInspector.ResourceRevisionTreeElement = function(storagePanel, revision)
 {
     var title = revision.timestamp ? revision.timestamp.toLocaleTimeString() : WebInspector.UIString("(original)");
-    WebInspector.BaseStorageTreeElement.call(this, storagePanel, revision, title, ["resource-sidebar-tree-item", "resources-category-" + revision.resource.category.name]);
+    WebInspector.BaseStorageTreeElement.call(this, storagePanel, revision, title, ["resource-sidebar-tree-item", "resources-type-" + revision.resource.type.name()]);
     if (revision.timestamp)
         this.tooltip = revision.timestamp.toLocaleString();
     this._revision = revision;

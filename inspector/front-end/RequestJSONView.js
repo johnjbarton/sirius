@@ -29,17 +29,18 @@
  */
 
 /**
- * @extends {WebInspector.ResourceView}
  * @constructor
+ * @extends {WebInspector.RequestView}
+ * @param {WebInspector.NetworkRequest} request
  */
-WebInspector.ResourceJSONView = function(resource, parsedJSON)
+WebInspector.RequestJSONView = function(request, parsedJSON)
 {
-    WebInspector.ResourceView.call(this, resource);
+    WebInspector.RequestView.call(this, request);
     this._parsedJSON = parsedJSON;
     this.element.addStyleClass("json");
 }
 
-WebInspector.ResourceJSONView.parseJSON = function(text)
+WebInspector.RequestJSONView.parseJSON = function(text)
 {
     var prefix = "";
 
@@ -57,7 +58,7 @@ WebInspector.ResourceJSONView.parseJSON = function(text)
     }
 }
 
-WebInspector.ResourceJSONView.parseJSONP = function(text)
+WebInspector.RequestJSONView.parseJSONP = function(text)
 {
     // Taking everything between first and last parentheses
     var start = text.indexOf("(");
@@ -76,7 +77,7 @@ WebInspector.ResourceJSONView.parseJSONP = function(text)
     }
 }
 
-WebInspector.ResourceJSONView.prototype = {
+WebInspector.RequestJSONView.prototype = {
     hasContent: function()
     {
         return true;
@@ -102,7 +103,7 @@ WebInspector.ResourceJSONView.prototype = {
     }
 }
 
-WebInspector.ResourceJSONView.prototype.__proto__ = WebInspector.ResourceView.prototype;
+WebInspector.RequestJSONView.prototype.__proto__ = WebInspector.RequestView.prototype;
 
 /**
  * @constructor

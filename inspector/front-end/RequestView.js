@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,41 +30,50 @@
 
 /**
  * @constructor
- * @extends {WebInspector.ResourceView}
+ * @extends {WebInspector.View}
+ * @param {WebInspector.NetworkRequest} request
  */
-WebInspector.ResourceHTMLView = function(resource)
+WebInspector.RequestView = function(request)
 {
-    WebInspector.ResourceView.call(this, resource);
-    this.element.addStyleClass("html");
+    WebInspector.View.call(this);
+    this.registerRequiredCSS("resourceView.css");
+
+    this.element.addStyleClass("resource-view");
+    this.request = request;
 }
 
-WebInspector.ResourceHTMLView.prototype = {
+WebInspector.RequestView.prototype = {
     hasContent: function()
     {
-        return true;
-    },
-
-    wasShown: function()
-    {
-        this._createIFrame();
-    },
-
-    willHide: function(parentElement)
-    {
-        this.element.removeChildren();
-    },
-
-    _createIFrame: function()
-    {
-        // We need to create iframe again each time because contentDocument
-        // is deleted when iframe is removed from its parent.
-        this.element.removeChildren();
-        var iframe = document.createElement("iframe");
-        this.element.appendChild(iframe);
-        iframe.setAttribute("sandbox", ""); // Forbid to run JavaScript and set unique origin.
-
-        iframe.contentDocument.body.innerHTML = this.resource.content;
+        return false;
     }
 }
 
-WebInspector.ResourceHTMLView.prototype.__proto__ = WebInspector.ResourceView.prototype;
+WebInspector.RequestView.prototype.__proto__ = WebInspector.View.prototype;
+
+/**
+ * @param {WebInspector.NetworkRequest} request
+ */
+WebInspector.RequestView.hasTextContent = function(request)
+{
+    if (request.type.isTextType())
+        return true; 
+    if (request.type === WebInspector.resourceTypes.Other)
+        return request.content && !request.contentEncoded;
+    return false;
+}
+
+/**
+ * @param {WebInspector.NetworkRequest} request
+ */
+WebInspector.RequestView.nonSourceViewForRequest = function(request)
+{
+    switch (request.type) {
+    case WebInspector.resourceTypes.Image:
+        return new WebInspector.ImageView(request);
+    case WebInspector.resourceTypes.Font:
+        return new WebInspector.FontView(request);
+    default:
+        return new WebInspector.RequestView(request);
+    }
+}

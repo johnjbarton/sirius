@@ -29,28 +29,43 @@
  */
 
 /**
- * DevTools.js is responsible for configuring Web Inspector for the Chromium
- * port as well as additional features specific to the Chromium port.
+ * @constructor
+ * @extends {WebInspector.RequestView}
+ * @param {WebInspector.NetworkRequest} request
  */
-
-{(function () {
-    Preferences.useLowerCaseMenuTitlesOnWindows = true;
-    Preferences.sharedWorkersDebugNote = "Shared workers can be inspected in the Task Manager";
-    Preferences.localizeUI = false;
-    Preferences.applicationTitle = "Developer Tools - %s";
-    Preferences.exposeDisableCache = true;
-    Preferences.exposeWorkersInspection = true;
-    Preferences.showDockToRight = true;
-})();}
-
-function buildPlatformExtensionAPI(extensionInfo)
+WebInspector.RequestHTMLView = function(request)
 {
-    return "var extensionInfo = " + JSON.stringify(extensionInfo) + ";" +
-       "var tabId = " + WebInspector._inspectedTabId + ";" +
-       platformExtensionAPI.toString();
+    WebInspector.RequestView.call(this, request);
+    this.element.addStyleClass("html");
 }
 
-WebInspector.setInspectedTabId = function(tabId)
-{
-    WebInspector._inspectedTabId = tabId;
+WebInspector.RequestHTMLView.prototype = {
+    hasContent: function()
+    {
+        return true;
+    },
+
+    wasShown: function()
+    {
+        this._createIFrame();
+    },
+
+    willHide: function(parentElement)
+    {
+        this.element.removeChildren();
+    },
+
+    _createIFrame: function()
+    {
+        // We need to create iframe again each time because contentDocument
+        // is deleted when iframe is removed from its parent.
+        this.element.removeChildren();
+        var iframe = document.createElement("iframe");
+        this.element.appendChild(iframe);
+        iframe.setAttribute("sandbox", ""); // Forbid to run JavaScript and set unique origin.
+
+        iframe.contentDocument.body.innerHTML = this.request.content;
+    }
 }
+
+WebInspector.RequestHTMLView.prototype.__proto__ = WebInspector.RequestView.prototype;

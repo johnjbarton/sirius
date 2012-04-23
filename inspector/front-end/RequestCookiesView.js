@@ -29,21 +29,22 @@
  */
 
 /**
- * @extends {WebInspector.View}
  * @constructor
+ * @extends {WebInspector.View}
+ * @param {WebInspector.NetworkRequest} request
  */
-WebInspector.ResourceCookiesView = function(resource)
+WebInspector.RequestCookiesView = function(request)
 {
     WebInspector.View.call(this);
     this.element.addStyleClass("resource-cookies-view");
 
-    this._resource = resource;
+    this._request = request;
 
-    resource.addEventListener("requestHeaders changed", this._refreshCookies, this);
-    resource.addEventListener("responseHeaders changed", this._refreshCookies, this);
+    request.addEventListener(WebInspector.NetworkRequest.Events.RequestHeadersChanged, this._refreshCookies, this);
+    request.addEventListener(WebInspector.NetworkRequest.Events.ResponseHeadersChanged, this._refreshCookies, this);
 }
 
-WebInspector.ResourceCookiesView.prototype = {
+WebInspector.RequestCookiesView.prototype = {
     wasShown: function()
     {
         if (!this._gotCookies) {
@@ -60,7 +61,7 @@ WebInspector.ResourceCookiesView.prototype = {
 
     get _gotCookies()
     {
-        return !!(this._resource.requestCookies || this._resource.responseCookies);
+        return !!(this._request.requestCookies || this._request.responseCookies);
     },
 
     _buildCookiesTable: function()
@@ -68,8 +69,8 @@ WebInspector.ResourceCookiesView.prototype = {
         this.detachChildViews();
 
         this._cookiesTable = new WebInspector.CookiesTable(null, true);
-        this._cookiesTable.addCookiesFolder(WebInspector.UIString("Request Cookies"), this._resource.requestCookies);
-        this._cookiesTable.addCookiesFolder(WebInspector.UIString("Response Cookies"), this._resource.responseCookies);
+        this._cookiesTable.addCookiesFolder(WebInspector.UIString("Request Cookies"), this._request.requestCookies);
+        this._cookiesTable.addCookiesFolder(WebInspector.UIString("Response Cookies"), this._request.responseCookies);
         this._cookiesTable.show(this.element);
     },
 
@@ -83,4 +84,4 @@ WebInspector.ResourceCookiesView.prototype = {
     }
 }
 
-WebInspector.ResourceCookiesView.prototype.__proto__ = WebInspector.View.prototype;
+WebInspector.RequestCookiesView.prototype.__proto__ = WebInspector.View.prototype;

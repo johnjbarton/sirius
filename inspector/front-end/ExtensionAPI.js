@@ -684,7 +684,7 @@ function ExtensionServerClient()
     this._port.addEventListener("message", this._onMessage.bind(this), false);
     this._port.start();
 
-    parent.postMessage("registerExtension", [ channel.port2 ], "*");
+    window.parent.postMessage("registerExtension", [ channel.port2 ], "*");
 }
 
 ExtensionServerClient.prototype = {

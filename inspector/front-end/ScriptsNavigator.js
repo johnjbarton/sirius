@@ -27,7 +27,6 @@
  */
 
 /**
- * @implements {WebInspector.ScriptsPanel.FileSelector}
  * @extends {WebInspector.Object}
  * @constructor
  */
@@ -48,27 +47,34 @@ WebInspector.ScriptsNavigator = function()
     this._tabbedPane.element.appendChild(this._treeSearchBox);
 
     var scriptsTreeElement = document.createElement("ol");
-    var scriptsView = new WebInspector.View();
-    scriptsView.element.addStyleClass("fill");
-    scriptsView.element.addStyleClass("navigator-container");
+    this._scriptsTree = new WebInspector.NavigatorTreeOutline(this, scriptsTreeElement);
+
     var scriptsOutlineElement = document.createElement("div");
     scriptsOutlineElement.addStyleClass("outline-disclosure");
     scriptsOutlineElement.addStyleClass("navigator");
     scriptsOutlineElement.appendChild(scriptsTreeElement);
+
+    var scriptsView = new WebInspector.View();
+    scriptsView.element.addStyleClass("fill");
+    scriptsView.element.addStyleClass("navigator-container");
     scriptsView.element.appendChild(scriptsOutlineElement);
-    this._scriptsTree = new WebInspector.NavigatorTreeOutline(this, scriptsTreeElement);
+
     this._tabbedPane.appendTab(WebInspector.ScriptsNavigator.ScriptsTab, WebInspector.UIString("Scripts"), scriptsView);
     this._tabbedPane.selectTab(WebInspector.ScriptsNavigator.ScriptsTab);
 
     var contentScriptsTreeElement = document.createElement("ol");
-    var contentScriptsView = new WebInspector.View();
-    contentScriptsView.element.addStyleClass("fill");
-    contentScriptsView.element.addStyleClass("navigator-container");
+    this._contentScriptsTree = new WebInspector.NavigatorTreeOutline(this, contentScriptsTreeElement);
+
     var contentScriptsOutlineElement = document.createElement("div");
     contentScriptsOutlineElement.addStyleClass("outline-disclosure");
     contentScriptsOutlineElement.addStyleClass("navigator");
     contentScriptsOutlineElement.appendChild(contentScriptsTreeElement);
-    this._contentScriptsTree = new WebInspector.NavigatorTreeOutline(this, contentScriptsTreeElement);
+
+    var contentScriptsView = new WebInspector.View();
+    contentScriptsView.element.addStyleClass("fill");
+    contentScriptsView.element.addStyleClass("navigator-container");
+    contentScriptsView.element.appendChild(contentScriptsOutlineElement);
+
     this._tabbedPane.appendTab(WebInspector.ScriptsNavigator.ContentScriptsTab, WebInspector.UIString("Content scripts"), contentScriptsView);
 
     this._snippetsTree = this._createSnippetsTree();
@@ -78,6 +84,11 @@ WebInspector.ScriptsNavigator = function()
     this._scriptTreeElementsByUISourceCode = new Map();
     
     WebInspector.settings.showScriptFolders.addChangeListener(this._showScriptFoldersSettingChanged.bind(this));
+}
+
+
+WebInspector.ScriptsNavigator.Events = {
+    ScriptSelected: "ScriptSelected"
 }
 
 WebInspector.ScriptsNavigator.ScriptsTab = "scripts";
@@ -236,9 +247,8 @@ WebInspector.ScriptsNavigator.prototype = {
     _scriptSelected: function(uiSourceCode, focusSource)
     {
         this._lastSelectedUISourceCode = uiSourceCode;
-        this.dispatchEventToListeners(WebInspector.ScriptsPanel.FileSelector.Events.FileSelected, uiSourceCode);
-        if (focusSource)
-            this.dispatchEventToListeners(WebInspector.ScriptsPanel.FileSelector.Events.ReleasedFocusAfterSelection, uiSourceCode);
+        var data = { uiSourceCode: uiSourceCode, focusSource: focusSource};
+        this.dispatchEventToListeners(WebInspector.ScriptsNavigator.Events.ScriptSelected, data);
     },
 
     /**
@@ -469,7 +479,7 @@ WebInspector.ScriptsNavigator.prototype = {
         
         if ((domain === "" && folderName === "") || !showScriptFolders)
             return isContentScript ? this._contentScriptsTree : this._scriptsTree;
-        
+
         var parentFolderElement;
         if (folderName === "")
             parentFolderElement = isContentScript ? this._contentScriptsTree : this._scriptsTree;
