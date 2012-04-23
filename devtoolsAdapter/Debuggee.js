@@ -9,6 +9,41 @@ function(            ChromeProxy)  {
 
   var debug = true;
   
+  //  inject our communications endpoints
+
+  function ScriptInjector(urls) {
+     this.urls = urls;
+  }
+
+  ScriptInjector.prototype = {
+
+    injectScripts: function(chromeProxy, tabId) {
+        this.files = this.urls.slice(1);
+        this.chrome = chromeProxy;
+        this._continueInjection(tabId);
+    },
+    
+    // Recurse by chaining off the callback, 
+    _continueInjection: function(tabId) {
+      if(this.files.length) {
+        this._injectScript(this.files.shift(), tabId);
+      } else {
+        delete this.files;
+      }
+    },
+    
+    _injectScript: function(file, tabId) {
+      chrome.tabs.executeScript(
+        tabId, 
+        {file: file, allFrames: true}, 
+        function() {
+          this._continueInjection(tabId);  
+        }
+      );
+    }
+  };
+  
+  
   function echoOk() {
     if (debug) {
       console.log('ok ', arguments);
@@ -164,7 +199,16 @@ function(            ChromeProxy)  {
       this.inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
         throw new Error("Should not be called");
       };
-
+      /*
+      this.inspectorWindow.InspectorFrontendHost.setInjectedScriptForOrigin = function(origin, script) {
+          script += "(null, null, 7);\ndebugger; window.alert('executeScript in ' + window.location + ' devtools: ' + Object.keys(chrome.devtools));";
+        this.chrome.windows.setInjectedScriptForOrigin(origin, script, function() {
+            if (debug) {
+              console.log("OK: setInjectedScriptForOrigin " + origin);
+            }
+        });
+      }.bind(this);
+*/
       var WebInspector = this.inspectorWindow.WebInspector;
       WebInspector.attached = true; // small icons for embed in orion
       
@@ -186,20 +230,21 @@ function(            ChromeProxy)  {
     
     // When called as a WebApp, devtools extensions are loaded.
     loadExtensions: function() {
-	  var optionsString = window.localStorage.getItem('options');
-	  if (optionsString) {
-            var options = JSON.parse(optionsString);
-            if (options.extensionInfos && options.extensionInfos.length) {
-	      this.startListener();
-              WebInspector.addExtensions(options.extensionInfos);
-            }
-          } 
-          this.navigateToURL();
-    },
-  
-    startListener: function() {
-      var disposer = RESTChannel.listen(window, this.panelProxySetup.bind(this));
-      window.addEventListener('unload', disposer);
+      var optionsString = window.localStorage.getItem('options');
+      if (optionsString) {
+        var options = JSON.parse(optionsString);
+        if (options.extensionInfos && options.extensionInfos.length) {
+          WebInspector.addExtensions(options.extensionInfos);
+          /*
+          this.chrome.windows.injectScripts(function() {
+              if (debug) {
+                console.log("OK: injectScripts");
+              }
+          });
+          */  
+        }
+      }
+      this.navigateToURL();
     },
 
     domains: [
