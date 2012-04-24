@@ -29,19 +29,20 @@
  */
 
 /**
- * @extends {WebInspector.ResourceContentView}
  * @constructor
+ * @extends {WebInspector.RequestContentView}
+ * @param {WebInspector.NetworkRequest} request
  */
-WebInspector.ResourcePreviewView = function(resource, responseView)
+WebInspector.RequestPreviewView = function(request, responseView)
 {
-    WebInspector.ResourceContentView.call(this, resource);
+    WebInspector.RequestContentView.call(this, request);
     this._responseView = responseView;
 }
 
-WebInspector.ResourcePreviewView.prototype = {
+WebInspector.RequestPreviewView.prototype = {
     contentLoaded: function()
     {
-        if (!this.resource.content) {
+        if (!this.request.content) {
             if (!this._emptyView) {
                 this._emptyView = this._createEmptyView();
                 this._emptyView.show(this.element);
@@ -67,29 +68,29 @@ WebInspector.ResourcePreviewView.prototype = {
 
     _createPreviewView: function()
     {
-        if (this.resource.hasErrorStatusCode() && this.resource.content)
-            return new WebInspector.ResourceHTMLView(this.resource);
+        if (this.request.hasErrorStatusCode() && this.request.content)
+            return new WebInspector.RequestHTMLView(this.request);
 
-        if (this.resource.category === WebInspector.resourceCategories.xhr && this.resource.content) {
-            var parsedJSON = WebInspector.ResourceJSONView.parseJSON(this.resource.content);
+        if (this.request.type === WebInspector.resourceTypes.XHR && this.request.content) {
+            var parsedJSON = WebInspector.RequestJSONView.parseJSON(this.request.content);
             if (parsedJSON)
-                return new WebInspector.ResourceJSONView(this.resource, parsedJSON);
+                return new WebInspector.RequestJSONView(this.request, parsedJSON);
         }
 
-        if (this.resource.content && this.resource.category === WebInspector.resourceCategories.scripts && this.resource.mimeType === "application/json") {
-            var parsedJSONP = WebInspector.ResourceJSONView.parseJSONP(this.resource.content);
+        if (this.request.content && this.request.type === WebInspector.resourceTypes.Script && this.request.mimeType === "application/json") {
+            var parsedJSONP = WebInspector.RequestJSONView.parseJSONP(this.request.content);
             if (parsedJSONP)
-                return new WebInspector.ResourceJSONView(this.resource, parsedJSONP);
+                return new WebInspector.RequestJSONView(this.request, parsedJSONP);
         }
 
         if (this._responseView.sourceView)
             return this._responseView.sourceView;
 
-        if (this.resource.category === WebInspector.resourceCategories.other)
+        if (this.request.type === WebInspector.resourceTypes.Other)
             return this._createEmptyView();
 
-        return WebInspector.ResourceView.nonSourceViewForResource(this.resource);
+        return WebInspector.RequestView.nonSourceViewForRequest(this.request);
     }
 }
 
-WebInspector.ResourcePreviewView.prototype.__proto__ = WebInspector.ResourceContentView.prototype;
+WebInspector.RequestPreviewView.prototype.__proto__ = WebInspector.RequestContentView.prototype;

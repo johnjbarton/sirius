@@ -30,15 +30,16 @@
 
 /**
  * @constructor
- * @extends {WebInspector.ResourceView}
+ * @extends {WebInspector.RequestView}
+ * @param {WebInspector.NetworkRequest} request
  */
-WebInspector.ResourceHTMLView = function(resource)
+WebInspector.RequestHTMLView = function(request)
 {
-    WebInspector.ResourceView.call(this, resource);
+    WebInspector.RequestView.call(this, request);
     this.element.addStyleClass("html");
 }
 
-WebInspector.ResourceHTMLView.prototype = {
+WebInspector.RequestHTMLView.prototype = {
     hasContent: function()
     {
         return true;
@@ -63,8 +64,8 @@ WebInspector.ResourceHTMLView.prototype = {
         this.element.appendChild(iframe);
         iframe.setAttribute("sandbox", ""); // Forbid to run JavaScript and set unique origin.
 
-        iframe.contentDocument.body.innerHTML = this.resource.content;
+        iframe.contentDocument.body.innerHTML = this.request.content;
     }
 }
 
-WebInspector.ResourceHTMLView.prototype.__proto__ = WebInspector.ResourceView.prototype;
+WebInspector.RequestHTMLView.prototype.__proto__ = WebInspector.RequestView.prototype;

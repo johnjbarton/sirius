@@ -40,6 +40,7 @@ WebInspector.DebuggerPresentationModel = function()
     this._presentationCallFrames = [];
 
     this._breakpointManager = new WebInspector.BreakpointManager(WebInspector.settings.breakpoints, WebInspector.debuggerModel, this._scriptMapping);
+    this._breakpointsActive = true;
 
     this._pendingConsoleMessages = {};
     this._consoleMessageLiveLocations = [];
@@ -65,7 +66,8 @@ WebInspector.DebuggerPresentationModel.Events = {
     DebuggerReset: "debugger-reset",
     CallFrameSelected: "call-frame-selected",
     ConsoleCommandEvaluatedInSelectedCallFrame: "console-command-evaluated-in-selected-call-frame",
-    ExecutionLineChanged: "execution-line-changed"
+    ExecutionLineChanged: "execution-line-changed",
+    BreakpointsActiveStateChanged: "breakpoints-active-state-changed"
 }
 
 WebInspector.DebuggerPresentationModel.prototype = {
@@ -349,6 +351,7 @@ WebInspector.DebuggerPresentationModel.prototype = {
     setBreakpoint: function(uiSourceCode, lineNumber, condition, enabled)
     {
         this._breakpointManager.setBreakpoint(uiSourceCode, lineNumber, condition, enabled);
+        this.setBreakpointsActive(true);
     },
 
     /**
@@ -516,6 +519,26 @@ WebInspector.DebuggerPresentationModel.prototype = {
         this._pendingConsoleMessages = {};
         this._consoleMessageLiveLocations = [];
         this.dispatchEventToListeners(WebInspector.DebuggerPresentationModel.Events.DebuggerReset);
+    },
+
+    /**
+     * @param {boolean} active
+     */
+    setBreakpointsActive: function(active)
+    {
+        if (this._breakpointsActive === active)
+            return;
+        this._breakpointsActive = active;
+        DebuggerAgent.setBreakpointsActive(active);
+        this.dispatchEventToListeners(WebInspector.DebuggerPresentationModel.Events.BreakpointsActiveStateChanged, active);
+    },
+
+    /**
+     * @return {boolean}
+     */
+    breakpointsActive: function()
+    {
+        return this._breakpointsActive;
     }
 }
 
@@ -734,17 +757,18 @@ WebInspector.DebuggerPresentationModel.CallFramePlacard.prototype.__proto__ = We
 WebInspector.DebuggerPresentationModelResourceBinding = function(model)
 {
     this._presentationModel = model;
-    WebInspector.Resource.registerDomainModelBinding(WebInspector.Resource.Type.Script, this);
+    WebInspector.Resource.registerDomainModelBinding(WebInspector.resourceTypes.Script, this);
 }
 
 WebInspector.DebuggerPresentationModelResourceBinding.prototype = {
     /**
      * @param {WebInspector.Resource} resource
+     * @return {boolean}
      */
     canSetContent: function(resource)
     {
         var uiSourceCode = this._uiSourceCodeForResource(resource);
-        return uiSourceCode && this._presentationModel.canEditScriptSource(uiSourceCode);
+        return !!uiSourceCode && this._presentationModel.canEditScriptSource(uiSourceCode);
     },
 
     /**
@@ -785,9 +809,10 @@ WebInspector.DebuggerPresentationModelResourceBinding.prototype = {
      * @param {string} content
      * @param {function(?string)} userCallback
      * @param {?string} oldContent
-     * @param {?string} oldContentEncoded
+     * @param {boolean} oldContentEncoded
+     * @param {string} mimeType
      */
-    _setContentWithInitialContent: function(uiSourceCode, content, userCallback, oldContent, oldContentEncoded)
+    _setContentWithInitialContent: function(uiSourceCode, content, userCallback, oldContent, oldContentEncoded, mimeType)
     {
         /**
          * @this {WebInspector.DebuggerPresentationModelResourceBinding}

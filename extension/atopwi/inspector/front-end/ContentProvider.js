@@ -1,6 +1,5 @@
 /*
- * Copyright (C) 2011 Google Inc. All rights reserved.
- * Copyright (C) 2007 Apple Inc. All rights reserved.
+ * Copyright (C) 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -30,51 +29,36 @@
  */
 
 /**
- * @param {*} object
- * @param {Array.<*>} array
- * @param {function(*, *)} comparator
+ * @interface
  */
-function binarySearch(object, array, comparator)
-{
-    var first = 0;
-    var last = array.length - 1;
+WebInspector.ContentProvider = function() { }
 
-    while (first <= last) {
-        var mid = (first + last) >> 1;
-        var c = comparator(object, array[mid]);
-        if (c > 0)
-            first = mid + 1;
-        else if (c < 0)
-            last = mid - 1;
-        else
-            return mid;
-    }
+WebInspector.ContentProvider.prototype = {
+    /**
+     * @return {?string}
+     */
+    contentURL: function() { },
 
-    // Return the nearest lesser index, "-1" means "0, "-2" means "1", etc.
-    return -(first + 1);
+    /**
+     * @param {function(?string,boolean,string)} callback
+     */
+    requestContent: function(callback) { },
+
+    /**
+     * @param {string} query
+     * @param {boolean} caseSensitive
+     * @param {boolean} isRegex
+     * @param {function(Array.<WebInspector.ContentProvider.SearchMatch>)} callback
+     */
+    searchInContent: function(query, caseSensitive, isRegex, callback) { }
 }
 
-Object.defineProperty(Array.prototype, "binaryIndexOf", { value: function(value, comparator)
-{
-    var result = binarySearch(value, this, comparator);
-    return result >= 0 ? result : -1;
-}});
-
 /**
- * @param {*} anObject
- * @param {Array.<*>} aList
- * @param {function(*, *)} aFunction
+ * @constructor
+ * @param {number} lineNumber
+ * @param {string} lineContent
  */
-function insertionIndexForObjectInListSortedByFunction(anObject, aList, aFunction)
-{
-    var index = binarySearch(anObject, aList, aFunction);
-    if (index < 0)
-        // See binarySearch implementation.
-        return -index - 1;
-    else {
-        // Return the first occurance of an item in the list.
-        while (index > 0 && aFunction(anObject, aList[index - 1]) === 0)
-            index--;
-        return index;
-    }
+WebInspector.ContentProvider.SearchMatch = function(lineNumber, lineContent) {
+    this.lineNumber = lineNumber;
+    this.lineContent = lineContent;
 }

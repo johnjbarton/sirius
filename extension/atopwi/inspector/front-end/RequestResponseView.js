@@ -29,25 +29,26 @@
  */
 
 /**
- * @extends {WebInspector.ResourceContentView}
  * @constructor
+ * @extends {WebInspector.RequestContentView}
+ * @param {WebInspector.NetworkRequest} request
  */
-WebInspector.ResourceResponseView = function(resource)
+WebInspector.RequestResponseView = function(request)
 {
-    WebInspector.ResourceContentView.call(this, resource);
+    WebInspector.RequestContentView.call(this, request);
 }
 
-WebInspector.ResourceResponseView.prototype = {
+WebInspector.RequestResponseView.prototype = {
     get sourceView()
     {
-        if (!this._sourceView && WebInspector.ResourceView.hasTextContent(this.resource))
-            this._sourceView = new WebInspector.ResourceSourceFrame(this.resource);
+        if (!this._sourceView && WebInspector.RequestView.hasTextContent(this.request))
+            this._sourceView = new WebInspector.ResourceSourceFrame(this.request);
         return this._sourceView;
     },
 
     contentLoaded: function()
     {
-        if (!this.resource.content || !this.sourceView) {
+        if (!this.request.content || !this.sourceView) {
             if (!this._emptyView) {
                 this._emptyView = new WebInspector.EmptyView(WebInspector.UIString("This request has no response data available."));
                 this._emptyView.show(this.element);
@@ -65,4 +66,4 @@ WebInspector.ResourceResponseView.prototype = {
     }
 }
 
-WebInspector.ResourceResponseView.prototype.__proto__ = WebInspector.ResourceContentView.prototype;
+WebInspector.RequestResponseView.prototype.__proto__ = WebInspector.RequestContentView.prototype;
