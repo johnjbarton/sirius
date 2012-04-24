@@ -192,7 +192,7 @@ function(            ChromeProxy)  {
             console.log("jsonObjectHandler "+data.method, data);
           }
           backend.dispatch.apply(backend, [data]);
-          this.onEvent(this.panelConnection, data);
+          this.inspectorWindow.WebInspector.extensionServer._notifyRemoteDebugEvent(data);
         }.bind(this)
       };
     
@@ -296,20 +296,6 @@ function(            ChromeProxy)  {
            panelConnection.respond.bind(panelConnection, messageObject.serial)
       );
     },
-    
-    onEvent:function(panelConnection, messageObject) {
-    // Call ExtensionServer._notifyRemoteDebugEvent
-      var domainMethod = messageObject.method;
-      var domain = domainMethod.split('.')[0];
-      var handler = this._eventListenersByDomain[domain];
-      if (handler) {
-        panelConnection.postObject(handler, messageObject, echoOk, echoErr);
-      } else {
-        if (debug) {
-          console.log('Debuggee.onEvent: no handler for ' + domain);
-        }
-      }
-    },
 
     navigateToURL: function(inspectorReady) {
       if (this.url) { // then we started in a new tab, navigate
@@ -332,7 +318,7 @@ function(            ChromeProxy)  {
       }
     },
     
-    sendMessageObject: function(messageObject) {
+    sendMessageObject: function(messageObject, port) {
       if (debug) {
         console.log(messageObject.id+" atopwi sendCommand "+messageObject.method);
       }
@@ -340,19 +326,26 @@ function(            ChromeProxy)  {
         {url: this.url, tabId: this.tabId}, 
         messageObject.method, 
         messageObject.params, 
-        this.handleCommandResponse.bind(this, messageObject)
+        this.handleCommandResponse.bind(this, messageObject, port)
       );
     },
      
-    handleCommandResponse: function(messageObject, data) {
-      data.id = messageObject.id;
-      if (debug) {
-        var msg = data.id +
-           " atopwi response to sendCommand " + messageObject.method;
-           var obj = {messageObject: messageObject, data: data};
-           console.log(msg, obj);
+    handleCommandResponse: function(messageObject, port, data) {
+      // move into devtools
+      if (messageObject.requestId && port) { 
+        data.requestId = messageObject.requestId;  // ExtensionServerClient.prototype.sendRequest
+        var extensionServer = this.inspectorWindow.WebInspector.extensionServer;
+        extensionServer._dispatchCallback(messageObject.requestId, port, data); 
+      } else {  
+        data.id = messageObject.id; // _wrapCallbackAndSendMessageObject
+        if (debug) {
+          var msg = data.id +
+             " atopwi response to sendCommand " + messageObject.method;
+             var obj = {messageObject: messageObject, data: data};
+             console.log(msg, obj);
+        }
+        this.inspectorWindow.InspectorBackend.dispatch(data); 
       }
-      this.inspectorWindow.InspectorBackend.dispatch(data); 
     }
 };
 

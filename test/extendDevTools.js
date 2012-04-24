@@ -4,8 +4,6 @@
 chrome.devtools.panels.create("Test", '', 'atopwi/test/testPanel.html', function(PanelAPI) {
   console.log('extendDevTools.html PANEL callback', arguments);
   PanelAPI.onShown.addListener(function(win) {
-    console.log('extend.html panel.onShown callback', arguments);
-    win.chrome = win.chrome || {};
-    win.chrome.devtools = chrome.devtools;
+    console.log('extendDevTools.html panel.onShown callback', arguments);
   });
 });
