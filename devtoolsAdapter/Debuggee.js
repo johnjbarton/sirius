@@ -183,9 +183,11 @@ function(            ChromeProxy)  {
       }
       this.inspectorWindow = window;
       
+      // Accept command from WebInspector and forward them to chrome.debugger
       var backend = this.inspectorWindow.InspectorBackend;
       backend.sendMessageObjectToBackend = this.sendMessageObject.bind(this);
       
+      // Route events from chrome.debugger to WebInspector
       this.chrome.jsonHandlers['chrome.debugger.remote'] = {
         jsonObjectHandler:  function(data) {
           if (debug) {
@@ -199,20 +201,11 @@ function(            ChromeProxy)  {
       this.inspectorWindow.InspectorFrontendHost.sendMessageToBackend = function() {
         throw new Error("Should not be called");
       };
-      /*
-      this.inspectorWindow.InspectorFrontendHost.setInjectedScriptForOrigin = function(origin, script) {
-          script += "(null, null, 7);\ndebugger; window.alert('executeScript in ' + window.location + ' devtools: ' + Object.keys(chrome.devtools));";
-        this.chrome.windows.setInjectedScriptForOrigin(origin, script, function() {
-            if (debug) {
-              console.log("OK: setInjectedScriptForOrigin " + origin);
-            }
-        });
-      }.bind(this);
-*/
+
       var WebInspector = this.inspectorWindow.WebInspector;
       WebInspector.attached = true; // small icons for embed in orion
       
-      this.completeLoad = WebInspector.delayLoaded; // set by openInspectoer
+      this.completeLoad = WebInspector.delayLoaded; // set by openInspector
     
       // Called asynchronously from WebInspector _initializeCapability
       // which is called byt the load event vai doLoadedDone()
@@ -235,57 +228,12 @@ function(            ChromeProxy)  {
         var options = JSON.parse(optionsString);
         if (options.extensionInfos && options.extensionInfos.length) {
           WebInspector.addExtensions(options.extensionInfos);
-          /*
-          this.chrome.windows.injectScripts(function() {
-              if (debug) {
-                console.log("OK: injectScripts");
-              }
-          });
-          */  
         }
       }
       this.navigateToURL();
     },
-
-    domains: [
-        "Inspector",
-         "Memory",
-         "Page",
-         "Runtime",
-         "Console",
-         "Network",
-         "Database",
-         "DOMStorage",
-         "ApplicationCache",
-         "FileSystem",
-         "DOM",
-         "CSS",
-         "Timeline",
-         "Debugger",
-         "DOMDebugger",
-         "Profiler",
-         "Worker"
-    ],
     
     _eventListenersByDomain: {},
-
-    panelProxySetup: function(connection) {
-      this.panelConnection = connection;
-      this.panelConnection.register('ChromeDevtools.sendCommand', {
-        post: this.proxySendCommand.bind(this, this.panelConnection)
-      });
-
-      // To avoid dispatching every event to every panel we create one listener for each domain
-      this.domains.forEach(function(domain) {
-        this.panelConnection.register('ChromeDevtools.onEvent.addListener.'+domain, {
-            put: function(connection, messageObject) {
-              this._eventListenersByDomain[domain] = messageObject.url;
-              console.log("Debuggee addListener "+messageObject.url, messageObject);
-            }.bind(this)
-        });
-      }.bind(this));
-      
-    },
     
     proxySendCommand: function(panelConnection, messageObject) {
     // Call from ExtensionServer.sendCommand
@@ -320,7 +268,7 @@ function(            ChromeProxy)  {
     
     sendMessageObject: function(messageObject, port) {
       if (debug) {
-        console.log(messageObject.id+" atopwi sendCommand "+messageObject.method);
+        console.log(messageObject.id+" atopwi sendCommand "+messageObject.method + ' with ' + port);
       }
       this.chrome.debugger.sendCommand(
         {url: this.url, tabId: this.tabId}, 
