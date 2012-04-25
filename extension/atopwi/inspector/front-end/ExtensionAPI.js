@@ -690,31 +690,13 @@ ResourceImpl.prototype = {
  */
 function RemoteDebugImpl()
 {
-    this._domainListeners = {};  // filled by addDomainListener
-    this._eventParams = {};      // filled by registerEvent
-    
-	this.onRemoteDebugEvent = {};
-	apiPrivate.Domains.forEach(function(domain) {
-	    function dispatchRemoteDebugEvent(message)
-        {
-            var domainMethod = messageObject.method;
-            var method = domainMethod.split('.')[1];
-            var params = [];
-            var messageArgs = messageObject.params;
-            if (messageArgs) {
-                var paramNames = this._eventArgs[domainMethod];
-                for (var i = 0; i < paramNames.length; ++i) {
-                    params.push(messageArgs[paramNames[i]]);
-                }
-            }
-	        var listenerObject = this._domainListeners[domain];
-            listenerObject[method].apply(listenerObject, params);
-        }
-  		this.onRemoteDebugEvent[domain] = new EventSink(events.RemoteDebug + domain, dispatchRemoteDebugEvent.bind(this));
-	}.bind(this));
+    this._eventParams = {};        // filled by registerEvent
+    this._eventSink = {};  // filled by addDomainListener
+    this._domainListeners = {};  // add/removeDomainListener
 }
 
-RemoteDebugImpl.prototype = {
+RemoteDebugImpl.prototype = 
+{
     sendCommand: function(domainMethod, params, callback)
     {
         return extensionServer.sendRequest({ command: commands.SendCommand, method: domainMethod, params: params }, callback);
@@ -723,12 +705,47 @@ RemoteDebugImpl.prototype = {
      * @param domainMethod {string} eg 'Debugger.scriptParsed' 
      * @param params [strings] 
      */
-    registerEvent: function(domainMethod, params) {
+    registerEvent: function(domainMethod, params) 
+    {
         this._eventParams[domainMethod] = params;
     },
     
-    addDomainListener: function(domain, obj) {
-        this._domainListeners[domain] = obj;
+    addDomainListener: function(domain, obj) 
+    {
+        var eventSink = new EventSink(events.RemoteDebug + domain);
+        this._eventSink[domain] = eventSink;
+        this._domainListeners[domain] = this._dispatchRemoteDebugEvent.bind(this, obj);
+        eventSink.addListener( this._domainListeners[domain] );     
+    },
+    
+    removeDomainListener: function(domain) 
+    {
+        var eventSink = this._eventSink[domain];
+        if (eventSink) 
+        {
+            var domainListener = this._domainListeners[domain];
+            if (domainListener) 
+            {
+                eventSink.removeListener(domainListener);
+                delete this._domainListeners[domain];
+            }
+            delete this._eventSink[domain];
+        }   
+    },
+    
+    _dispatchRemoteDebugEvent: function(domainListener, messageObject)
+    {
+        var domainMethod = messageObject.method;
+        var method = domainMethod.split('.')[1];
+        var params = [];
+        var messageArgs = messageObject.params;
+        if (messageArgs) {
+            var paramNames = this._eventParams[domainMethod];
+            for (var i = 0; i < paramNames.length; ++i) {
+                params.push(messageArgs[paramNames[i]]);
+            }
+        }
+        domainListener[method].apply(domainListener, params);
     }
 }
 /**
