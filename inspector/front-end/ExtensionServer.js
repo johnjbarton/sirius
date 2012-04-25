@@ -532,10 +532,15 @@ WebInspector.ExtensionServer.prototype = {
         auditRun.cancel();
     },
     
-    _onSendCommand: function(message, port) {
-      InspectorBackend.sendMessageObjectToBackend.call(InspectorBackend, message, port);
+    _onSendCommand: function(message, port) 
+    {
+        function dispatchSendCommandReply(result) 
+        {
+            this._dispatchCallback(message.requestId, port, result);
+        }
+        InspectorBackend._wrapCallbackAndSendMessageObject(message.method, message.params, dispatchSendCommandReply.bind(this));
     },
-
+    
     _dispatchCallback: function(requestId, port, result)
     {
         if (requestId)
@@ -667,11 +672,13 @@ WebInspector.ExtensionServer.prototype = {
 
     _registerExtension: function(origin, port)
     {
+        // TODO make _registeredExtensions an array to allow multiple extensions/origin
         if (!this._registeredExtensions.hasOwnProperty(origin)) {
             if (origin !== window.location.origin) // Just ignore inspector frames.
                 console.error("Ignoring unauthorized client request from " + origin);
             return;
         }
+        InspectorBackend.registerExtensionDispatcher(this._notifyRemoteDebugEvent.bind(this));
         port._extensionOrigin = origin;
         port.addEventListener("message", this._onmessage.bind(this), false);
         port.start();
