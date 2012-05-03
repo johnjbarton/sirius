@@ -21,7 +21,7 @@ function(appendFrame)  {
     showInspectorIframe: function() {
       var inspectorElt = window.document.getElementById('WebInspector');
       inspectorElt.classList.remove('hide');
-      var devtoolsURL = window.SiriusBase + '/atopwi/inspector/front-end/devtools.html';
+      var devtoolsURL = window.SiriusBase + '/atopwi/inspector/front-end/devtools.html?ws=localhost:9222/devtools/page/243_1';
       return appendFrame('WebInspector', devtoolsURL);
     },
 

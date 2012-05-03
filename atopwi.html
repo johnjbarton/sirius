@@ -12,7 +12,7 @@
 var SiriusBase = 'chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc';
 window.crx2appBase = SiriusBase+'/crx2app/extension';
 
-function extractDebuggeeFromURL() {
+function extractParamsFromURL() {
   var search = window.location.search;
   if (search) {
     var parameterString = search.substr(1);
@@ -41,7 +41,7 @@ function reloadWithURL(debuggeeURLElt) {
 
 
 function getDebuggeeSpec() {
-  var debuggeeSpec = extractDebuggeeFromURL();
+  var debuggeeSpec = extractParamsFromURL();
   if (debuggeeSpec) {
     return debuggeeSpec;
   } else {
@@ -52,6 +52,35 @@ function getDebuggeeSpec() {
     //}
   }
 }
+
+function URLOptions() {
+  this.params = extractParamsFromURL() || {};
+}
+
+URLOptions.prototype = {
+  useWebSocket: function() {
+    return this.params.hasOwnProperty('ws');
+  },
+  useCrx2app: function() {
+    return (this.params.hasOwnProperty('url') || this.params.hasOwnProperty('tabId'));
+  },
+  devToolsURL: function() {
+    var devtoolsURL = window.SiriusBase + '/atopwi/inspector/front-end/devtools.html';
+    if (this.useWebSocket()) {
+      devtoolsURL += '?ws=' + this.params.ws;
+    } // else params by postMessage...
+    return devtoolsURL;
+  },
+  getDebuggeeSpec: function() {
+    if (this.useWebSocket() || this.useCrx2app()) {
+      return {
+        url: this.params.url, 
+        devtoolsURL: this.devToolsURL(),
+        ws: this.params.ws
+      };
+    } // else none.
+  }
+};
 
 function onLoad() {
 
@@ -71,9 +100,15 @@ console.log('window.crx2appBase ', window.crx2appBase);
    };
   
   require(['DevtoolsConnection'], function open(DevtoolsConnection) {
-    var debuggeeSpec = getDebuggeeSpec();
-    // connect to the chromeIframe
-    DevtoolsConnection.openInspector(debuggeeSpec);
+    var options = new URLOptions();
+    var debuggeeSpec = options.getDebuggeeSpec();
+    if (debuggeeSpec) {
+      // connect to the chromeIframe
+      DevtoolsConnection.openInspector(debuggeeSpec);
+    } else {
+      var prompt = document.querySelector('.debuggeeSpec');
+      prompt.classList.remove('hide');
+    }
   });
   
 }
@@ -97,16 +132,24 @@ body {
 #debuggee {
   margin: 20px;
 }
+.debuggeeSpec {
+  margin: 20px;
+}
 </style>
 </head>
 <body>
 <div class='hide' id='error'></div>
-<div class='hide' id='debuggeeSpec'>
-<h1> Chrome Devtools as Web App using crx2app extension </h1>
+<div class='hide debuggeeSpec'>
+<h1> Chrome Devtools as Web App </h1>
+<h2>Using Chrome extension crx2App</h2>
 <form >
-URL: <input id='debuggeeSpecURLElt' type='url' size='128'/>
+URL to debug: <input id='debuggeeSpecURLElt' type='url' size='128'/>
   <button id="doDebug">Debug</button>
 </form>
+<h2>OR: Using Web Sockets</h2>
+<div class="WebSocketSelector">
+<iframe src="http://localhost:9222"></iframe>
+</div>
 </div>
 <div class='hide' id="WebInspector"></div>
 </body>
