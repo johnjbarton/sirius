@@ -25,12 +25,17 @@
       "contextMenus",
       "webNavigation",
       "webRequest",
-      "debugger"
+      "debugger",
+      "webRequestBlocking"
     ],
    "content_scripts": [
      {
        "matches": ["http://*/mixloginstatic/LoginWindow.html*"],
        "js": ["superLogin.js"]
+     },
+     {
+       "matches": ["*://*/*atopwi.html*"],
+       "js": ["atopwi/devtoolsAdapter/webSocketOverrides.js"]
      }
    ]
 }
