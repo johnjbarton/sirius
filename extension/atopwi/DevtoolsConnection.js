@@ -21,8 +21,8 @@ function(appendFrame)  {
     showInspectorIframe: function() {
       var inspectorElt = window.document.getElementById('WebInspector');
       inspectorElt.classList.remove('hide');
-      var devtoolsURL = window.SiriusBase + '/atopwi/inspector/front-end/devtools.html';
-      return appendFrame('WebInspector', devtoolsURL);
+      console.log("append WebInspector from "+this.debuggee.devtoolsURL);
+      return appendFrame('WebInspector', this.debuggee.devtoolsURL);
     },
 
     listenDebuggee: function() {

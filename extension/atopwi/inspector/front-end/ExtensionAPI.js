@@ -65,25 +65,6 @@ function defineCommonExtensionSymbols(apiPrivate)
         ViewShown: "view-shown-",
         ViewHidden: "view-hidden-"
     };
-    apiPrivate.Domains = [
-        "Inspector",
-         "Memory",
-         "Page",
-         "Runtime",
-         "Console",
-         "Network",
-         "Database",
-         "DOMStorage",
-         "ApplicationCache",
-         "FileSystem",
-         "DOM",
-         "CSS",
-         "Timeline",
-         "Debugger",
-         "DOMDebugger",
-         "Profiler",
-         "Worker"
-    ];
     
     apiPrivate.Commands = {
         AddAuditCategory: "addAuditCategory",
@@ -702,12 +683,12 @@ RemoteDebugImpl.prototype =
         return extensionServer.sendRequest({ command: commands.SendCommand, method: domainMethod, params: params }, callback);
     },
     /**
-     * @param domainMethod {string} eg 'Debugger.scriptParsed' 
-     * @param params [strings] 
+     * @param domainMethod {string} eg 'Page.loadEventFired' 
+     * @param params [strings], eg ['timeStamp'] 
      */
-    registerEvent: function(domainMethod, params) 
+    registerEvent: function(domainMethod, paramNames) 
     {
-        this._eventParams[domainMethod] = params;
+        this._eventParams[domainMethod] = paramNames;
     },
     
     addDomainListener: function(domain, obj) 
@@ -737,15 +718,18 @@ RemoteDebugImpl.prototype =
     {
         var domainMethod = messageObject.method;
         var method = domainMethod.split('.')[1];
-        var params = [];
-        var messageArgs = messageObject.params;
-        if (messageArgs) {
-            var paramNames = this._eventParams[domainMethod];
-            for (var i = 0; i < paramNames.length; ++i) {
-                params.push(messageArgs[paramNames[i]]);
+        if (method in domainListener) 
+        {
+            var params = [];
+            var messageArgs = messageObject.params;
+            if (messageArgs) {
+                var paramNames = this._eventParams[domainMethod];
+                for (var i = 0; i < paramNames.length; ++i) {
+                    params.push(messageArgs[paramNames[i]]);
+                }
             }
-        }
-        domainListener[method].apply(domainListener, params);
+            domainListener[method].apply(domainListener, params);
+        } // else assume client did not want this event
     }
 }
 /**
