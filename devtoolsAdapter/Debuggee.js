@@ -39,8 +39,10 @@ function(            ChromeProxy)  {
     },
         
     put: function (atopwi, obj) {
-      this.attachToChrome(obj);
-      return {message:'hey'};
+      if (obj.url || obj.tabId) {
+        this.attachToChrome(obj);
+        return {message:'attached'};
+      }
     },
     
     register: function(atopwi) {

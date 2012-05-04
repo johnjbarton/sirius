@@ -53,30 +53,62 @@ function getDebuggeeSpec() {
   }
 }
 
+  
+  function getFrontendURL() {
+    var url = document.querySelector('.frontendURL').value;
+    if (url) {
+      localStorage.setItem('atopwi.frontendURL', url);
+    }
+    return url;
+  }
+  
 function URLOptions() {
   this.params = extractParamsFromURL() || {};
+  
+  function preset(url) {
+    if (url) {
+      document.querySelector('.frontendURL').value = url;
+      localStorage.setItem('atopwi.frontendURL', url);
+    }
+  }
+  
+  var defaultPreset = localStorage.getItem('atopwi.frontendURL') || window.SiriusBase;
+  preset(defaultPreset);
+  
+  document.querySelector('.crxFrontEnd').addEventListener('click', function() {
+    preset(window.SiriusBase + '/atopwi/inspector/front-end/');
+  });
+  document.querySelector('.testingFrontEnd').addEventListener('click', function() {
+    preset('http://localhost:8081/out/Release/resources/inspector/');
+  });
+  
 }
 
 URLOptions.prototype = {
+  
   useWebSocket: function() {
     return this.params.hasOwnProperty('ws');
   },
+  
   useCrx2app: function() {
     return (this.params.hasOwnProperty('url') || this.params.hasOwnProperty('tabId'));
   },
+
   devToolsURL: function() {
-    var devtoolsURL = window.SiriusBase + '/atopwi/inspector/front-end/devtools.html';
+    var devtoolsURL = getFrontendURL() + 'devtools.html';
     if (this.useWebSocket()) {
       devtoolsURL += '?ws=' + this.params.ws;
-    } // else params by postMessage...
+    } 
     return devtoolsURL;
   },
+  
   getDebuggeeSpec: function() {
     if (this.useWebSocket() || this.useCrx2app()) {
       return {
         url: this.params.url, 
         devtoolsURL: this.devToolsURL(),
-        ws: this.params.ws
+        ws: this.params.ws,
+        frontendURL: getFrontendURL()
       };
     } // else none.
   }
@@ -93,8 +125,6 @@ function onLoad() {
       }
     }); 
     
-console.log('window.crx2appBase ', window.crx2appBase);
-
    require.onError = function(err) {
      console.error(err+'', {stack: err.stack.split('\n')});
    };
@@ -103,9 +133,11 @@ console.log('window.crx2appBase ', window.crx2appBase);
     var options = new URLOptions();
     var debuggeeSpec = options.getDebuggeeSpec();
     if (debuggeeSpec) {
-      // connect to the chromeIframe
+      console.log("openInspector ", debuggeeSpec);
       DevtoolsConnection.openInspector(debuggeeSpec);
     } else {
+      var selector = document.querySelector('.WebSocketSelector');
+      selector.innerHTML = '<iframe src="http://localhost:9222"></iframe>';
       var prompt = document.querySelector('.debuggeeSpec');
       prompt.classList.remove('hide');
     }
@@ -141,14 +173,20 @@ body {
 <div class='hide' id='error'></div>
 <div class='hide debuggeeSpec'>
 <h1> Chrome Devtools as Web App </h1>
-<h2>Using Chrome extension crx2App</h2>
+front-end url presets: <button class='crxFrontEnd'>Sirius Extension</button><button class='testingFrontEnd'>localhost testing</button> 
+<form >
+front-end url: <input class='frontendURL' type='url' size='128'/>
+</form>
+<h2>Backend Using Chrome extension crx2App</h2>
+<p>The devtools front-end connects through postMessage() events to the chrome.debugger API and from there to the backend</p>
 <form >
 URL to debug: <input id='debuggeeSpecURLElt' type='url' size='128'/>
   <button id="doDebug">Debug</button>
 </form>
-<h2>OR: Using Web Sockets</h2>
+<h2>OR: Backend Using Web Sockets</h2>
+<p>The devtools front-end connects to localhost:9222</p>
 <div class="WebSocketSelector">
-<iframe src="http://localhost:9222"></iframe>
+
 </div>
 </div>
 <div class='hide' id="WebInspector"></div>
