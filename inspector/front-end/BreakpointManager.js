@@ -204,7 +204,6 @@ WebInspector.BreakpointManager.prototype = {
     {
         var uiSourceCode = uiBreakpoint.uiSourceCode;
         var lineNumber = uiBreakpoint.lineNumber;
-        console.assert(uiSourceCode.breakpoints()[lineNumber] === uiBreakpoint);
         uiSourceCode.breakpointRemoved(lineNumber);
         uiBreakpoint.breakpoint.removeUIBreakpoint();
     },
@@ -413,7 +412,7 @@ WebInspector.Breakpoint.prototype = {
     },
 
     /**
-     * @type {WebInspector.UIBreakpoint}
+     * @return {WebInspector.UIBreakpoint}
      */
     get uiBreakpoint()
     {

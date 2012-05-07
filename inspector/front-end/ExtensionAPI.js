@@ -332,7 +332,7 @@ function ExtensionViewImpl(id)
     function dispatchShowEvent(message)
     {
         var frameIndex = message.arguments[0];
-        this._fire(window.parent.frames[frameIndex]);
+        this._fire(window.top.frames[frameIndex]);
     }
     this.onShown = new EventSink(events.ViewShown + id, dispatchShowEvent);
     this.onHidden = new EventSink(events.ViewHidden + id);
@@ -757,7 +757,7 @@ function ExtensionServerClient()
     this._port.addEventListener("message", this._onMessage.bind(this), false);
     this._port.start();
 
-    window.parent.postMessage("registerExtension", [ channel.port2 ], "*");
+    top.postMessage("registerExtension", [ channel.port2 ], "*");
 }
 
 ExtensionServerClient.prototype = {

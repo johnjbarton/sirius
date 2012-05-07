@@ -283,7 +283,7 @@ WebInspector.HeapSnapshotView.prototype = {
             return false;
         }
 
-        var current = this.dataGrid.children[0];
+        var current = this.dataGrid.rootNode().children[0];
         var depth = 0;
         var info = {};
 
@@ -356,7 +356,7 @@ WebInspector.HeapSnapshotView.prototype = {
 
     refreshVisibleData: function()
     {
-        var child = this.dataGrid.children[0];
+        var child = this.dataGrid.rootNode().children[0];
         while (child) {
             child.refresh();
             child = child.traverseNextNode(false, null, true);
@@ -370,7 +370,7 @@ WebInspector.HeapSnapshotView.prototype = {
 
         this._baseProfileUid = this._profiles()[this.baseSelectElement.selectedIndex].uid;
         var dataGrid = /** @type {WebInspector.HeapSnapshotDiffDataGrid} */ this.dataGrid;
-        dataGrid._baseProfileIndexChanged(this._loadProfileByIndex.bind(this), this.baseSelectElement.selectedIndex);
+        this._loadProfile(this._baseProfileUid, dataGrid.setBaseDataSource.bind(dataGrid));
 
         if (!this.currentQuery || !this._searchFinishedCallback || !this._searchResults)
             return;
@@ -422,12 +422,6 @@ WebInspector.HeapSnapshotView.prototype = {
 
     _loadProfile: function(profileUid, callback)
     {
-        WebInspector.panels.profiles.loadHeapSnapshot(profileUid, callback);
-    },
-
-    _loadProfileByIndex: function(profileIndex, callback)
-    {
-        var profileUid = this._profiles()[profileIndex].uid;
         WebInspector.panels.profiles.loadHeapSnapshot(profileUid, callback);
     },
 

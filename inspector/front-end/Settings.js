@@ -181,13 +181,14 @@ WebInspector.ExperimentsSettings = function()
     this.timelineVerticalOverview = this._createExperiment("timelineStartAtZero", "Enable vertical overview mode in the Timeline panel");
     this.showShadowDOM = this._createExperiment("showShadowDOM", "Show shadow DOM");
     this.snippetsSupport = this._createExperiment("snippetsSupport", "Snippets support");
+    this.showStylesPanel = this._createExperiment("stylesPanel", "Show styles panel");
 
     this._cleanUpSetting();
 }
 
 WebInspector.ExperimentsSettings.prototype = {
     /**
-     * @type {Array.<WebInspector.Experiment>}
+     * @return {Array.<WebInspector.Experiment>}
      */
     get experiments()
     {
@@ -195,7 +196,7 @@ WebInspector.ExperimentsSettings.prototype = {
     },
     
     /**
-     * @type {boolean}
+     * @return {boolean}
      */
     get experimentsEnabled()
     {

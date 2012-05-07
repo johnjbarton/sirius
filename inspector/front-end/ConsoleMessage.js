@@ -35,7 +35,7 @@
  * @param {string} source
  * @param {string} level
  * @param {string} message
- * @param {WebInspector.DebuggerPresentationModel.Linkifier} linkifier
+ * @param {WebInspector.Linkifier} linkifier
  * @param {string=} type
  * @param {string=} url
  * @param {number=} line
@@ -91,7 +91,7 @@ WebInspector.ConsoleMessageImpl.prototype = {
             }
         } else if (this.source === WebInspector.ConsoleMessage.MessageSource.Network) {
             if (this._request) {
-                this._stackTrace = this._request.stackTrace;
+                this._stackTrace = this._request.initiator.stackTrace;
                 if (this._request.initiator && this._request.initiator.url) {
                     this.url = this._request.initiator.url;
                     this.line = this._request.initiator.lineNumber;

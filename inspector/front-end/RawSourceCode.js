@@ -216,7 +216,7 @@ WebInspector.RawSourceCode.prototype = {
      */
     _createUISourceCode: function(id, url, contentProvider)
     {
-        var uiSourceCode = new WebInspector.UISourceCodeImpl(id, url, contentProvider);
+        var uiSourceCode = new WebInspector.JavaScriptSource(id, url, contentProvider);
         uiSourceCode.isContentScript = this.isContentScript;
         uiSourceCode.isEditable = this._scripts.length === 1 && !this._scripts[0].lineOffset && !this._scripts[0].columnOffset && !this._formatted;
         return uiSourceCode;
@@ -239,26 +239,13 @@ WebInspector.RawSourceCode.prototype.__proto__ = WebInspector.Object.prototype;
 
 /**
  * @interface
+ * @extends {WebInspector.SourceMapping}
  */
 WebInspector.RawSourceCode.SourceMapping = function()
 {
 }
 
 WebInspector.RawSourceCode.SourceMapping.prototype = {
-    /**
-     * @param {DebuggerAgent.Location} rawLocation
-     * @return {WebInspector.UILocation}
-     */
-    rawLocationToUILocation: function(rawLocation) { },
-
-    /**
-     * @param {WebInspector.UISourceCode} uiSourceCode
-     * @param {number} lineNumber
-     * @param {number} columnNumber
-     * @return {DebuggerAgent.Location}
-     */
-    uiLocationToRawLocation: function(uiSourceCode, lineNumber, columnNumber) { },
-
     /**
      * @return {WebInspector.UISourceCode}
      */
@@ -352,17 +339,4 @@ WebInspector.RawSourceCode.FormattedSourceMapping.prototype = {
     {
         return this._uiSourceCode;
     }
-}
-
-/**
- * @constructor
- * @param {WebInspector.UISourceCode} uiSourceCode
- * @param {number} lineNumber
- * @param {number} columnNumber
- */
-WebInspector.UILocation = function(uiSourceCode, lineNumber, columnNumber)
-{
-    this.uiSourceCode = uiSourceCode;
-    this.lineNumber = lineNumber;
-    this.columnNumber = columnNumber;
 }
