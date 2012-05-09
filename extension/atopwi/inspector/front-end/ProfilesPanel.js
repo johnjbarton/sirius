@@ -103,16 +103,16 @@ WebInspector.registerLinkifierPlugin(function(title)
  * @param {string} profileType
  * @param {string} title
  * @param {number} uid
+ * @param {number} maxJSObjectId
  * @param {boolean} isTemporary
  */
-WebInspector.ProfileHeader = function(profileType, title, uid, isTemporary)
+WebInspector.ProfileHeader = function(profileType, title, uid, maxJSObjectId, isTemporary)
 {
     this.typeId = profileType,
     this.title = title;
     this.uid = uid;
     this.isTemporary = isTemporary;
-
-    this.maxJSObjectId = 0;
+    this.maxJSObjectId = maxJSObjectId;
 }
 
 /**
@@ -325,7 +325,7 @@ WebInspector.ProfilesPanel.prototype = {
         this._profiles.push(profile);
         this._profilesIdMap[this._makeKey(profile.uid, typeId)] = profile;
 
-        if (profile.title.indexOf(UserInitiatedProfileName) !== 0) {
+        if (!profile.title.startsWith(UserInitiatedProfileName)) {
             var profileTitleKey = this._makeKey(profile.title, typeId);
             if (!(profileTitleKey in this._profileGroups))
                 this._profileGroups[profileTitleKey] = [];
@@ -551,7 +551,7 @@ WebInspector.ProfilesPanel.prototype = {
     displayTitleForProfileLink: function(title, typeId)
     {
         title = unescape(title);
-        if (title.indexOf(UserInitiatedProfileName) === 0) {
+        if (title.startsWith(UserInitiatedProfileName)) {
             title = WebInspector.UIString("Profile %d", title.substring(UserInitiatedProfileName.length + 1));
         } else {
             var titleKey = this._makeKey(title, typeId);
@@ -847,7 +847,7 @@ WebInspector.ProfilesPanel.prototype = {
         this.getProfileType(profileType).setRecordingProfile(isProfiling);
         if (this.hasTemporaryProfile(profileType) !== isProfiling) {
             if (!this._temporaryRecordingProfile)
-                this._temporaryRecordingProfile = new WebInspector.ProfileHeader(profileType, WebInspector.UIString("Recording\u2026"), -1, true);
+                this._temporaryRecordingProfile = new WebInspector.ProfileHeader(profileType, WebInspector.UIString("Recording\u2026"), -1, -1, true);
             if (isProfiling) {
                 this.addProfileHeader(this._temporaryRecordingProfile);
                 if (profileType === WebInspector.CPUProfileType.TypeId)
@@ -864,6 +864,7 @@ WebInspector.ProfilesPanel.prototype = {
                 this._temporaryRecordingProfile = new WebInspector.ProfileHeader(
                     WebInspector.HeapSnapshotProfileType.TypeId,
                     WebInspector.UIString("Snapshotting\u2026"),
+                    -1,
                     -1,
                     true);
             }
@@ -906,7 +907,7 @@ WebInspector.ProfilerDispatcher.prototype = {
      */
     addProfileHeader: function(profile)
     {
-        this._profiler.addProfileHeader(new WebInspector.ProfileHeader(profile["typeId"], profile["title"], profile["uid"], false));
+        this._profiler.addProfileHeader(new WebInspector.ProfileHeader(profile["typeId"], profile["title"], profile["uid"], profile["maxJSObjectId"], false));
     },
 
     addHeapSnapshotChunk: function(uid, chunk)
@@ -939,7 +940,7 @@ WebInspector.ProfileSidebarTreeElement = function(profile, titleFormat, classNam
     this.profile = profile;
     this._titleFormat = titleFormat;
 
-    if (this.profile.title.indexOf(UserInitiatedProfileName) === 0)
+    if (this.profile.title.startsWith(UserInitiatedProfileName))
         this._profileNumber = this.profile.title.substring(UserInitiatedProfileName.length + 1);
 
     WebInspector.SidebarTreeElement.call(this, className, "", "", profile, false);
@@ -964,7 +965,7 @@ WebInspector.ProfileSidebarTreeElement.prototype = {
     {
         if (this._mainTitle)
             return this._mainTitle;
-        if (this.profile.title.indexOf(UserInitiatedProfileName) === 0)
+        if (this.profile.title.startsWith(UserInitiatedProfileName))
             return WebInspector.UIString(this._titleFormat, this._profileNumber);
         return this.profile.title;
     },

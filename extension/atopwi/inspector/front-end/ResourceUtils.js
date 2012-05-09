@@ -30,7 +30,7 @@
 
 /**
  * @constructor
- * @param {String|string} url
+ * @param {string} url
  */
 WebInspector.ParsedURL = function(url)
 {
@@ -40,7 +40,9 @@ WebInspector.ParsedURL = function(url)
     this.host = "";
     this.port = "";
     this.path = "";
+    this.queryParams = "";
     this.fragment = "";
+    this.folderPathComponents = "";
     this.lastPathComponent = "";
 
     // RegExp groups:
@@ -50,37 +52,41 @@ WebInspector.ParsedURL = function(url)
     // 4 - ?path
     // 5 - ?fragment
     var match = url.match(/^([^:]+):\/\/([^\/:]*)(?::([\d]+))?(?:(\/[^#]*)(?:#(.*))?)?$/i);
-    if (!match) {
-        if (this == "about:blank") {
-            this.isValid = true;
-            this.scheme = "about";
-            this.host = "blank";
-            this.path = "/";
+    if (match) {
+        this.isValid = true;
+        this.scheme = match[1].toLowerCase();
+        this.host = match[2];
+        this.port = match[3];
+        this.path = match[4] || "/";
+        this.fragment = match[5];
+    } else {
+        if (this.url.startsWith("data:")) {
+            this.scheme = "data";
             return;
         }
-        return;
+        if (this.url === "about:blank") {
+            this.scheme = "about";
+            return;
+        }
+        this.path = this.url;
     }
-
-    this.isValid = true;
-    this.scheme = match[1].toLowerCase();
-    this.host = match[2];
-    this.port = match[3];
-    this.path = match[4] || "/";
-    this.fragment = match[5];
 
     if (this.path) {
         // First cut the query params.
         var path = this.path;
         var indexOfQuery = path.indexOf("?");
-        if (indexOfQuery !== -1)
+        if (indexOfQuery !== -1) {
+            this.queryParams = path.substring(indexOfQuery + 1)
             path = path.substring(0, indexOfQuery);
+        }
 
         // Then take last path component.
         var lastSlashIndex = path.lastIndexOf("/");
         if (lastSlashIndex !== -1) {
-            this.firstPathComponents = path.substring(0, lastSlashIndex + 1);
+            this.folderPathComponents = path.substring(0, lastSlashIndex);
             this.lastPathComponent = path.substring(lastSlashIndex + 1);
-        }
+        } else
+            this.lastPathComponent = path;
     }
 }
 
@@ -89,6 +95,14 @@ WebInspector.ParsedURL.prototype = {
     {
         if (this._displayName)
             return this._displayName;
+
+        if (this.scheme === "data") {
+            this._displayName = this.url.trimEnd(20);
+            return this._displayName;
+        }
+
+        if (this.url === "about:blank")
+            return this.url;
 
         this._displayName = this.lastPathComponent;
         if (!this._displayName)
@@ -105,7 +119,7 @@ WebInspector.ParsedURL.prototype = {
  */
 String.prototype.asParsedURL = function()
 {
-    var parsedURL = new WebInspector.ParsedURL(this);
+    var parsedURL = new WebInspector.ParsedURL(this.toString());
     if (parsedURL.isValid)
         return parsedURL;
     return null;
@@ -159,7 +173,7 @@ WebInspector.displayNameForURL = function(url)
     var index = WebInspector.inspectedPageURL.indexOf(lastPathComponent);
     if (index !== -1 && index + lastPathComponent.length === WebInspector.inspectedPageURL.length) {
         var baseURL = WebInspector.inspectedPageURL.substring(0, index);
-        if (url.indexOf(baseURL) === 0)
+        if (url.startsWith(baseURL))
             return url.substring(index);
     }
 
@@ -188,7 +202,7 @@ WebInspector.linkifyStringAsFragmentWithCustomLinkifier = function(string, linki
         container.appendChild(document.createTextNode(nonLink));
 
         var title = linkString;
-        var realURL = (linkString.indexOf("www.") === 0 ? "http://" + linkString : linkString);
+        var realURL = (linkString.startsWith("www.") ? "http://" + linkString : linkString);
         var lineColumnMatch = lineColumnRegEx.exec(realURL);
         if (lineColumnMatch)
             realURL = realURL.substring(0, realURL.length - lineColumnMatch[0].length);
@@ -324,7 +338,7 @@ WebInspector.resourceURLForRelatedNode = function(node, url)
     if (!url || url.indexOf("://") > 0)
         return url;
 
-    if (url.trim().indexOf("javascript:") === 0)
+    if (url.trim().startsWith("javascript:"))
         return null; // Do not provide a resource URL for security.
 
     for (var frameOwnerCandidate = node; frameOwnerCandidate; frameOwnerCandidate = frameOwnerCandidate.parentNode) {
@@ -364,7 +378,7 @@ WebInspector.completeURL = function(baseURL, href)
 
         // Return special URLs as-is.
         var trimmedHref = href.trim();
-        if (trimmedHref.indexOf("data:") === 0 || trimmedHref.indexOf("javascript:") === 0)
+        if (trimmedHref.startsWith("data:") || trimmedHref.startsWith("javascript:"))
             return href;
     }
 

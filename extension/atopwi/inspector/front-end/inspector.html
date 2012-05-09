@@ -69,6 +69,8 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <script type="text/javascript" src="NetworkRequest.js"></script>
     <script type="text/javascript" src="CSSStyleModel.js"></script>
     <script type="text/javascript" src="NetworkManager.js"></script>
+    <script type="text/javascript" src="NavigatorOverlayController.js"></script>
+    <script type="text/javascript" src="NavigatorView.js"></script>
     <script type="text/javascript" src="NetworkLog.js"></script>
     <script type="text/javascript" src="ResourceTreeModel.js"></script>
     <script type="text/javascript" src="ResourceUtils.js"></script>
@@ -169,11 +171,14 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <script type="text/javascript" src="HeapSnapshotProxy.js"></script>
     <script type="text/javascript" src="HeapSnapshotWorkerDispatcher.js"></script>
     <script type="text/javascript" src="HeapSnapshotGridNodes.js"></script>
+    <script type="text/javascript" src="HeapSnapshotLoader.js"></script>
     <script type="text/javascript" src="HeapSnapshotDataGrids.js"></script>
     <script type="text/javascript" src="HeapSnapshotView.js"></script>
     <script type="text/javascript" src="DebuggerModel.js"></script>
     <script type="text/javascript" src="ScriptMapping.js"></script>
     <script type="text/javascript" src="UISourceCode.js"></script>
+    <script type="text/javascript" src="JavaScriptSource.js"></script>
+    <script type="text/javascript" src="Linkifier.js"></script>
     <script type="text/javascript" src="DebuggerPresentationModel.js"></script>
     <script type="text/javascript" src="BreakpointManager.js"></script>
     <script type="text/javascript" src="ContentProviders.js"></script>
@@ -204,6 +209,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     <script type="text/javascript" src="HandlerRegistry.js"></script>
     <script type="text/javascript" src="MemoryStatistics.js"></script>
     <script type="text/javascript" src="SnippetsModel.js"></script>
+    <script type="text/javascript" src="StylesPanel.js"></script>
 </head>
 <body class="detached" id="-webkit-web-inspector">
     <div id="toolbar">
@@ -211,7 +217,10 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
         <div id="toolbar-controls">
             <div class="toolbar-item"><button id="toolbar-dropdown-arrow" class="toolbar-label">&raquo;</button></div>
             <div class="toolbar-item hidden" id="search-results-matches"></div>
-            <div class="toolbar-item toolbar-search-item"><input id="search" type="search" incremental results="0"><div id="search-toolbar-label" class="toolbar-label"></div></div>
+            <div class="toolbar-item toolbar-search-item" >
+                <input id="search" type="search" incremental results="0">
+                <div id="search-toolbar-label" class="toolbar-label"></div><div id="toolbar-search-navigation-control"></div>
+            </div>
             <div class="toolbar-item close-right"><button id="close-button-right"></button></div>
         </div>
     </div>

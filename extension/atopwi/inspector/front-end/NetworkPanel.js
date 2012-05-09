@@ -53,7 +53,7 @@ WebInspector.NetworkLogView = function()
 
     this._createStatusbarButtons();
     this._createFilterStatusBarItems();
-    this._linkifier = WebInspector.debuggerPresentationModel.createLinkifier();
+    this._linkifier = new WebInspector.Linkifier();
 
     WebInspector.networkManager.addEventListener(WebInspector.NetworkManager.EventTypes.RequestStarted, this._onRequestStarted, this);
     WebInspector.networkManager.addEventListener(WebInspector.NetworkManager.EventTypes.RequestUpdated, this._onRequestUpdated, this);
@@ -681,7 +681,7 @@ WebInspector.NetworkLogView.prototype = {
             if (!node) {
                 // Create the timeline tree element and graph.
                 node = this._createRequestGridNode(request);
-                this._dataGrid.appendChild(node);
+                this._dataGrid.rootNode().appendChild(node);
             }
             node.refreshRequest();
 
@@ -732,7 +732,7 @@ WebInspector.NetworkLogView.prototype = {
         this._requestGridNodes = {};
 
         if (this._dataGrid) {
-            this._dataGrid.removeChildren();
+            this._dataGrid.rootNode().removeChildren();
             this._updateDividersIfNeeded();
             this._updateSummaryBar();
         }
@@ -1858,10 +1858,14 @@ WebInspector.NetworkDataGridNode.prototype = {
         this._statusCell.removeChildren();
 
         if (this._request.failed) {
-            if (this._request.canceled)
-                this._statusCell.setTextAndTitle(WebInspector.UIString("(canceled)"));
-            else
-                this._statusCell.setTextAndTitle(WebInspector.UIString("(failed)"));
+            var failText = this._request.canceled ? WebInspector.UIString("(canceled)") : WebInspector.UIString("(failed)");
+            if (this._request.localizedFailDescription) {
+                this._statusCell.appendChild(document.createTextNode(failText));
+                this._appendSubtitle(this._statusCell, this._request.localizedFailDescription);
+                this._statusCell.title = failText + " " + this._request.localizedFailDescription;
+            } else {
+                this._statusCell.setTextAndTitle(failText);
+            }
             this._statusCell.addStyleClass("network-dim-cell");
             this.element.addStyleClass("network-error-row");
             return;

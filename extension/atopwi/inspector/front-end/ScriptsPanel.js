@@ -65,7 +65,6 @@ WebInspector.ScriptsPanel = function(presentationModel)
     const initialNavigatorWidth = 225;
     const minimalViewsContainerWidthPercent = 50;
     this.editorView = new WebInspector.SplitView(WebInspector.SplitView.SidebarPosition.Left, "scriptsPanelNavigatorSidebarWidth", initialNavigatorWidth);
-    this.editorView.element.id = "scripts-editor-view";
     this.editorView.element.tabIndex = 0;
 
     this.editorView.minimalSidebarWidth = Preferences.minScriptsSidebarWidth;
@@ -73,17 +72,13 @@ WebInspector.ScriptsPanel = function(presentationModel)
     this.editorView.show(this.splitView.mainElement);
 
     this._navigator = new WebInspector.ScriptsNavigator();
-    this._navigatorView = this._navigator.view;
-    this._navigator.show(this.editorView.sidebarElement);
+    this._navigator.view.show(this.editorView.sidebarElement);
 
-    this._editorContainer = new WebInspector.TabbedEditorContainer(this);
+    this._editorContainer = new WebInspector.TabbedEditorContainer(this, "previouslyViewedFiles");
     this._editorContainer.show(this.editorView.mainElement);
-    WebInspector.OpenResourceDialog.install(this, this._presentationModel, this.editorView.mainElement);
+    WebInspector.OpenScriptDialog.install(this, this._presentationModel, this.editorView.mainElement);
 
-    this._createNavigatorControls();
-    WebInspector.settings.navigatorHidden = WebInspector.settings.createSetting("navigatorHidden", true);
-    if (WebInspector.settings.navigatorHidden.get())
-        this._toggleNavigator();
+    this._navigatorController = new WebInspector.NavigatorOverlayController(this, this.editorView, this._navigator.view, this._editorContainer.view);
 
     this._navigator.addEventListener(WebInspector.ScriptsNavigator.Events.ScriptSelected, this._scriptSelected, this);
     this._editorContainer.addEventListener(WebInspector.TabbedEditorContainer.Events.EditorSelected, this._editorSelected, this);
@@ -93,7 +88,7 @@ WebInspector.ScriptsPanel = function(presentationModel)
 
     this.sidebarPanes = {};
     this.sidebarPanes.watchExpressions = new WebInspector.WatchExpressionsSidebarPane();
-    this.sidebarPanes.callstack = new WebInspector.CallStackSidebarPane(this._presentationModel);
+    this.sidebarPanes.callstack = new WebInspector.CallStackSidebarPane();
     this.sidebarPanes.scopechain = new WebInspector.ScopeChainSidebarPane();
     this.sidebarPanes.jsBreakpoints = new WebInspector.JavaScriptBreakpointsSidebarPane(this._presentationModel, this._showSourceLine.bind(this));
     if (Capabilities.nativeInstrumentationEnabled) {
@@ -157,21 +152,22 @@ WebInspector.ScriptsPanel = function(presentationModel)
     this._debuggerEnabled = !Capabilities.debuggerCausesRecompilation;
 
     this._sourceFramesByUISourceCode = new Map();
+    this._waitingToLiveEdit = [];  // uiSourceCode-s
     this._reset(false);
 
     WebInspector.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.DebuggerWasEnabled, this._debuggerWasEnabled, this);
     WebInspector.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.DebuggerWasDisabled, this._debuggerWasDisabled, this);
+    WebInspector.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.DebuggerPaused, this._debuggerPaused, this);
+    WebInspector.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.DebuggerResumed, this._debuggerResumed, this);
+    WebInspector.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.CallFrameSelected, this._callFrameSelected, this);
+    WebInspector.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.ConsoleCommandEvaluatedInSelectedCallFrame, this._consoleCommandEvaluatedInSelectedCallFrame, this);
+    WebInspector.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.ExecutionLineChanged, this._executionLineChanged, this);
+    WebInspector.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.GlobalObjectCleared, this._reset.bind(this, false));
+    WebInspector.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.BreakpointsActiveStateChanged, this._breakpointsActiveStateChanged, this);
 
     this._presentationModel.addEventListener(WebInspector.DebuggerPresentationModel.Events.UISourceCodeAdded, this._handleUISourceCodeAdded, this)
     this._presentationModel.addEventListener(WebInspector.DebuggerPresentationModel.Events.UISourceCodeReplaced, this._uiSourceCodeReplaced, this);
     this._presentationModel.addEventListener(WebInspector.DebuggerPresentationModel.Events.UISourceCodeRemoved, this._uiSourceCodeRemoved, this);
-    this._presentationModel.addEventListener(WebInspector.DebuggerPresentationModel.Events.DebuggerPaused, this._debuggerPaused, this);
-    this._presentationModel.addEventListener(WebInspector.DebuggerPresentationModel.Events.DebuggerResumed, this._debuggerResumed, this);
-    this._presentationModel.addEventListener(WebInspector.DebuggerPresentationModel.Events.CallFrameSelected, this._callFrameSelected, this);
-    this._presentationModel.addEventListener(WebInspector.DebuggerPresentationModel.Events.ConsoleCommandEvaluatedInSelectedCallFrame, this._consoleCommandEvaluatedInSelectedCallFrame, this);
-    this._presentationModel.addEventListener(WebInspector.DebuggerPresentationModel.Events.ExecutionLineChanged, this._executionLineChanged, this);
-    this._presentationModel.addEventListener(WebInspector.DebuggerPresentationModel.Events.DebuggerReset, this._reset.bind(this, false));
-    this._presentationModel.addEventListener(WebInspector.DebuggerPresentationModel.Events.BreakpointsActiveStateChanged, this._breakpointsActiveStateChanged, this);
 
     var enableDebugger = !Capabilities.debuggerCausesRecompilation || WebInspector.settings.debuggerEnabled.get();
     if (enableDebugger)
@@ -198,9 +194,9 @@ WebInspector.ScriptsPanel.prototype = {
         return [this.enableToggleButton.element, this._pauseOnExceptionButton.element, this._toggleFormatSourceButton.element, this._scriptViewStatusBarItemsContainer];
     },
 
-    get defaultFocusedElement()
+    defaultFocusedElement: function()
     {
-        return this._navigator.defaultFocusedElement;
+        return this._navigator.view.defaultFocusedElement();
     },
 
     get paused()
@@ -215,7 +211,7 @@ WebInspector.ScriptsPanel.prototype = {
             this._debugSidebarContentsElement.insertBefore(this.sidebarPanes.domBreakpoints.element, this.sidebarPanes.xhrBreakpoints.element);
         this.sidebarPanes.watchExpressions.show();
 
-        window.setTimeout(this._maybeShowNavigatorOverlay.bind(this), 0);
+        this._navigatorController.wasShown();
     },
 
     _didBuildOutlineChunk: function(event)
@@ -305,6 +301,10 @@ WebInspector.ScriptsPanel.prototype = {
     {
         this._navigator.setScriptSourceIsDirty(uiSourceCode, isDirty);
         this._editorContainer.setFileIsDirty(uiSourceCode, isDirty);
+        if (!isDirty) {  
+          this._waitingToLiveEdit.push(uiSourceCode);
+          this._updateDebuggerButtons();
+        }
     },
 
     _uiBreakpointAdded: function(event)
@@ -321,13 +321,12 @@ WebInspector.ScriptsPanel.prototype = {
 
     _consoleCommandEvaluatedInSelectedCallFrame: function(event)
     {
-        this.sidebarPanes.scopechain.update(this._presentationModel.selectedCallFrame);
+        this.sidebarPanes.scopechain.update(WebInspector.debuggerModel.selectedCallFrame());
     },
 
     _debuggerPaused: function(event)
     {
-        var callFrames = event.data.callFrames;
-        var details = event.data.details;
+        var details = /** @type {WebInspector.DebuggerPausedDetails} */ event.data;
 
         this._paused = true;
         this._waitingToPause = false;
@@ -336,7 +335,7 @@ WebInspector.ScriptsPanel.prototype = {
         this._updateDebuggerButtons();
 
         WebInspector.inspectorView.setCurrentPanel(this);
-        this.sidebarPanes.callstack.update(callFrames);
+        this.sidebarPanes.callstack.update(details.callFrames);
 
         if (details.reason === WebInspector.DebuggerModel.BreakReason.DOM) {
             this.sidebarPanes.domBreakpoints.highlightBreakpoint(details.auxData);
@@ -355,15 +354,15 @@ WebInspector.ScriptsPanel.prototype = {
             this.sidebarPanes.callstack.setStatus(WebInspector.UIString("Paused on a XMLHttpRequest."));
         } else if (details.reason === WebInspector.DebuggerModel.BreakReason.Exception) {
             this.sidebarPanes.callstack.setStatus(WebInspector.UIString("Paused on exception: '%s'.", details.auxData.description));
-        } else {
+        } else if (details.callFrames.length) {
             function didGetUILocation(uiLocation)
             {
-                if (!this._presentationModel.findBreakpoint(uiLocation.uiSourceCode, uiLocation.lineNumber))
+                if (!uiLocation.uiSourceCode.findBreakpoint(uiLocation.lineNumber))
                     return;
                 this.sidebarPanes.jsBreakpoints.highlightBreakpoint(uiLocation.uiSourceCode, uiLocation.lineNumber);
                 this.sidebarPanes.callstack.setStatus(WebInspector.UIString("Paused on a JavaScript breakpoint."));
             }
-            callFrames[0].uiLocation(didGetUILocation.bind(this));
+            details.callFrames[0].createLiveLocation(didGetUILocation.bind(this));
         }
 
         window.focus();
@@ -615,13 +614,13 @@ WebInspector.ScriptsPanel.prototype = {
 
         this.sidebarPanes.scopechain.update(callFrame);
         this.sidebarPanes.watchExpressions.refreshExpressions();
-        this.sidebarPanes.callstack.selectedCallFrame = callFrame;
-        callFrame.uiLocation(this._revealExecutionLine.bind(this));
+        this.sidebarPanes.callstack.setSelectedCallFrame(callFrame);
+        callFrame.createLiveLocation(this._revealExecutionLine.bind(this));
     },
 
     _editorClosed: function(event)
     {
-        this._hideNavigatorOverlay();
+        this._navigatorController.hideNavigatorOverlay();
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.data;
 
         if (this._currentUISourceCode === uiSourceCode)
@@ -635,14 +634,14 @@ WebInspector.ScriptsPanel.prototype = {
     {
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.data;
         this._showFile(uiSourceCode);
-        this._hideNavigatorOverlay();
+        this._navigatorController.hideNavigatorOverlay();
     },
 
     _scriptSelected: function(event)
     {
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.data.uiSourceCode;
         var sourceFrame = this._showFile(uiSourceCode);
-        this._hideNavigatorOverlay();
+        this._navigatorController.hideNavigatorOverlay();
         if (sourceFrame && event.data.focusSource)
             sourceFrame.focus();
     },
@@ -682,14 +681,19 @@ WebInspector.ScriptsPanel.prototype = {
         }
 
         if (this._paused) {
-            this.pauseButton.addStyleClass("paused");
-
+            if (this._waitingToLiveEdit.length) {
+                this.pauseButton.addStyleClass("liveEdit");
+                this.debuggerStatusElement.textContent = WebInspector.UIString("LiveEdit Ready");
+            } else {
+                this.pauseButton.addStyleClass("paused");
+                this.debuggerStatusElement.textContent = WebInspector.UIString("Paused");
+            }
+  
             this.pauseButton.disabled = false;
             this.stepOverButton.disabled = false;
             this.stepIntoButton.disabled = false;
             this.stepOutButton.disabled = false;
 
-            this.debuggerStatusElement.textContent = WebInspector.UIString("Paused");
         } else {
             this.pauseButton.removeStyleClass("paused");
 
@@ -765,10 +769,41 @@ WebInspector.ScriptsPanel.prototype = {
         nextStateMap[stateEnum.PauseOnUncaughtExceptions] = stateEnum.DontPauseOnExceptions;
         this._setPauseOnExceptions(nextStateMap[this._pauseOnExceptionButton.state]);
     },
+    
+    _isLiveEditError: function(callNext, error) {
+        if (error) {
+            WebInspector.log(error, WebInspector.ConsoleMessage.MessageLevel.Error, true);
+            this.debuggerStatusElement.textContent = WebInspector.UIString("LiveEdit Failed");;
+            this.pauseButton.removeStyleClass("liveEdit");
+            return true;
+        } else {
+            callNext();
+            return false;
+        }
+    },
+
+    _recurseToSerialize: function(ary, asyncFncOfItem) {
+        if (ary.length) {
+            var item = ary.pop();
+            asyncFncOfItem(item, this._recurseToSerialize.bind(this, ary, asyncFncOfItem));
+        } 
+    },
 
     _togglePause: function()
     {
-        if (this._paused) {
+        if (this._waitingToLiveEdit.length) {
+            this._recurseToSerialize(this._waitingToLiveEdit.slice(0), function(uiSourceCode, callNext) {
+                var isLiveEditError = this._isLiveEditError.bind(this, callNext);
+                // The request will be synchronous since we got to content from edits
+                uiSourceCode.requestContent(function(newContent) {
+                    // The LiveEdit will be asynchronous 
+                    this._presentationModel.setScriptSource(uiSourceCode, newContent, isLiveEditError);
+                }.bind(this));
+            }.bind(this));
+            // We shall either fail and stay in pause, or succeed and continue.
+            this._waitingToLiveEdit = [];
+            return; 
+        } else if (this._paused) {
             this._paused = false;
             this._waitingToPause = false;
             DebuggerAgent.resume();
@@ -822,7 +857,7 @@ WebInspector.ScriptsPanel.prototype = {
 
     _toggleBreakpointsClicked: function(event)
     {
-        this._presentationModel.setBreakpointsActive(!this._presentationModel.breakpointsActive());
+        WebInspector.debuggerModel.setBreakpointsActive(!WebInspector.debuggerModel.breakpointsActive());
     },
 
     _breakpointsActiveStateChanged: function(event)
@@ -900,134 +935,6 @@ WebInspector.ScriptsPanel.prototype = {
         debugToolbar.appendChild(this.debuggerStatusElement);
 
         return debugToolbar;
-    },
-
-    _createNavigatorControls: function()
-    {
-        this._navigatorSidebarResizeWidgetElement = document.createElement("div");
-        this._navigatorSidebarResizeWidgetElement.addStyleClass("scripts-navigator-resizer-widget");
-        this.editorView.installResizer(this._navigatorSidebarResizeWidgetElement);
-        this._navigatorView.element.appendChild(this._navigatorSidebarResizeWidgetElement);
-
-        this._navigatorShowHideButton = this._createNavigatorControlButton(WebInspector.UIString("Show scripts navigator"), "scripts-navigator-show-hide-button", this._toggleNavigator.bind(this));
-        this._navigatorShowHideButton.addStyleClass("toggled-on");
-        this._navigatorShowHideButton.title = WebInspector.UIString("Hide scripts navigator");
-        this.editorView.element.appendChild(this._navigatorShowHideButton);
-
-        this._navigatorPinButton = this._createNavigatorControlButton(WebInspector.UIString("Pin scripts navigator"), "scripts-navigator-pin-button", this._pinNavigator.bind(this));
-        this._navigatorPinButton.addStyleClass("hidden");
-        this._navigatorView.element.appendChild(this._navigatorPinButton);
-    },
-
-    _createNavigatorControlButton: function(title, id, listener)
-    {
-        var button = document.createElement("button");
-        button.title = title;
-        button.id = id;
-        button.addStyleClass("scripts-navigator-control-button");
-        button.addEventListener("click", listener, false);
-        button.createChild("div", "glyph");
-        return button;
-    },
-
-    _escDownWhileNavigatorOverlayOpen: function(event)
-    {
-        this._hideNavigatorOverlay();
-    },
-
-    _maybeShowNavigatorOverlay: function()
-    {
-        if (this._navigator && WebInspector.settings.navigatorHidden.get() && !WebInspector.settings.navigatorWasOnceHidden.get())
-            this._showNavigatorOverlay();
-    },
-
-    _toggleNavigator: function()
-    {
-        if (this._navigatorOverlayShown)
-            this._hideNavigatorOverlay();
-        else if (this._navigatorHidden)
-            this._showNavigatorOverlay();
-        else
-            this._hidePinnedNavigator();
-    },
-
-    _hidePinnedNavigator: function()
-    {
-        this._navigatorHidden = true;
-        this._navigatorShowHideButton.removeStyleClass("toggled-on");
-        this._navigatorShowHideButton.title = WebInspector.UIString("Show scripts navigator");
-        this._editorContainer.element.addStyleClass("navigator-hidden");
-        this._navigatorSidebarResizeWidgetElement.addStyleClass("hidden");
-
-        this._navigatorPinButton.removeStyleClass("hidden");
-
-        this.editorView.hideSidebarElement();
-        this._navigatorView.detach();
-        WebInspector.settings.navigatorHidden.set(true);
-    },
-
-    _pinNavigator: function()
-    {
-        delete this._navigatorHidden;
-        this._hideNavigatorOverlay();
-
-        this._navigatorPinButton.addStyleClass("hidden");
-        this._navigatorShowHideButton.addStyleClass("toggled-on");
-        this._navigatorShowHideButton.title = WebInspector.UIString("Hide scripts navigator");
-
-        this._editorContainer.element.removeStyleClass("navigator-hidden");
-        this._navigatorSidebarResizeWidgetElement.removeStyleClass("hidden");
-
-        this.editorView.showSidebarElement();
-        this._navigator.show(this.editorView.sidebarElement);
-        this._navigator.focus();
-        WebInspector.settings.navigatorHidden.set(false);
-    },
-
-    _showNavigatorOverlay: function()
-    {
-        if (this._navigatorOverlayShown)
-            return;
-
-        this._navigatorOverlayShown = true;
-        this._sidebarOverlay = new WebInspector.SidebarOverlay(this._navigatorView, "scriptsPanelNavigatorOverlayWidth", Preferences.minScriptsSidebarWidth);
-        this._sidebarOverlay.addEventListener(WebInspector.SidebarOverlay.EventTypes.WasShown, this._navigatorOverlayWasShown, this);
-        this._sidebarOverlay.addEventListener(WebInspector.SidebarOverlay.EventTypes.WillHide, this._navigatorOverlayWillHide, this);
-
-        var navigatorOverlayResizeWidgetElement = document.createElement("div");
-        navigatorOverlayResizeWidgetElement.addStyleClass("scripts-navigator-resizer-widget");
-        this._sidebarOverlay.resizerWidgetElement = navigatorOverlayResizeWidgetElement;
-
-        this._sidebarOverlay.show(this.editorView.element);
-    },
-
-    _hideNavigatorOverlay: function()
-    {
-        if (!this._navigatorOverlayShown)
-            return;
-
-        this._sidebarOverlay.hide();
-        if (this.visibleView)
-            this.visibleView.focus();
-    },
-
-    _navigatorOverlayWasShown: function(event)
-    {
-        this._navigatorView.element.appendChild(this._navigatorShowHideButton);
-        this._navigatorShowHideButton.addStyleClass("toggled-on");
-        this._navigatorShowHideButton.title = WebInspector.UIString("Hide scripts navigator");
-        this._navigator.focus();
-        this.registerShortcut(WebInspector.KeyboardShortcut.Keys.Esc.code, this._escDownWhileNavigatorOverlayOpen.bind(this));
-    },
-
-    _navigatorOverlayWillHide: function(event)
-    {
-        delete this._navigatorOverlayShown;
-        WebInspector.settings.navigatorWasOnceHidden.set(true);
-        this.editorView.element.appendChild(this._navigatorShowHideButton);
-        this._navigatorShowHideButton.removeStyleClass("toggled-on");
-        this._navigatorShowHideButton.title = WebInspector.UIString("Show scripts navigator");
-        this.unregisterShortcut(WebInspector.KeyboardShortcut.Keys.Esc.code);
     },
 
     _createButtonAndRegisterShortcuts: function(buttonId, buttonTitle, handler, shortcuts, shortcutDescription)

@@ -100,7 +100,7 @@ WebInspector.CPUProfileView = function(profile)
         this._updatePercentButton();
     }
 
-    this._linkifier = WebInspector.debuggerPresentationModel.createLinkifier(new WebInspector.DebuggerPresentationModel.DefaultLinkifierFormatter(30));
+    this._linkifier = new WebInspector.Linkifier(new WebInspector.Linkifier.DefaultFormatter(30));
 
     ProfilerAgent.getProfile(this.profile.typeId, this.profile.uid, profileCallback.bind(this));
 }
@@ -162,13 +162,13 @@ WebInspector.CPUProfileView.prototype = {
     {
         var selectedProfileNode = this.dataGrid.selectedNode ? this.dataGrid.selectedNode.profileNode : null;
 
-        this.dataGrid.removeChildren();
+        this.dataGrid.rootNode().removeChildren();
 
         var children = this.profileDataGridTree.children;
         var count = children.length;
 
         for (var index = 0; index < count; ++index)
-            this.dataGrid.appendChild(children[index]);
+            this.dataGrid.rootNode().appendChild(children[index]);
 
         if (selectedProfileNode)
             selectedProfileNode.selected = true;
@@ -221,9 +221,9 @@ WebInspector.CPUProfileView.prototype = {
 
         this._searchFinishedCallback = finishedCallback;
 
-        var greaterThan = (query.indexOf(">") === 0);
-        var lessThan = (query.indexOf("<") === 0);
-        var equalTo = (query.indexOf("=") === 0 || ((greaterThan || lessThan) && query.indexOf("=") === 1));
+        var greaterThan = (query.startsWith(">"));
+        var lessThan = (query.startsWith("<"));
+        var equalTo = (query.startsWith("=") || ((greaterThan || lessThan) && query.indexOf("=") === 1));
         var percentUnits = (query.lastIndexOf("%") === (query.length - 1));
         var millisecondsUnits = (query.length > 2 && query.lastIndexOf("ms") === (query.length - 2));
         var secondsUnits = (!millisecondsUnits && query.lastIndexOf("s") === (query.length - 1));
