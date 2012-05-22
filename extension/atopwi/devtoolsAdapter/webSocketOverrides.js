@@ -10,13 +10,10 @@ function rewriteURLs() {
 }
 
 function awaitContent() {
-  var selector = window.document.querySelector('.WebSocketSelector');
-  if (selector.getBoundingClientRect().height) {
-    if (selector.querySelectorAll('iframe').length > 0) {
-      rewriteURLs(); 
-    } else {
-      window.setTimeout(awaitContent, 100);
-    }
+  if (window.document.querySelectorAll('.WebSocketSelector iframe').length > 0) {
+    rewriteURLs(); 
+  } else {
+    window.setTimeout(awaitContent, 100);
   }
 }
 

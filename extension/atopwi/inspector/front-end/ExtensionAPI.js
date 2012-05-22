@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -58,14 +58,12 @@ function defineCommonExtensionSymbols(apiPrivate)
         OpenResource: "open-resource",
         PanelSearch: "panel-search-",
         Reload: "Reload",
-        RemoteDebug: "remote-debug-",
         ResourceAdded: "resource-added",
         ResourceContentCommitted: "resource-content-committed",
         TimelineEventRecorded: "timeline-event-recorded",
         ViewShown: "view-shown-",
         ViewHidden: "view-hidden-"
     };
-    
     apiPrivate.Commands = {
         AddAuditCategory: "addAuditCategory",
         AddAuditResult: "addAuditResult",
@@ -80,7 +78,6 @@ function defineCommonExtensionSymbols(apiPrivate)
         GetPageResources: "getPageResources",
         GetRequestContent: "getRequestContent",
         GetResourceContent: "getResourceContent",
-        SendCommand: "sendCommand", 
         Subscribe: "subscribe",
         SetOpenResourceHandler: "setOpenResourceHandler",
         SetResourceContent: "setResourceContent",
@@ -94,9 +91,6 @@ function defineCommonExtensionSymbols(apiPrivate)
     };
 }
 
-/**
- * @return InspectorExtensionAPI 
- */
 function injectedExtensionAPI(injectedScriptId)
 {
 
@@ -176,7 +170,6 @@ function InspectorExtensionAPI()
     defineDeprecatedProperty(this, "webInspector", "resources", "network");
     this.timeline = new Timeline();
     this.console = new ConsoleAPI();
-    this.remoteDebug = new RemoteDebug();
 
     this.onReset = new EventSink(events.Reset);
 }
@@ -421,9 +414,19 @@ ExtensionSidebarPaneImpl.prototype = {
         extensionServer.sendRequest({ command: commands.SetSidebarHeight, id: this._id, height: height });
     },
 
-    setExpression: function(expression, rootTitle, callback)
+    setExpression: function(expression, rootTitle, evaluateOptions)
     {
-        extensionServer.sendRequest({ command: commands.SetSidebarContent, id: this._id, expression: expression, rootTitle: rootTitle, evaluateOnPage: true }, callback);
+        var callback = extractCallbackArgument(arguments);
+        var request = {
+            command: commands.SetSidebarContent,
+            id: this._id,
+            expression: expression,
+            rootTitle: rootTitle,
+            evaluateOnPage: true,
+        };
+        if (typeof evaluateOptions === "object")
+            request.evaluateOptions = evaluateOptions;
+        extensionServer.sendRequest(request, callback);
     },
 
     setObject: function(jsonObject, rootTitle, callback)
@@ -505,6 +508,8 @@ function AuditResultImpl(id)
     this.createURL = this._nodeFactory.bind(null, "url");
     this.createSnippet = this._nodeFactory.bind(null, "snippet");
     this.createText = this._nodeFactory.bind(null, "text");
+    this.createObject = this._nodeFactory.bind(null, "object");
+    this.createNode = this._nodeFactory.bind(null, "node");
 }
 
 AuditResultImpl.prototype = {
@@ -607,13 +612,20 @@ InspectedWindow.prototype = {
         return extensionServer.sendRequest({ command: commands.Reload, options: options });
     },
 
-    eval: function(expression, callback)
+    eval: function(expression, evaluateOptions)
     {
+        var callback = extractCallbackArgument(arguments);
         function callbackWrapper(result)
         {
             callback(result.value, result.isException);
         }
-        return extensionServer.sendRequest({ command: commands.EvaluateOnInspectedPage, expression: expression }, callback && callbackWrapper);
+        var request = {
+            command: commands.EvaluateOnInspectedPage,
+            expression: expression
+        };
+        if (typeof evaluateOptions === "object")
+            request.evaluateOptions = evaluateOptions;
+        return extensionServer.sendRequest(request, callback && callbackWrapper);
     },
 
     getResources: function(callback)
@@ -666,72 +678,6 @@ ResourceImpl.prototype = {
     }
 }
 
-/**
- * @constructor
- */
-function RemoteDebugImpl()
-{
-    this._eventParams = {};        // filled by registerEvent
-    this._eventSink = {};  // filled by addDomainListener
-    this._domainListeners = {};  // add/removeDomainListener
-}
-
-RemoteDebugImpl.prototype = 
-{
-    sendCommand: function(domainMethod, params, callback)
-    {
-        return extensionServer.sendRequest({ command: commands.SendCommand, method: domainMethod, params: params }, callback);
-    },
-    /**
-     * @param domainMethod {string} eg 'Page.loadEventFired' 
-     * @param params [strings], eg ['timeStamp'] 
-     */
-    registerEvent: function(domainMethod, paramNames) 
-    {
-        this._eventParams[domainMethod] = paramNames;
-    },
-    
-    addDomainListener: function(domain, obj) 
-    {
-        var eventSink = new EventSink(events.RemoteDebug + domain);
-        this._eventSink[domain] = eventSink;
-        this._domainListeners[domain] = this._dispatchRemoteDebugEvent.bind(this, obj);
-        eventSink.addListener( this._domainListeners[domain] );     
-    },
-    
-    removeDomainListener: function(domain) 
-    {
-        var eventSink = this._eventSink[domain];
-        if (eventSink) 
-        {
-            var domainListener = this._domainListeners[domain];
-            if (domainListener) 
-            {
-                eventSink.removeListener(domainListener);
-                delete this._domainListeners[domain];
-            }
-            delete this._eventSink[domain];
-        }   
-    },
-    
-    _dispatchRemoteDebugEvent: function(domainListener, messageObject)
-    {
-        var domainMethod = messageObject.method;
-        var method = domainMethod.split('.')[1];
-        if (method in domainListener) 
-        {
-            var params = [];
-            var messageArgs = messageObject.params;
-            if (messageArgs) {
-                var paramNames = this._eventParams[domainMethod];
-                for (var i = 0; i < paramNames.length; ++i) {
-                    params.push(messageArgs[paramNames[i]]);
-                }
-            }
-            domainListener[method].apply(domainListener, params);
-        } // else assume client did not want this event
-    }
-}
 /**
  * @constructor
  */
@@ -857,6 +803,12 @@ function defineDeprecatedProperty(object, className, oldName, newName)
     object.__defineGetter__(oldName, getter);
 }
 
+function extractCallbackArgument(args)
+{
+    var lastArgument = args[args.length - 1];
+    return typeof lastArgument === "function" ? lastArgument : undefined;
+}
+
 var AuditCategory = declareInterfaceClass(AuditCategoryImpl);
 var AuditResult = declareInterfaceClass(AuditResultImpl);
 var Button = declareInterfaceClass(ButtonImpl);
@@ -867,7 +819,6 @@ var PanelWithSidebar = declareInterfaceClass(PanelWithSidebarImpl);
 var Request = declareInterfaceClass(RequestImpl);
 var Resource = declareInterfaceClass(ResourceImpl);
 var Timeline = declareInterfaceClass(TimelineImpl);
-var RemoteDebug = declareInterfaceClass(RemoteDebugImpl);
 
 var extensionServer = new ExtensionServerClient();
 

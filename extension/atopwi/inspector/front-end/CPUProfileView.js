@@ -23,8 +23,6 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// FIXME: Rename the file.
-
 /**
  * @constructor
  * @extends {WebInspector.View}
@@ -102,7 +100,7 @@ WebInspector.CPUProfileView = function(profile)
 
     this._linkifier = new WebInspector.Linkifier(new WebInspector.Linkifier.DefaultFormatter(30));
 
-    ProfilerAgent.getProfile(this.profile.typeId, this.profile.uid, profileCallback.bind(this));
+    ProfilerAgent.getProfile(this.profile.profileType().id, this.profile.uid, profileCallback.bind(this));
 }
 
 WebInspector.CPUProfileView._TypeTree = "Tree";
@@ -176,7 +174,7 @@ WebInspector.CPUProfileView.prototype = {
 
     refreshVisibleData: function()
     {
-        var child = this.dataGrid.children[0];
+        var child = this.dataGrid.rootNode().children[0];
         while (child) {
             child.refresh();
             child = child.traverseNextNode(false, null, true);
@@ -564,14 +562,20 @@ WebInspector.CPUProfileType.prototype = {
         return this._recording ? WebInspector.UIString("Stop CPU profiling.") : WebInspector.UIString("Start CPU profiling.");
     },
 
+    /**
+     * @override
+     * @return {boolean}
+     */
     buttonClicked: function()
     {
         if (this._recording) {
             this.stopRecordingProfile();
             WebInspector.networkManager.enableResourceTracking();
+            return false;
         } else {
             WebInspector.networkManager.disableResourceTracking();
             this.startRecordingProfile();
+            return true;
         }
     },
 
@@ -593,6 +597,7 @@ WebInspector.CPUProfileType.prototype = {
     startRecordingProfile: function()
     {
         this._recording = true;
+        WebInspector.userMetrics.ProfilesCPUProfileTaken.record();
         ProfilerAgent.start();
     },
 
@@ -607,15 +612,58 @@ WebInspector.CPUProfileType.prototype = {
         this._recording = isProfiling;
     },
 
-    createSidebarTreeElementForProfile: function(profile)
+    /**
+     * @override
+     * @param {string=} title
+     * @return {WebInspector.ProfileHeader}
+     */
+    createTemporaryProfile: function(title)
     {
-        return new WebInspector.ProfileSidebarTreeElement(profile, WebInspector.UIString("Profile %d"), "profile-sidebar-tree-item");
+        title = title || WebInspector.UIString("Recording\u2026");
+        return new WebInspector.CPUProfileHeader(this, title);
     },
 
-    createView: function(profile)
+    /**
+     * @override
+     * @param {ProfilerAgent.ProfileHeader} profile
+     * @return {WebInspector.ProfileHeader}
+     */
+    createProfile: function(profile)
     {
-        return new WebInspector.CPUProfileView(profile);
+        return new WebInspector.CPUProfileHeader(this, profile.title, profile.uid);
     }
 }
 
 WebInspector.CPUProfileType.prototype.__proto__ = WebInspector.ProfileType.prototype;
+
+/**
+ * @constructor
+ * @extends {WebInspector.ProfileHeader}
+ * @param {WebInspector.CPUProfileType} type
+ * @param {string} title
+ * @param {number=} uid
+ */
+WebInspector.CPUProfileHeader = function(type, title, uid)
+{
+    WebInspector.ProfileHeader.call(this, type, title, uid);
+}
+
+WebInspector.CPUProfileHeader.prototype = {
+    /**
+     * @override
+     */
+    createSidebarTreeElement: function()
+    {
+        return new WebInspector.ProfileSidebarTreeElement(this, WebInspector.UIString("Profile %d"), "profile-sidebar-tree-item");
+    },
+
+    /**
+     * @override
+     */
+    createView: function()
+    {
+        return new WebInspector.CPUProfileView(this);
+    }
+}
+
+WebInspector.CPUProfileHeader.prototype.__proto__ = WebInspector.ProfileHeader.prototype;

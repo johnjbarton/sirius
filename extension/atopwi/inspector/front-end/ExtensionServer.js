@@ -61,7 +61,6 @@ WebInspector.ExtensionServer = function()
     this._registerHandler(commands.GetResourceContent, this._onGetResourceContent.bind(this));
     this._registerHandler(commands.Log, this._onLog.bind(this));
     this._registerHandler(commands.Reload, this._onReload.bind(this));
-    this._registerHandler(commands.SendCommand, this._onSendCommand.bind(this));
     this._registerHandler(commands.SetOpenResourceHandler, this._onSetOpenResourceHandler.bind(this));
     this._registerHandler(commands.SetResourceContent, this._onSetResourceContent.bind(this));
     this._registerHandler(commands.SetSidebarHeight, this._onSetSidebarHeight.bind(this));
@@ -261,9 +260,8 @@ WebInspector.ExtensionServer.prototype = {
             this._dispatchCallback(message.requestId, port, result);
         }
         if (message.evaluateOnPage)
-            sidebar.setExpression(message.expression, message.rootTitle, callback.bind(this));
-        else
-            sidebar.setObject(message.expression, message.rootTitle, callback.bind(this));
+            return sidebar.setExpression(message.expression, message.rootTitle, message.evaluateOptions, port._extensionOrigin, callback.bind(this));
+        sidebar.setObject(message.expression, message.rootTitle, callback.bind(this));
     },
 
     _onSetSidebarPage: function(message, port)
@@ -339,7 +337,7 @@ WebInspector.ExtensionServer.prototype = {
       
             this._dispatchCallback(message.requestId, port, result);
         }
-        RuntimeAgent.evaluate(message.expression, "", true, undefined, undefined, true, callback.bind(this));
+        return this.evaluate(message.expression, true, true, message.evaluateOptions, port._extensionOrigin, callback.bind(this));
     },
 
     _onGetConsoleMessages: function()
@@ -502,9 +500,9 @@ WebInspector.ExtensionServer.prototype = {
         return this._requests[id];
     },
 
-    _onAddAuditCategory: function(message)
+    _onAddAuditCategory: function(message, port)
     {
-        var category = new WebInspector.ExtensionAuditCategory(message.id, message.displayName, message.resultCount);
+        var category = new WebInspector.ExtensionAuditCategory(port._extensionOrigin, message.id, message.displayName, message.resultCount);
         if (WebInspector.panels.audits.getCategory(category.id))
             return this._status.E_EXISTS(category.id);
         this._clientObjects[message.id] = category;
@@ -531,16 +529,7 @@ WebInspector.ExtensionServer.prototype = {
             return this._status.E_NOTFOUND(message.resultId);
         auditRun.cancel();
     },
-    
-    _onSendCommand: function(message, port) 
-    {
-        function dispatchSendCommandReply(result) 
-        {
-            this._dispatchCallback(message.requestId, port, result);
-        }
-        InspectorBackend._wrapCallbackAndSendMessageObject(message.method, message.params, dispatchSendCommandReply.bind(this));
-    },
-    
+
     _dispatchCallback: function(requestId, port, result)
     {
         if (requestId)
@@ -621,11 +610,6 @@ WebInspector.ExtensionServer.prototype = {
         this._postNotification(WebInspector.extensionAPI.Events.TimelineEventRecorded, event.data);
     },
 
-    _notifyRemoteDebugEvent: function(data) {
-        var domain = data.method.split('.')[0];
-    	this._postNotification(WebInspector.extensionAPI.Events.RemoteDebug + domain, data);	
-    },
-
     /**
      * @param {Array.<ExtensionDescriptor>} extensions
      */
@@ -672,13 +656,11 @@ WebInspector.ExtensionServer.prototype = {
 
     _registerExtension: function(origin, port)
     {
-        // TODO make _registeredExtensions an array to allow multiple extensions/origin
         if (!this._registeredExtensions.hasOwnProperty(origin)) {
             if (origin !== window.location.origin) // Just ignore inspector frames.
                 console.error("Ignoring unauthorized client request from " + origin);
             return;
         }
-        InspectorBackend.registerExtensionDispatcher(this._notifyRemoteDebugEvent.bind(this));
         port._extensionOrigin = origin;
         port.addEventListener("message", this._onmessage.bind(this), false);
         port.start();
@@ -740,6 +722,29 @@ WebInspector.ExtensionServer.prototype = {
                 result.push(source[i]);
         }
         return "/" + result.join("/");
+    },
+
+    /**
+     * @param {string} expression
+     * @param {boolean} exposeCommandLineAPI
+     * @param {boolean} returnByValue
+     * @param {Object} options
+     * @param {string} securityOrigin
+     * @param {function(?string, ?RuntimeAgent.RemoteObject, boolean=)} callback
+     */
+    evaluate: function(expression, exposeCommandLineAPI, returnByValue, options, securityOrigin, callback) 
+    {
+        var contextId;
+        if (typeof options === "object" && options["useContentScriptContext"]) {
+            var mainFrame = WebInspector.resourceTreeModel.mainFrame;
+            if (!mainFrame)
+                return this._status.E_FAILED("main frame not available yet");
+            var context = WebInspector.javaScriptContextManager.contextByFrameAndSecurityOrigin(mainFrame, securityOrigin);
+            if (!context)
+                return this._status.E_NOTFOUND(securityOrigin);
+            contextId = context.id;
+        }
+        RuntimeAgent.evaluate(expression, "extension", exposeCommandLineAPI, true, contextId, returnByValue, callback);
     }
 }
 

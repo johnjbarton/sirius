@@ -368,17 +368,30 @@ WebInspector.Resource.prototype = {
     },
 
     /**
+     * @return {WebInspector.ResourceType}
+     */
+    contentType: function()
+    {
+        return this.type;
+    },
+
+    /**
      * @param {function(?string, boolean, string)} callback
      */
     requestContent: function(callback)
     {
         if (typeof this._content !== "undefined") {
-            callback(this._content, !!this._contentEncoded, this.mimeType);
+            callback(this._content, !!this._contentEncoded, this.canonicalMimeType());
             return;
         }
 
         this._pendingContentCallbacks.push(callback);
         this._innerRequestContent();
+    },
+
+    canonicalMimeType: function()
+    {
+        return this.type.canonicalMimeType() || this.mimeType;
     },
 
     /**
@@ -448,7 +461,7 @@ WebInspector.Resource.prototype = {
             this._originalContent = content;
             var callbacks = this._pendingContentCallbacks.slice();
             for (var i = 0; i < callbacks.length; ++i)
-                callbacks[i](this._content, this._contentEncoded, this.mimeType);
+                callbacks[i](this._content, this._contentEncoded, this.canonicalMimeType());
             this._pendingContentCallbacks.length = 0;
             delete this._contentRequested;
         }
@@ -512,6 +525,14 @@ WebInspector.ResourceRevision.prototype = {
     contentURL: function()
     {
         return this._resource.url;
+    },
+
+    /**
+     * @return {WebInspector.ResourceType}
+     */
+    contentType: function()
+    {
+        return this._resource.contentType();
     },
 
     /**

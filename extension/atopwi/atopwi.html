@@ -35,7 +35,7 @@ function reloadWithURL(debuggeeURLElt) {
   var debuggeeURL = debuggeeURLElt.value;
   var base = window.location.href;
   base = base.split('?')[0];
-  var relo = 'debuggee='+encodeURIComponent(debuggeeURL)+'&';
+  var relo = 'url='+encodeURIComponent(debuggeeURL)+'&';
   window.open(base+'?'+relo);
 }
 
@@ -80,6 +80,11 @@ function URLOptions() {
   });
   document.querySelector('.testingFrontEnd').addEventListener('click', function() {
     preset('http://localhost:8081/out/Release/resources/inspector/');
+  });
+  
+  document.querySelector('#doDebug').addEventListener('click', function() {
+    var elt = document.querySelector('#debuggeeSpecURLElt');
+    reloadWithURL(elt);
   });
   
 }

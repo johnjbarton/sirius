@@ -218,6 +218,10 @@ Object.defineProperty(Array.prototype, "upperBound",
     }
 });
 
+Object.defineProperty(Uint32Array.prototype, "sort", {
+   value: Array.prototype.sort
+});
+
 (function() {
 var partition = {
     /**
@@ -730,10 +734,13 @@ Map.prototype = {
     
     /**
      * @param {Object} key
+     * @return {Object} value
      */
     remove: function(key)
     {
+        var result = this._map[key.__identifier];
         delete this._map[key.__identifier];
+        return result;
     },
     
     values: function()

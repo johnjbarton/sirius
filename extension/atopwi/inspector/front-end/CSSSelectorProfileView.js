@@ -27,6 +27,7 @@
  * @constructor
  * @extends WebInspector.DataGridNode
  * @param {WebInspector.CSSSelectorProfileView} profileView
+ * @param {CSSAgent.SelectorProfile} data
  */
 WebInspector.CSSSelectorDataGridNode = function(profileView, data)
 {
@@ -283,12 +284,19 @@ WebInspector.CSSSelectorProfileType.prototype = {
         return this._recording ? WebInspector.UIString("Stop CSS selector profiling.") : WebInspector.UIString("Start CSS selector profiling.");
     },
 
+    /**
+     * @override
+     * @return {boolean}
+     */
     buttonClicked: function()
     {
-        if (this._recording)
+        if (this._recording) {
             this.stopRecordingProfile();
-        else
+            return false;
+        } else {
             this.startRecordingProfile();
+            return true;
+        }
     },
 
     get treeItemTitle()
@@ -325,15 +333,19 @@ WebInspector.CSSSelectorProfileType.prototype = {
 
     stopRecordingProfile: function()
     {
+        /**
+         * @param {?Protocol.Error} error
+         * @param {CSSAgent.SelectorProfile} profile
+         */
         function callback(error, profile)
         {
             if (error)
                 return;
 
-            profile.uid = this._profileUid++;
-            profile.title = WebInspector.UIString("Profile %d", profile.uid) + String.sprintf(" (%s)", Number.secondsToString(profile.totalTime / 1000));
-            profile.typeId = WebInspector.CSSSelectorProfileType.TypeId;
-            WebInspector.panels.profiles.addProfileHeader(profile);
+            var uid = this._profileUid++;
+            var title = WebInspector.UIString("Profile %d", uid) + String.sprintf(" (%s)", Number.secondsToString(profile.totalTime / 1000));
+            var profileHeader = new WebInspector.CSSProfileHeader(this, title, uid, profile);
+            WebInspector.panels.profiles.addProfileHeader(profileHeader);
             WebInspector.panels.profiles.setRecordingProfile(WebInspector.CSSSelectorProfileType.TypeId, false);
         }
 
@@ -341,15 +353,62 @@ WebInspector.CSSSelectorProfileType.prototype = {
         CSSAgent.stopSelectorProfiler(callback.bind(this));
     },
 
-    createSidebarTreeElementForProfile: function(profile)
+    /**
+     * @override
+     * @param {string=} title
+     * @return {WebInspector.ProfileHeader}
+     */
+    createTemporaryProfile: function(title)
     {
-        return new WebInspector.ProfileSidebarTreeElement(profile, profile.title, "profile-sidebar-tree-item");
+        title = title || WebInspector.UIString("Recording\u2026");
+        return new WebInspector.CSSProfileHeader(this, title);
     },
 
-    createView: function(profile)
+    /**
+     * @override
+     * @param {CSSAgent.SelectorProfile} profile
+     * @return {WebInspector.ProfileHeader}
+     */
+    createProfile: function(profile)
     {
-        return new WebInspector.CSSSelectorProfileView(profile);
+        throw new Error("Unreachable");
     }
 }
 
 WebInspector.CSSSelectorProfileType.prototype.__proto__ = WebInspector.ProfileType.prototype;
+
+
+/**
+ * @constructor
+ * @extends {WebInspector.ProfileHeader}
+ * @param {WebInspector.CSSSelectorProfileType} type
+ * @param {string} title
+ * @param {number=} uid
+ * @param {CSSAgent.SelectorProfile=} protocolData
+ */
+WebInspector.CSSProfileHeader = function(type, title, uid, protocolData)
+{
+    WebInspector.ProfileHeader.call(this, type, title, uid);
+    this._protocolData = protocolData;
+}
+
+WebInspector.CSSProfileHeader.prototype = {
+    /**
+     * @override
+     */
+    createSidebarTreeElement: function()
+    {
+        return new WebInspector.ProfileSidebarTreeElement(this, this.title, "profile-sidebar-tree-item");
+    },
+
+    /**
+     * @override
+     */
+    createView: function()
+    {
+        var profile = /** @type {CSSAgent.SelectorProfile} */this._protocolData;
+        return new WebInspector.CSSSelectorProfileView(profile);
+    }
+}
+
+WebInspector.CSSProfileHeader.prototype.__proto__ = WebInspector.ProfileHeader.prototype;

@@ -64,4 +64,26 @@ cd 19.0.1081.2
 gclient config http://src.chromium.org/svn/releases/19.0.1081.2
 gclient sync
 # wait a long time
+
+Testing:
+-------
+
+This info is for testing patches to WebKit from atopwi/inspector/front-end
+
+Where the tests live:
+  chromium/src/third_party/WebKit/LayoutTests/inspector
+  chromium/src/third_party/WebKit/LayoutTests/http/tests/inspector
+  chromium/src/chrome/browser/debugger/devtools_sanity_unittest.cc
+
+How to run them:
+
+First build
+
+make -j10 BUILDTYPE=Release DumpRenderTree
+
+webkit/tools/layout_tests/run_webkit_tests.sh inspector
+
+make -j10 BUILDTYPE=Release interactive_ui_tests
+
+out/Release/interactive_ui_tests --gtest_help
   

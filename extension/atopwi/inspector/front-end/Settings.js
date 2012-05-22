@@ -53,7 +53,8 @@ var Capabilities = {
     profilerCausesRecompilation: true,
     nativeInstrumentationEnabled: false,
     heapProfilerPresent: false,
-    canOverrideDeviceMetrics: false
+    canOverrideDeviceMetrics: false,
+    timelineSupportsFrameInstrumentation: false,
 }
 
 /**
@@ -95,6 +96,7 @@ WebInspector.Settings = function()
     this.showPaintRects = this.createSetting("showPaintRects", false);
     this.zoomLevel = this.createSetting("zoomLevel", 0);
     this.savedURLs = this.createSetting("savedURLs", {});
+    this.javaScriptDisabled = this.createSetting("javaScriptDisabled", false);
 
     // If there are too many breakpoints in a storage, it is likely due to a recent bug that caused
     // periodical breakpoints duplication leading to inspector slowness.
@@ -178,10 +180,9 @@ WebInspector.ExperimentsSettings = function()
     this._enabledForTest = {};
     
     // Add currently running experiments here.
-    this.timelineVerticalOverview = this._createExperiment("timelineStartAtZero", "Enable vertical overview mode in the Timeline panel");
     this.showShadowDOM = this._createExperiment("showShadowDOM", "Show shadow DOM");
     this.snippetsSupport = this._createExperiment("snippetsSupport", "Snippets support");
-    this.showStylesPanel = this._createExperiment("stylesPanel", "Show styles panel");
+    this.sourceCodePanel = this._createExperiment("sourceCodePanel", "Source Code panel");
 
     this._cleanUpSetting();
 }

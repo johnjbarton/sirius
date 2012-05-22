@@ -58,6 +58,7 @@ WebInspector.NetworkRequest = function(requestId, url, documentURL, frameId, loa
     this._content = undefined;
     this._contentEncoded = false;
     this._pendingContentCallbacks = [];
+    this._frames = [];
 }
 
 WebInspector.NetworkRequest.Events = {
@@ -239,7 +240,7 @@ WebInspector.NetworkRequest.prototype = {
         // resourceSize when we don't have Content-Length. This still won't
         // work for chunks with non-trivial encodings. We need a way to
         // get actual transfer size from the network stack.
-        var bodySize = Number(this.responseHeaders["Content-Length"] || this.resourceSize);
+        var bodySize = Number(this.responseHeaderValue("Content-Length") || this.resourceSize);
         return this.responseHeadersSize + bodySize;
     },
 
@@ -398,11 +399,11 @@ WebInspector.NetworkRequest.prototype = {
     },
 
     /**
-     * @return {Object}
+     * @return {Array.<Object>}
      */
     get requestHeaders()
     {
-        return this._requestHeaders || {};
+        return this._requestHeaders || [];
     },
 
     set requestHeaders(x)
@@ -421,8 +422,8 @@ WebInspector.NetworkRequest.prototype = {
     {
         if (this._requestHeadersText === undefined) {
             this._requestHeadersText = this.requestMethod + " " + this.url + " HTTP/1.1\r\n";
-            for (var key in this.requestHeaders)
-                this._requestHeadersText += key + ": " + this.requestHeaders[key] + "\r\n";
+            for (var i = 0; i < this.requestHeaders; ++i)
+                this._requestHeadersText += this.requestHeaders[i].name + ": " + this.requestHeaders[i].value + "\r\n";
         }
         return this._requestHeadersText;
     },
@@ -451,10 +452,8 @@ WebInspector.NetworkRequest.prototype = {
             return this._sortedRequestHeaders;
 
         this._sortedRequestHeaders = [];
-        for (var key in this.requestHeaders)
-            this._sortedRequestHeaders.push({header: key, value: this.requestHeaders[key]});
-        this._sortedRequestHeaders.sort(function(a,b) { return a.header.localeCompare(b.header) });
-
+        this._sortedRequestHeaders = this.requestHeaders.slice();
+        this._sortedRequestHeaders.sort(function(a,b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()) });
         return this._sortedRequestHeaders;
     },
 
@@ -502,11 +501,11 @@ WebInspector.NetworkRequest.prototype = {
     },
 
     /**
-     * @return {Object}
+     * @return {Array.<Object>}
      */
     get responseHeaders()
     {
-        return this._responseHeaders || {};
+        return this._responseHeaders || [];
     },
 
     set responseHeaders(x)
@@ -525,8 +524,8 @@ WebInspector.NetworkRequest.prototype = {
     {
         if (this._responseHeadersText === undefined) {
             this._responseHeadersText = "HTTP/1.1 " + this.statusCode + " " + this.statusText + "\r\n";
-            for (var key in this.responseHeaders)
-                this._responseHeadersText += key + ": " + this.responseHeaders[key] + "\r\n";
+            for (var i = 0; i < this.requestHeaders; ++i)
+                this._responseHeadersText += this.responseHeaders[i].name + ": " + this.responseHeaders[i].value + "\r\n";
         }
         return this._responseHeadersText;
     },
@@ -553,12 +552,10 @@ WebInspector.NetworkRequest.prototype = {
     {
         if (this._sortedResponseHeaders !== undefined)
             return this._sortedResponseHeaders;
-
+        
         this._sortedResponseHeaders = [];
-        for (var key in this.responseHeaders)
-            this._sortedResponseHeaders.push({header: key, value: this.responseHeaders[key]});
-        this._sortedResponseHeaders.sort(function(a,b) { return a.header.localeCompare(b.header) });
-
+        this._sortedResponseHeaders = this.responseHeaders.slice();
+        this._sortedResponseHeaders.sort(function(a,b) { return a.name.toLowerCase().localeCompare(b.name.toLowerCase()) });
         return this._sortedResponseHeaders;
     },
 
@@ -650,10 +647,16 @@ WebInspector.NetworkRequest.prototype = {
     _headerValue: function(headers, headerName)
     {
         headerName = headerName.toLowerCase();
-        for (var header in headers) {
-            if (header.toLowerCase() === headerName)
-                return headers[header];
+        
+        var values = [];
+        for (var i = 0; i < headers.length; ++i) {
+            if (headers[i].name.toLowerCase() === headerName)
+                values.push(headers[i].value);
         }
+        // Set-Cookie values should be separated by '\n', not comma, otherwise cookies could not be parsed.
+        if (headerName === "set-cookie")
+            return values.join("\n");
+        return values.join(", ");
     },
 
     /**
@@ -678,6 +681,14 @@ WebInspector.NetworkRequest.prototype = {
     contentURL: function()
     {
         return this._url;
+    },
+
+    /**
+     * @return {WebInspector.ResourceType}
+     */
+    contentType: function()
+    {
+        return this._type;
     },
 
     /**
@@ -804,6 +815,56 @@ WebInspector.NetworkRequest.prototype = {
     resource: function()
     {
         return this._resource;
+    },
+
+    /**
+     * @return {Object}
+     */
+    frames: function()
+    {
+        return this._frames;
+    },
+
+    /**
+     * @param {number} position
+     * @return {Object}
+     */
+    frame: function(position)
+    {
+        return this._frames[position];
+    },
+
+    /**
+     * @param {string} errorMessage
+     * @param {number} time
+     */
+    addFrameError: function(errorMessage, time)
+    {
+        var errorObject = {};
+        errorObject.errorMessage = errorMessage;
+        errorObject.time = time;
+        this._pushFrame(errorObject);
+    },
+
+    /**
+     * @param {Object} response
+     * @param {number} time
+     * @param {boolean} sent
+     */
+    addFrame: function(response, time, sent)
+    {
+        response.time = time;
+        if (sent)
+            response.sent = true;
+        this._pushFrame(response);
+    },
+
+    _pushFrame: function(object)
+    {
+        if (this._frames.length >= 100) {
+            this._frames.splice(0, 10);
+        }
+        this._frames.push(object);
     }
 }
 

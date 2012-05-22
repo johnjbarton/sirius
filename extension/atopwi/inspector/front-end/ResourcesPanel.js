@@ -1278,7 +1278,7 @@ WebInspector.FrameResourceTreeElement.prototype = {
 
         function doSave(forceSaveAs, content)
         {
-            WebInspector.save(this._resource.url, content, forceSaveAs);
+            WebInspector.fileManager.save(this._resource.url, content, forceSaveAs);
         }
 
         function save(forceSaveAs)
@@ -2049,7 +2049,7 @@ WebInspector.ResourceRevisionTreeElement.prototype = {
         if (InspectorFrontendHost.canSave()) {
             function doSave(forceSaveAs, content)
             {
-                WebInspector.save(this._revision.resource.url, content, forceSaveAs);
+                WebInspector.fileManager.save(this._revision.resource.url, content, forceSaveAs);
             }
 
             function save(forceSaveAs)
@@ -2068,7 +2068,7 @@ WebInspector.ResourceRevisionTreeElement.prototype = {
     sourceView: function()
     {
         if (!this._sourceView)
-            this._sourceView = new WebInspector.ResourceRevisionSourceFrame(this._revision);
+            this._sourceView = new WebInspector.SourceFrame(this._revision);
         return this._sourceView;
     }
 }
