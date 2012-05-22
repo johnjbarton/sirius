@@ -57,6 +57,9 @@ function getDebuggeeSpec() {
   function getFrontendURL() {
     var url = document.querySelector('.frontendURL').value;
     if (url) {
+      if (url[url.length - 1] !== '/') {
+        url += '/';
+      }
       localStorage.setItem('atopwi.frontendURL', url);
     }
     return url;
