@@ -93,15 +93,19 @@ function(            ChromeProxy)  {
 
     parseDebuggee: function(debuggeeSpec) {
       var tabId = parseInt(debuggeeSpec.tabId, 10);
-      if ( isNaN(tabId) ) {  // then we better have a URL
+      if (debuggeeSpec.url) {
         this.url = decodeURIComponent(debuggeeSpec.url);
-      } else {
+      }
+      if ( !isNaN(tabId) ) {  // then we better have a URL
         this.tabId = tabId;
       }
     },
     
     open: function(debuggeeSpec) {
       this.parseDebuggee(debuggeeSpec);
+      if (debug) {
+        console.log("Debuggee parsed debuggeeSpec %o and got %o", debuggeeSpec, this);
+      }
       this.chrome.openNewTab(
         this.url, 
         function(newTabId) {
