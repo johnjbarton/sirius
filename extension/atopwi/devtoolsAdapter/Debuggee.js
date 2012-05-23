@@ -28,7 +28,7 @@ function(            ChromeProxy)  {
       console.log(window.location + ' talking ');
       RESTChannel.talk(window.parent, function(atopwi) {
         this.register(atopwi);
-        console.log('Debuggee connected');
+        console.log('Debuggee connected', atopwi);
       }.bind(this));
     },
     
@@ -42,6 +42,9 @@ function(            ChromeProxy)  {
       if (obj.url || obj.tabId) {
         this.attachToChrome(obj);
         return {message:'attached'};
+      } else {
+        var error = "No url or tabId property on debuggee";
+        return {message:"Error: "+error, error: error};
       }
     },
     

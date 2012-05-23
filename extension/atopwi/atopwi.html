@@ -57,6 +57,9 @@ function getDebuggeeSpec() {
   function getFrontendURL() {
     var url = document.querySelector('.frontendURL').value;
     if (url) {
+      if (url[url.length - 1] !== '/') {
+        url += '/';
+      }
       localStorage.setItem('atopwi.frontendURL', url);
     }
     return url;
@@ -110,7 +113,8 @@ URLOptions.prototype = {
   getDebuggeeSpec: function() {
     if (this.useWebSocket() || this.useCrx2app()) {
       return {
-        url: this.params.url, 
+        url: this.params.url,
+        tabId: this.params.tabId,
         devtoolsURL: this.devToolsURL(),
         ws: this.params.ws,
         frontendURL: getFrontendURL()
