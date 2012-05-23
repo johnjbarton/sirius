@@ -41,8 +41,8 @@ function(appendFrame)  {
         'debuggee', 
         this.debuggee,
         function(reply) {
-          console.log("atopwi puts debuggee and hears: "+reply.message, reply);
-        },
+          console.log("atopwi puts debuggee %o and hears: "+reply.message, this.debuggee, reply);
+        }.bind(this),
         function(err) {
           console.error("atopwi puts debuggee then err", err);
         }

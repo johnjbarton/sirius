@@ -113,7 +113,8 @@ URLOptions.prototype = {
   getDebuggeeSpec: function() {
     if (this.useWebSocket() || this.useCrx2app()) {
       return {
-        url: this.params.url, 
+        url: this.params.url,
+        tabId: this.params.tabId,
         devtoolsURL: this.devToolsURL(),
         ws: this.params.ws,
         frontendURL: getFrontendURL()
