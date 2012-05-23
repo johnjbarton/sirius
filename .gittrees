@@ -1,0 +1,4 @@
+[subtree "extension/atopwi"]
+	url = git@github.com:johnjbarton/atopwi.git
+	path = extension/atopwi
+	branch = master
