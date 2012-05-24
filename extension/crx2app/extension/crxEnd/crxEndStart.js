@@ -50,7 +50,7 @@ function obeyOptions() {
       var crx2appBase = window.crx2appBase; 
       var fakeBlankURL = crx2appBase + '/workaroundBug108519.html';
       //**********
-      buildContextMenuItem(name, fakeBlankURL, function onDebuggerWindowCreated(debuggeeTabId, win) {
+      buildContextMenuItem(name, fakeBlankURL, function onDebuggerWindowCreated(onClickInfo, debuggeeTab, win) {
         var debuggerTab = win.tabs[0];
         // We just created a window for the debugger. 
         // We gave it a tabId via the URL parameters, it will now try to attach to that tabId
@@ -61,9 +61,9 @@ function obeyOptions() {
           if (!windowsAdapter) {  // then this origin has not been seen
              windowsAdapter = crxEnd.createWindowsAdapter(validOrigin, debuggerTab);
           }
-          windowsAdapter.addUserSelectedTab(debuggeeTabId);
+          windowsAdapter.addUserSelectedTab(debuggeeTab.id);
     
-          var url = allowedSite.site + '?tabId=' + debuggeeTabId + '&';
+          var url = allowedSite.site + '?tabId=' + debuggeeTab.id + '&' + 'url=' + onClickInfo.pageUrl;
           // now release the debugger
           chrome.tabs.update(debuggerTab.id, {url: url}, function(tab) {
           console.log("Opened debugger based on context menu click "+url);

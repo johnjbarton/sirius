@@ -31,13 +31,15 @@
 /**
  * @extends {WebInspector.View}
  * @constructor
+ * @param {WebInspector.ContentProvider} contentProvider
  */
-WebInspector.SourceFrame = function(url)
+WebInspector.SourceFrame = function(contentProvider)
 {
     WebInspector.View.call(this);
     this.element.addStyleClass("script-view");
 
-    this._url = url;
+    this._url = contentProvider.contentURL();
+    this._contentProvider = contentProvider;
 
     this._textModel = new WebInspector.TextEditorModel();
 
@@ -90,9 +92,9 @@ WebInspector.SourceFrame.prototype = {
         this._clearLineToReveal();
     },
 
-    focus: function()
+    defaultFocusedElement: function()
     {
-        this._textViewer.focus();
+        return this._textViewer.defaultFocusedElement();
     },
 
     get loaded()
@@ -114,12 +116,8 @@ WebInspector.SourceFrame.prototype = {
     {
         if (!this._contentRequested) {
             this._contentRequested = true;
-            this.requestContent(this.setContent.bind(this));
+            this._contentProvider.requestContent(this.setContent.bind(this));
         }
-    },
-
-    requestContent: function(callback)
-    {
     },
 
     /**
@@ -207,12 +205,17 @@ WebInspector.SourceFrame.prototype = {
     {
     },
 
-    setContent: function(mimeType, content)
+    /**
+     * @param {?string} content
+     * @param {boolean} contentEncoded
+     * @param {string} mimeType
+     */
+    setContent: function(content, contentEncoded, mimeType)
     {
         this._textViewer.mimeType = mimeType;
 
         this._loaded = true;
-        this._textModel.setText(content);
+        this._textModel.setText(content || "");
 
         this._textViewer.beginUpdates();
 
@@ -465,6 +468,33 @@ WebInspector.SourceFrame.prototype = {
         rowMessage.repeatCountElement.textContent = WebInspector.UIString(" (repeated %d times)", rowMessage.repeatCount);
     },
 
+    removeMessageFromSource: function(lineNumber, msg)
+    {
+        if (lineNumber >= this._textModel.linesCount)
+            lineNumber = this._textModel.linesCount - 1;
+        if (lineNumber < 0)
+            lineNumber = 0;
+
+        var rowMessages = this._rowMessages[lineNumber];
+        for (var i = 0; rowMessages && i < rowMessages.length; ++i) {
+            var rowMessage = rowMessages[i];
+            if (rowMessage.consoleMessage !== msg)
+                continue;
+
+            var messageLineElement = rowMessage.element;
+            var messageBubbleElement = messageLineElement.parentElement;
+            messageBubbleElement.removeChild(messageLineElement);
+            rowMessages.remove(rowMessage);
+            if (!rowMessages.length)
+                delete this._rowMessages[lineNumber];
+            if (!messageBubbleElement.childElementCount) {
+                this._textViewer.removeDecoration(lineNumber, messageBubbleElement);
+                delete this._messageBubbles[lineNumber];
+            }
+            break;
+        }
+    },
+
     populateLineGutterContextMenu: function(contextMenu, lineNumber)
     {
     },
@@ -481,30 +511,18 @@ WebInspector.SourceFrame.prototype = {
         this._textViewer.inheritScrollPositions(sourceFrame._textViewer);
     },
 
+    /**
+     * @return {boolean}
+     */
     canEditSource: function()
     {
         return false;
     },
 
-    commitEditing: function()
-    {
-        function callback(error)
-        {
-            this.didEditContent(error, this._textModel.text);
-        }
-        this.editContent(this._textModel.text, callback.bind(this));
-    },
-
-    didEditContent: function(error, content)
-    {
-        if (error) {
-            if (error.message)
-                WebInspector.log(error.message, WebInspector.ConsoleMessage.MessageLevel.Error, true);
-            return;
-        }
-    },
-
-    editContent: function(newContent, callback)
+    /**
+     * @param {string} text 
+     */
+    commitEditing: function(text)
     {
     }
 }
@@ -534,7 +552,7 @@ WebInspector.TextViewerDelegateForSourceFrame.prototype = {
 
     commitEditing: function()
     {
-        this._sourceFrame.commitEditing();
+        this._sourceFrame.commitEditing(this._sourceFrame._textModel.text);
     },
 
     populateLineGutterContextMenu: function(contextMenu, lineNumber)

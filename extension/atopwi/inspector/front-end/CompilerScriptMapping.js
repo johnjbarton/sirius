@@ -30,7 +30,9 @@
 
 /**
  * @constructor
- * @extends {WebInspector.ScriptMapping}
+ * @extends {WebInspector.Object}
+ * @implements {WebInspector.SourceMapping}
+ * @implements {WebInspector.UISourceCodeProvider}
  */
 WebInspector.CompilerScriptMapping = function()
 {
@@ -69,9 +71,9 @@ WebInspector.CompilerScriptMapping.prototype = {
     /**
      * @return {Array.<WebInspector.UISourceCode>}
      */
-    uiSourceCodeList: function()
+    uiSourceCodes: function()
     {
-        var result = []
+        var result = [];
         for (var url in this._uiSourceCodeByURL)
             result.push(this._uiSourceCodeByURL[url]);
         return result;
@@ -100,8 +102,7 @@ WebInspector.CompilerScriptMapping.prototype = {
         if (this._scriptForSourceMap.get(sourceMap)) {
             this._sourceMapForScriptId[script.scriptId] = sourceMap;
             var uiSourceCodes = this._uiSourceCodesForSourceMap(sourceMap);
-            var data = { scriptId: script.scriptId, uiSourceCodes: uiSourceCodes };
-            this.dispatchEventToListeners(WebInspector.ScriptMapping.Events.ScriptBound, data);
+            script.setSourceMapping(this);
             return;
         }
 
@@ -114,12 +115,11 @@ WebInspector.CompilerScriptMapping.prototype = {
             var sourceContent = sourceMap.sourceContent(sourceURL);
             var contentProvider;
             if (sourceContent)
-                contentProvider = new WebInspector.StaticContentProvider("text/javascript", sourceContent);
+                contentProvider = new WebInspector.StaticContentProvider(WebInspector.resourceTypes.Script, sourceContent);
             else
                 contentProvider = new WebInspector.CompilerSourceMappingContentProvider(sourceURL);
-            var uiSourceCode = new WebInspector.UISourceCodeImpl(sourceURL, sourceURL, contentProvider);
+            var uiSourceCode = new WebInspector.JavaScriptSource(sourceURL, null, contentProvider, this, false);
             uiSourceCode.isContentScript = script.isContentScript;
-            uiSourceCode.isEditable = false;
             this._uiSourceCodeByURL[sourceURL] = uiSourceCode;
             this._sourceMapForUISourceCode.put(uiSourceCode, sourceMap);
             uiSourceCodeList.push(uiSourceCode);
@@ -127,10 +127,10 @@ WebInspector.CompilerScriptMapping.prototype = {
 
         this._sourceMapForScriptId[script.scriptId] = sourceMap;
         this._scriptForSourceMap.put(sourceMap, script);
-        var data = { removedItems: [], addedItems: uiSourceCodeList };
-        this.dispatchEventToListeners(WebInspector.ScriptMapping.Events.UISourceCodeListChanged, data);
-        data = { scriptId: script.scriptId, uiSourceCodes: uiSourceCodeList };
-        this.dispatchEventToListeners(WebInspector.ScriptMapping.Events.ScriptBound, data);
+        script.setSourceMapping(this);
+
+        for (var i = 0; i < uiSourceCodeList.length; ++i)
+            this.dispatchEventToListeners(WebInspector.UISourceCodeProvider.Events.UISourceCodeAdded, uiSourceCodeList[i]);
     },
 
     /**
@@ -161,8 +161,9 @@ WebInspector.CompilerScriptMapping.prototype = {
 
     reset: function()
     {
-        var data = { removedItems: this.uiSourceCodeList(), addedItems: [] };
-        this.dispatchEventToListeners(WebInspector.ScriptMapping.Events.UISourceCodeListChanged, data);
+        var uiSourceCodes = this.uiSourceCodes();
+        for (var i = 0; i < uiSourceCodes.length; ++i)
+            this.dispatchEventToListeners(WebInspector.UISourceCodeProvider.Events.UISourceCodeRemoved, uiSourceCodes[i]);
 
         this._sourceMapByURL = {};
         this._sourceMapForScriptId = {};
@@ -172,7 +173,7 @@ WebInspector.CompilerScriptMapping.prototype = {
     }
 }
 
-WebInspector.CompilerScriptMapping.prototype.__proto__ = WebInspector.ScriptMapping.prototype;
+WebInspector.CompilerScriptMapping.prototype.__proto__ = WebInspector.Object.prototype;
 
 /**
  * @constructor
@@ -361,7 +362,7 @@ WebInspector.SourceMapParser.prototype = {
         var baseHost = base.scheme + "://" + base.host + (base.port ? ":" + base.port : "");
         if (url[0] === "/")
             return baseHost + url;
-        return baseHost + base.firstPathComponents + url;
+        return baseHost + base.folderPathComponents + "/" + url;
     },
 
     _VLQ_BASE_SHIFT: 5,

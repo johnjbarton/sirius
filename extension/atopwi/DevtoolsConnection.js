@@ -21,8 +21,8 @@ function(appendFrame)  {
     showInspectorIframe: function() {
       var inspectorElt = window.document.getElementById('WebInspector');
       inspectorElt.classList.remove('hide');
-      var devtoolsURL = window.SiriusBase + '/atopwi/inspector/front-end/devtools.html';
-      return appendFrame('WebInspector', devtoolsURL);
+      console.log("append WebInspector from "+this.debuggee.devtoolsURL);
+      return appendFrame('WebInspector', this.debuggee.devtoolsURL);
     },
 
     listenDebuggee: function() {
@@ -41,8 +41,8 @@ function(appendFrame)  {
         'debuggee', 
         this.debuggee,
         function(reply) {
-          console.log("atopwi puts debuggee and hears: "+reply.message, reply);
-        },
+          console.log("atopwi puts debuggee %o and hears: "+reply.message, this.debuggee, reply);
+        }.bind(this),
         function(err) {
           console.error("atopwi puts debuggee then err", err);
         }

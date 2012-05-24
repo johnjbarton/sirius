@@ -216,15 +216,36 @@ require(['orion/sirius'], function(sirius) {
     sirius.save(request.url, request.content, editURL, onSaved, onErr);
   }
 
+  function redirectDevtools(request, sender, sendResponse) {
+    console.log("redirectDevTools ", sender.tab.url);
+    var filter = {
+      urls: ['http://localhost:9222/*'], // when devtools is requested and
+      tabId: sender.tab.id               // when the atopwi tab starts the request
+    };
+    function grabParams(details) {
+      console.log('grabParams ', details.url);
+      var params = details.url.split('?')[1];
+      if (params) {
+        chrome.tabs.update(sender.tab.id, {url: sender.tab.url + '?' + params});
+      }
+      chrome.webRequest.onBeforeRequest.removeListener(grabParams); 
+    }
+    chrome.webRequest.onBeforeRequest.addListener(
+      grabParams, 
+      filter, 
+      ['blocking']
+    );
+  }
+
   chrome.extension.onRequest.addListener(
     function dispatch(request, sender, sendResponse) {
       if (request.orion === "loginUnloading") {
         // built into Orion now superLogin(request, sender, sendResponse);
       } else if (request.message === "saveResource") {
         saveResource(request, sender, sendResponse);
-      } else {
-        sendResponse({}); // snub them.
-      }
+      } else if (request.message === "redirectDevtools") {
+        redirectDevtools(request, sender, sendResponse);
+      } 
     }
   );
 });  

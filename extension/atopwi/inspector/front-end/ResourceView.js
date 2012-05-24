@@ -49,27 +49,27 @@ WebInspector.ResourceView.prototype = {
 
 WebInspector.ResourceView.prototype.__proto__ = WebInspector.View.prototype;
 
+/**
+ * @param {WebInspector.Resource} resource
+ */
 WebInspector.ResourceView.hasTextContent = function(resource)
 {
-    switch (resource.category) {
-    case WebInspector.resourceCategories.documents:
-    case WebInspector.resourceCategories.scripts:
-    case WebInspector.resourceCategories.xhr:
-    case WebInspector.resourceCategories.stylesheets:
-        return true;
-    case WebInspector.resourceCategories.other:
+    if (resource.type.isTextType())
+        return true; 
+    if (resource.type === WebInspector.resourceTypes.Other)
         return resource.content && !resource.contentEncoded;
-    default:
-        return false;
-    }
+    return false;
 }
 
+/**
+ * @param {WebInspector.Resource} resource
+ */
 WebInspector.ResourceView.nonSourceViewForResource = function(resource)
 {
-    switch (resource.category) {
-    case WebInspector.resourceCategories.images:
+    switch (resource.type) {
+    case WebInspector.resourceTypes.Image:
         return new WebInspector.ImageView(resource);
-    case WebInspector.resourceCategories.fonts:
+    case WebInspector.resourceTypes.Font:
         return new WebInspector.FontView(resource);
     default:
         return new WebInspector.ResourceView(resource);
@@ -83,20 +83,8 @@ WebInspector.ResourceView.nonSourceViewForResource = function(resource)
 WebInspector.ResourceSourceFrame = function(resource)
 {
     this._resource = resource;
-    WebInspector.SourceFrame.call(this, resource.url);
+    WebInspector.SourceFrame.call(this, resource);
     this._resource.addEventListener(WebInspector.Resource.Events.RevisionAdded, this._contentChanged, this);
-}
-
-//This is a map from resource.type to mime types
-//found in WebInspector.SourceTokenizer.Registry.
-WebInspector.ResourceSourceFrame.DefaultMIMETypeForResourceType = {
-    0: "text/html",
-    1: "text/css",
-    4: "text/javascript"
-}
-
-WebInspector.ResourceSourceFrame.mimeTypeForResource = function(resource) {
-    return WebInspector.ResourceSourceFrame.DefaultMIMETypeForResourceType[resource.type] || resource.mimeType;
 }
 
 WebInspector.ResourceSourceFrame.prototype = {
@@ -105,20 +93,9 @@ WebInspector.ResourceSourceFrame.prototype = {
         return this._resource;
     },
 
-    requestContent: function(callback)
-    {
-        function contentLoaded(text)
-        {
-            var mimeType = WebInspector.ResourceSourceFrame.mimeTypeForResource(this.resource);
-            callback(mimeType, text);
-        }
-
-        this.resource.requestContent(contentLoaded.bind(this));
-    },
-
     _contentChanged: function(event)
     {
-        this.setContent(WebInspector.ResourceSourceFrame.mimeTypeForResource[this._resource], this._resource.content);
+        this.setContent(this._resource.content, false, this._resource.canonicalMimeType());
     }
 }
 
@@ -138,25 +115,31 @@ WebInspector.EditableResourceSourceFrame.Events = {
 }
 
 WebInspector.EditableResourceSourceFrame.prototype = {
+    /**
+     * @return {boolean}
+     */
     canEditSource: function()
     {
         //FIXME: make live edit stop using resource content binding.
-        return this._resource.isEditable() && this._resource.type === WebInspector.Resource.Type.Stylesheet;
+        return this._resource.isEditable() && this._resource.type === WebInspector.resourceTypes.Stylesheet;
     },
 
-    editContent: function(newText, callback)
+    /**
+     * @param {string} text
+     */
+    commitEditing: function(text)
     {
         this._clearIncrementalUpdateTimer();
         var majorChange = true;
         this._settingContent = true;
         function callbackWrapper(text)
         {
-            callback(text);
             delete this._settingContent;
+            this.dispatchEventToListeners(WebInspector.EditableResourceSourceFrame.Events.TextEdited, this);
         }
-        this.resource.setContent(newText, majorChange, callbackWrapper.bind(this));
+        this.resource.setContent(text, majorChange, callbackWrapper.bind(this));
     },
-
+    
     afterTextChanged: function(oldRange, newRange)
     {
         function commitIncrementalEdit()
@@ -189,33 +172,3 @@ WebInspector.EditableResourceSourceFrame.prototype = {
 }
 
 WebInspector.EditableResourceSourceFrame.prototype.__proto__ = WebInspector.ResourceSourceFrame.prototype;
-
-/**
- * @extends {WebInspector.ResourceSourceFrame}
- * @constructor
- */
-WebInspector.ResourceRevisionSourceFrame = function(revision)
-{
-    WebInspector.ResourceSourceFrame.call(this, revision.resource);
-    this._revision = revision;
-}
-
-WebInspector.ResourceRevisionSourceFrame.prototype = {
-    get resource()
-    {
-        return this._revision.resource;
-    },
-
-    requestContent: function(callback)
-    {
-        function contentLoaded(text)
-        {
-            var mimeType = WebInspector.ResourceSourceFrame.mimeTypeForResource(this.resource);
-            callback(mimeType, text);
-        }
-
-        this._revision.requestContent(contentLoaded.bind(this));
-    },
-}
-
-WebInspector.ResourceRevisionSourceFrame.prototype.__proto__ = WebInspector.ResourceSourceFrame.prototype;

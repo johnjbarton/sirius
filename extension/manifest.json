@@ -25,22 +25,17 @@
       "contextMenus",
       "webNavigation",
       "webRequest",
-      "debugger"
+      "debugger",
+      "webRequestBlocking"
     ],
    "content_scripts": [
      {
        "matches": ["http://*/mixloginstatic/LoginWindow.html*"],
        "js": ["superLogin.js"]
      },
-     { // Common code for content-scripts
-       "matches": ["*://*/*/devtools/panels/*"],
-       "js": ["atopwi/devtoolsAdapter/ScriptInjector.js"],
-       "all_frames": true
-     },
-     { // Add scripts to extension panels giving remote debug API
-       "matches": ["*://*/*/devtools/panels/*"],
-       "js": ["atopwi/devtoolsAdapter/panelInjector.js"],
-       "all_frames": true
+     {
+       "matches": ["*://*/*atopwi.html*"],
+       "js": ["atopwi/devtoolsAdapter/webSocketOverrides.js"]
      }
    ]
 }

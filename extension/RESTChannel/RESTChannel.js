@@ -4,7 +4,9 @@
 /*globals window console */
 
 
-// Don't use AMD here, it's too hard to sync the load events 
+/**
+ * Request response protocol mimicing HTTP over postMessage()
+ */
 
 window.RESTChannel = (function() {
 

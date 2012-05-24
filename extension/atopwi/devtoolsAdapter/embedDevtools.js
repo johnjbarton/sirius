@@ -9,6 +9,13 @@
 
   var debug = true;
   
+  window.WebInspector.delayLoaded = window.WebInspector.loaded;
+  window.WebInspector.loaded = function() {
+    if (debug) {
+      console.log('WebInspector patched at load event');
+    }
+  };
+
   var InspectorPatch = {
 
     // relative to atopwi/inspector/front-end
@@ -20,13 +27,10 @@
       ],
 
     patchInspector: function(event) {
+      if (debug) {
+          console.log('WebInspector at DOMContentLoaded event');
+       }
       var win = event.currentTarget;
-      win.WebInspector.delayLoaded = win.WebInspector.loaded;
-      win.WebInspector.loaded = function() {
-        if (debug) {
-          console.log('WebInspector patched at load event');
-        }
-      };
       ScriptInjector.injectScripts(this.files, win);
     }
   };
@@ -36,4 +40,11 @@
       InspectorPatch.patchInspector.bind(InspectorPatch)
   );
     
+  window.addEventListener(
+      'load',
+      function() {
+        if (debug) {
+          console.log('WebInspector at load event');
+        }
+  });  
 }());

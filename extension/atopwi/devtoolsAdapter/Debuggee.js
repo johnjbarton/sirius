@@ -28,7 +28,7 @@ function(            ChromeProxy)  {
       console.log(window.location + ' talking ');
       RESTChannel.talk(window.parent, function(atopwi) {
         this.register(atopwi);
-        console.log('Debuggee connected');
+        console.log('Debuggee connected', atopwi);
       }.bind(this));
     },
     
@@ -39,8 +39,13 @@ function(            ChromeProxy)  {
     },
         
     put: function (atopwi, obj) {
-      this.attachToChrome(obj);
-      return {message:'hey'};
+      if (obj.url || obj.tabId) {
+        this.attachToChrome(obj);
+        return {message:'attached'};
+      } else {
+        var error = "No url or tabId property on debuggee";
+        return {message:"Error: "+error, error: error};
+      }
     },
     
     register: function(atopwi) {
@@ -88,15 +93,19 @@ function(            ChromeProxy)  {
 
     parseDebuggee: function(debuggeeSpec) {
       var tabId = parseInt(debuggeeSpec.tabId, 10);
-      if ( isNaN(tabId) ) {  // then we better have a URL
+      if (debuggeeSpec.url) {
         this.url = decodeURIComponent(debuggeeSpec.url);
-      } else {
+      }
+      if ( !isNaN(tabId) ) {  // then we better have a URL
         this.tabId = tabId;
       }
     },
     
     open: function(debuggeeSpec) {
       this.parseDebuggee(debuggeeSpec);
+      if (debug) {
+        console.log("Debuggee parsed debuggeeSpec %o and got %o", debuggeeSpec, this);
+      }
       this.chrome.openNewTab(
         this.url, 
         function(newTabId) {
@@ -148,16 +157,17 @@ function(            ChromeProxy)  {
       }
       this.inspectorWindow = window;
       
+      // Accept command from WebInspector and forward them to chrome.debugger
       var backend = this.inspectorWindow.InspectorBackend;
       backend.sendMessageObjectToBackend = this.sendMessageObject.bind(this);
       
+      // Route events from chrome.debugger to WebInspector
       this.chrome.jsonHandlers['chrome.debugger.remote'] = {
         jsonObjectHandler:  function(data) {
           if (debug) {
             console.log("jsonObjectHandler "+data.method, data);
           }
           backend.dispatch.apply(backend, [data]);
-          this.onEvent(this.panelConnection, data);
         }.bind(this)
       };
     
@@ -168,7 +178,7 @@ function(            ChromeProxy)  {
       var WebInspector = this.inspectorWindow.WebInspector;
       WebInspector.attached = true; // small icons for embed in orion
       
-      this.completeLoad = WebInspector.delayLoaded; // set by openInspectoer
+      this.completeLoad = WebInspector.delayLoaded; // set by openInspector
     
       // Called asynchronously from WebInspector _initializeCapability
       // which is called byt the load event vai doLoadedDone()
@@ -186,84 +196,18 @@ function(            ChromeProxy)  {
     
     // When called as a WebApp, devtools extensions are loaded.
     loadExtensions: function() {
-	  var optionsString = window.localStorage.getItem('options');
-	  if (optionsString) {
-            var options = JSON.parse(optionsString);
-            if (options.extensionInfos && options.extensionInfos.length) {
-	      this.startListener();
-              WebInspector.addExtensions(options.extensionInfos);
-            }
-          } 
-          this.navigateToURL();
-    },
-  
-    startListener: function() {
-      var disposer = RESTChannel.listen(window, this.panelProxySetup.bind(this));
-      window.addEventListener('unload', disposer);
-    },
-
-    domains: [
-        "Inspector",
-         "Memory",
-         "Page",
-         "Runtime",
-         "Console",
-         "Network",
-         "Database",
-         "DOMStorage",
-         "ApplicationCache",
-         "FileSystem",
-         "DOM",
-         "CSS",
-         "Timeline",
-         "Debugger",
-         "DOMDebugger",
-         "Profiler",
-         "Worker"
-    ],
-    
-    _eventListenersByDomain: {},
-
-    panelProxySetup: function(connection) {
-      this.panelConnection = connection;
-      this.panelConnection.register('ChromeDevtools.sendCommand', {
-        post: this.proxySendCommand.bind(this, this.panelConnection)
-      });
-
-      // To avoid dispatching every event to every panel we create one listener for each domain
-      this.domains.forEach(function(domain) {
-        this.panelConnection.register('ChromeDevtools.onEvent.addListener.'+domain, {
-            put: function(connection, messageObject) {
-              this._eventListenersByDomain[domain] = messageObject.url;
-              console.log("Debuggee addListener "+messageObject.url, messageObject);
-            }.bind(this)
-        });
-      }.bind(this));
-      
-    },
-    
-    proxySendCommand: function(panelConnection, messageObject) {
-      this.chrome.debugger.sendCommand(
-          {url: this.url, tabId: this.tabId}, 
-           messageObject.method, 
-           messageObject.params, 
-           panelConnection.respond.bind(panelConnection, messageObject.serial)
-      );
-    },
-    
-    onEvent:function(panelConnection, messageObject) {
-      var domainMethod = messageObject.method;
-      var domain = domainMethod.split('.')[0];
-      var handler = this._eventListenersByDomain[domain];
-      if (handler) {
-        panelConnection.postObject(handler, messageObject, echoOk, echoErr);
-      } else {
-        if (debug) {
-          console.log('Debuggee.onEvent: no handler for ' + domain);
+      var optionsString = window.localStorage.getItem('options');
+      if (optionsString) {
+        var options = JSON.parse(optionsString);
+        if (options.extensionInfos && options.extensionInfos.length) {
+          WebInspector.addExtensions(options.extensionInfos);
         }
       }
+      this.navigateToURL();
     },
-
+    
+    _eventListenersByDomain: {},
+    
     navigateToURL: function(inspectorReady) {
       if (this.url) { // then we started in a new tab, navigate
         if (debug) {
@@ -287,26 +231,34 @@ function(            ChromeProxy)  {
     
     sendMessageObject: function(messageObject) {
       if (debug) {
-        console.log(messageObject.id+" atopwi sendCommand "+messageObject.method);
+        var from = messageObject.id ? messageObject.id + ' from devtools ' : '';
+        from += messageObject.requestId ? messageObject.requestId + ' from extension ' : '';
+        
+        console.log(from +" atopwi sendCommand "+messageObject.method);
       }
+      
+      // The socket protocol sends 'id' and the backend echoes it,
+      // so we save it for the response
+      function handleSendCommandResponse(id, data) {
+        data.id = id;
+        if (debug) {
+          var msg = data.id + 
+             " atopwi response to sendCommand " + messageObject.method;
+             var obj = {messageObject: messageObject, data: data};
+             console.log(msg, obj);
+        }
+        
+        this.inspectorWindow.InspectorBackend.dispatch(data); 
+      }
+      
       this.chrome.debugger.sendCommand(
         {url: this.url, tabId: this.tabId}, 
         messageObject.method, 
         messageObject.params, 
-        this.handleCommandResponse.bind(this, messageObject)
+        handleSendCommandResponse.bind(this, messageObject.id)
       );
-    },
-     
-    handleCommandResponse: function(messageObject, data) {
-      data.id = messageObject.id;
-      if (debug) {
-        var msg = data.id +
-           " atopwi response to sendCommand " + messageObject.method;
-           var obj = {messageObject: messageObject, data: data};
-           console.log(msg, obj);
-      }
-      this.inspectorWindow.InspectorBackend.dispatch(data); 
     }
+    
 };
 
 return Debuggee;

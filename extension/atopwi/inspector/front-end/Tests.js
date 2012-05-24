@@ -254,14 +254,14 @@ TestSuite.prototype.testScriptsTabIsPopulatedOnInspectedPageRefresh = function()
     var test = this;
     this.assertEquals(WebInspector.panels.elements, WebInspector.inspectorView.currentPanel(), "Elements panel should be current one.");
 
-    WebInspector.debuggerPresentationModel.addEventListener(WebInspector.DebuggerPresentationModel.Events.DebuggerReset, waitUntilScriptIsParsed);
+    WebInspector.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.GlobalObjectCleared, waitUntilScriptIsParsed);
 
     // Reload inspected page. It will reset the debugger agent.
     test.evaluateInConsole_("window.location.reload(true);", function(resultText) {});
 
     function waitUntilScriptIsParsed()
     {
-        WebInspector.debuggerPresentationModel.removeEventListener(WebInspector.DebuggerPresentationModel.Events.DebuggerReset, waitUntilScriptIsParsed);
+        WebInspector.debuggerModel.removeEventListener(WebInspector.DebuggerModel.Events.GlobalObjectCleared, waitUntilScriptIsParsed);
         test.showPanel("scripts");
         test._waitUntilScriptsAreParsed(["debugger_test_page.html"],
             function() {
@@ -404,7 +404,7 @@ TestSuite.prototype.testNetworkSize = function()
         test.releaseControl();
     }
     
-    this.addSniffer(WebInspector.NetworkDispatcher.prototype, "_finishResource", finishResource);
+    this.addSniffer(WebInspector.NetworkDispatcher.prototype, "_finishNetworkRequest", finishResource);
 
     // Reload inspected page to sniff network events
     test.evaluateInConsole_("window.location.reload(true);", function(resultText) {});
@@ -427,7 +427,7 @@ TestSuite.prototype.testNetworkSyncSize = function()
         test.releaseControl();
     }
     
-    this.addSniffer(WebInspector.NetworkDispatcher.prototype, "_finishResource", finishResource);
+    this.addSniffer(WebInspector.NetworkDispatcher.prototype, "_finishNetworkRequest", finishResource);
 
     // Send synchronous XHR to sniff network events
     test.evaluateInConsole_("var xhr = new XMLHttpRequest(); xhr.open(\"GET\", \"chunked\", false); xhr.send(null);", function() {});
@@ -451,7 +451,7 @@ TestSuite.prototype.testNetworkRawHeadersText = function()
         test.releaseControl();
     }
     
-    this.addSniffer(WebInspector.NetworkDispatcher.prototype, "_finishResource", finishResource);
+    this.addSniffer(WebInspector.NetworkDispatcher.prototype, "_finishNetworkRequest", finishResource);
 
     // Reload inspected page to sniff network events
     test.evaluateInConsole_("window.location.reload(true);", function(resultText) {});
@@ -485,7 +485,7 @@ TestSuite.prototype.testNetworkTiming = function()
         test.releaseControl();
     }
     
-    this.addSniffer(WebInspector.NetworkDispatcher.prototype, "_finishResource", finishResource);
+    this.addSniffer(WebInspector.NetworkDispatcher.prototype, "_finishNetworkRequest", finishResource);
     
     // Reload inspected page to sniff network events
     test.evaluateInConsole_("window.location.reload(true);", function(resultText) {});
@@ -649,7 +649,7 @@ TestSuite.prototype.nonAnonymousUISourceCodes_ = function()
         return !!uiSourceCode.url;
     }
 
-    var uiSourceCodes = WebInspector.panels.scripts._presentationModel.uiSourceCodes();
+    var uiSourceCodes = WebInspector.panels.scripts._uiSourceCodeProvider.uiSourceCodes();
     return uiSourceCodes.filter(filterOutAnonymous);
 };
 
@@ -688,7 +688,7 @@ TestSuite.prototype._scriptsAreParsed = function(expected)
     var missing = expected.slice(0);
     for (var i = 0; i < uiSourceCodes.length; ++i) {
         for (var j = 0; j < missing.length; ++j) {
-            if (uiSourceCodes[i].fileName.search(missing[j]) !== -1) {
+            if (uiSourceCodes[i].parsedURL.lastPathComponent.search(missing[j]) !== -1) {
                 missing.splice(j, 1);
                 break;
             }
