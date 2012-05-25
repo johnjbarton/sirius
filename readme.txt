@@ -1,21 +1,27 @@
-Sirius - Chrome Extension for Orion Web Tools Platform
+Sirius - Integrating Chrome Devtools with Other Web Dev Tools
 
-Requires Chrome dev channel version 19+
+  * Tracks Chrome Devtools front-end
+  * Wraps Chrome Devtools front-end in an iframe
+  * Connects to Chrome backend over chrome.debugger proxy (crx2app)
+  * Add extensions to support
+    * Orion Web IDE
+    * Others TODO
+Coming soon:
+  * Extends chrome.devtools to add chrome.devtools.remoteDebug for extensions
+  * Improvements for editing, including plugable editors
 
-To run atopwi, a modified Chrome Devtool (aka Web Inspector)
----------------------------------------------------------
+Requires Chrome version 20+
+
+Install
+-------------------------------------------------------------------------
 
 1. clone this repo
 2. Open chrome://extensions
    set developer mode
    load unpacked extension
    point the subdirectory sirius/extension from the repo in step 1
-   You  should see the Sirus Star icon
+   You  should see the Sirius Star icon
 3. Reload any tab and use the context menu option Debug Sirius
-4. The first time the devtools window comes up, it will be blank, just
-right click and reload.  This is a bug in Chrome 19 that will be fixed
-soon.
-
 
 Other Sirius Ideas:
 ---------------------------------------------------------------
@@ -31,17 +37,9 @@ Devtools edit-and-save
    if Orion editor is open with changes on the same file, abort save
   
 ----------------------------------------------------------------------  
-Notes for me:  
+Notes for development under Sirius:
+
+  extension/atopwi/inspector/front-end is a git-tx transplant from
+Chromium build src/out/Release/inspector/ 
   
-Fake git submodules under /extension
-  git clone git@github.com:johnjbarton/atopwi.git extension/atopwi
-  cd extension/atopwi
-  git checkout sirius
-  cd ../..
-  git clone git@github.com:johnjbarton/OrionEditorEmbedded.git extension/OrionEditorEmbedded
-  git clone git@github.com:johnjbarton/MetaObject.git extension/MetaObject
-  git clone git@github.com:johnjbarton/orion.client.git extension/orion.client
-  cd extension/orion.client
-  git checkout hackOrionUtils
-  cd ../..
-  git clone git@github.com:johnjbarton/crx2app.git extension/crx2app
+  See bin/git-tx
