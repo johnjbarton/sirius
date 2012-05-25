@@ -240,15 +240,17 @@ function(            ChromeProxy)  {
       // The socket protocol sends 'id' and the backend echoes it,
       // so we save it for the response
       function handleSendCommandResponse(id, data) {
-        data.id = id;
+        var response = {result: data, id: id};
+        if (chrome.extension.lastError) {
+            response.error = chrome.extension.lastError;
+        }
         if (debug) {
-          var msg = data.id + 
+          var msg = id + 
              " atopwi response to sendCommand " + messageObject.method;
-             var obj = {messageObject: messageObject, data: data};
+             var obj = {messageObject: messageObject, data: data, response: response};
              console.log(msg, obj);
         }
-        
-        this.inspectorWindow.InspectorBackend.dispatch(data); 
+        this.inspectorWindow.InspectorBackend.dispatch(response); 
       }
       
       this.chrome.debugger.sendCommand(
