@@ -8,7 +8,7 @@
 //------------------------------------------------------------------------------
 // Save-to-Orion
 
-  chrome.experimental.devtools.inspectedWindow.onResourceContentCommitted.addListener(function saveToOrion(resource) {
+  chrome.devtools.inspectedWindow.onResourceContentCommitted.addListener(function saveToOrion(resource) {
 
     resource.getContent(function onContent(content, encoding) {
 
@@ -28,7 +28,7 @@
   
 //----------------------------------------------------------------------------
 /*
-  chrome.experimental.devtools.panels.setOpenResourceHandler(function openInOrion(resource) {
+  chrome.devtools.panels.setOpenResourceHandler(function openInOrion(resource) {
     console.log("openInOrion"+resource.url);
   });
 */  

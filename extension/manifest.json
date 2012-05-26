@@ -19,7 +19,6 @@
    "devtools_page": "devtools.html",
   "permissions" :
     [
-      "experimental",
       "*://*/*",
       "tabs",
       "contextMenus",
