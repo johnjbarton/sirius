@@ -221,16 +221,15 @@ WindowsAdapter.prototype = {
 
   // copy allowed fields, force values on others
   _cleanseCreateData: function(createData) {
-    return {
-      url: createData.url,
-      left: createData.left,
-      top: createData.top,
-      width: createData.width,
-      height: createData.height,
-      focused: createData.focused,
-      type: createData.type,
-      incognito: false // true   // Forced 
-    };
+    var allowedProperties = [ 'url', 'left', 'top', 'width', 'height', 'focused', 'type' ];
+    var cleanData = {};
+    allowedProperties.forEach(function(prop) {
+      if (typeof createData[prop] !== 'undefined')  {
+        cleanData[prop] = createData[prop];
+      }
+    });
+    cleanData.incognito = false; // forced
+    return cleanData;
   },
 
   _bindListeners: function() {
