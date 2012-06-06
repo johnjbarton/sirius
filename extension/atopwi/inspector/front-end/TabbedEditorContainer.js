@@ -117,7 +117,7 @@ WebInspector.TabbedEditorContainer.prototype = {
         if (this._currentFile === uiSourceCode)
             return;
         this._currentFile = uiSourceCode;
-        
+
         var tabId = this._tabIds.get(uiSourceCode) || this._appendFileTab(uiSourceCode, userGesture);
         
         this._tabbedPane.selectTab(tabId, userGesture);
@@ -328,6 +328,35 @@ WebInspector.TabbedEditorContainer.prototype = {
     {
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.target;
         this._updateFileTitle(uiSourceCode);
+        if (uiSourceCode.url) {
+          this._changedUISourceCodes = this._changedUISourceCodes || {}; 
+          this._changedUISourceCodes[uiSourceCode.url] = uiSourceCode;
+        }
+    },
+    
+    dirtySourceCodes: function() {
+        var dirtyCodes = [];
+        this._tabIds.values().forEach(function(tabId) {
+            var uiSourceCode = this._files[tabId];
+            if (uiSourceCode.isDirty()) {
+                dirtyCodes.push(uiSourceCode);
+            }
+        }.bind(this));
+        return dirtyCodes;
+    },
+    
+    contentChangedSourceCodes: function() {
+        if (this._changedUISourceCodes) {
+            var changed = [];
+            Object.keys(this._changedUISourceCodes).forEach(function(url) {
+                changed.push(this._changedUISourceCodes[url]);
+	    }.bind(this));
+            return changed;
+        }
+    },
+    
+    clearChangedSourceCodes: function() {
+        delete this._changedUISourceCodes;
     },
 
     reset: function()
