@@ -200,20 +200,9 @@ WebInspector.UISourceCode.prototype = {
      */
     commitWorkingCopy: function(callback)
     {
-        /**
-         * @param {?string} error
-         */
-        function innerCallback(error)
-        {
-            delete this._committingWorkingCopy;
-            if (!error)
-                this.contentChanged(newContent, this._mimeType);
-            callback(error);
-        }
-
-        var newContent = this._workingCopy;
-        this._committingWorkingCopy = true;
-        this.workingCopyCommitted(innerCallback.bind(this));
+        this.contentChanged(this._workingCopy, this._mimeType);
+        if (this._resource) 
+            this._resource.addRevision(this._content);
     },
 
     /**
