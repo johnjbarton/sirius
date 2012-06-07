@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -28,63 +28,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-WebInspector = {};
-WebInspector.UIString = function(s) { return s; };
-
-importScripts("HeapSnapshot.js");
-importScripts("HeapSnapshotLoader.js");
-importScripts("HeapSnapshotWorkerDispatcher.js");
-importScripts("utilities.js");
-
-function postMessageWrapper(message)
-{
-    postMessage(message);
+.memory-pie-chart-container {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
 }
 
-/**
- * @constructor
- */
-WebInspector.WorkerConsole = function()
-{
+.memory-pie-chart {
+    -webkit-box-flex: 1;
 }
 
-WebInspector.WorkerConsole.prototype = {
-    /** @param {...*} var_args */
-    log: function(var_args)
-    {
-        this._postMessage("log", Array.prototype.slice.call(arguments));
-    },
+.memory-blocks-list .swatch {
+    background-image: none;
+}
 
-    /** @param {...*} var_args */
-    error: function(var_args)
-    {
-        this._postMessage("error", Array.prototype.slice.call(arguments));
-    },
+.memory-blocks-list {
+    padding: 1px;
+    font-size: 11px;
+}
 
-    /** @param {...*} var_args */
-    info: function(var_args)
-    {
-        this._postMessage("info", Array.prototype.slice.call(arguments));
-    },
-
-    trace: function()
-    {
-        this.log(new Error().stack);
-    },
-
-    /** @param {string} method */
-    /** @param {Array.<*>} args */
-    _postMessage: function(method, args)
-    {
-        var rawMessage = {
-            object: "console",
-            method: method,
-            arguments: args
-        };
-        postMessageWrapper(rawMessage);
-    }
-};
-
-var dispatcher = new WebInspector.HeapSnapshotWorkerDispatcher(this, postMessageWrapper);
-addEventListener("message", dispatcher.dispatchMessage.bind(dispatcher), false);
-console = new WebInspector.WorkerConsole();
+.memory-blocks-list .item {
+    margin: 10px;
+}

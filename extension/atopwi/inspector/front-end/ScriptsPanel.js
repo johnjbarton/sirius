@@ -273,20 +273,8 @@ WebInspector.ScriptsPanel.prototype = {
     {
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.data;
         this._removeSourceFrame(uiSourceCode);
-        uiSourceCode.removeEventListener(WebInspector.UISourceCodeProvider.Events.WorkingCopyChanged, this._uiSourceCodeWorkingCopyChanged, this);
     },
-    
-    _uiSourceCodeWorkingCopyChanged: function(event)
-    {
-        this._updateDebuggerButtons();  // The number of dirty editor tabs may have changed.
-    },
-    
-    _uiSourceCodeContentChanged: function(event)
-    {
-        // After this event completes,  one editor tab moves from dirty to not dirty.
-        setTimeout( this._updateDebuggerButtons.bind(this) );
-    },
-    
+
     _consoleCommandEvaluatedInSelectedCallFrame: function(event)
     {
         this.sidebarPanes.scopechain.update(WebInspector.debuggerModel.selectedCallFrame());
@@ -487,10 +475,6 @@ WebInspector.ScriptsPanel.prototype = {
         }
          
         this._sourceFramesByUISourceCode.put(uiSourceCode, sourceFrame);
-        // TODO where should we call removeEventListener?
-        uiSourceCode.addEventListener(WebInspector.UISourceCode.Events.WorkingCopyChanged, this._uiSourceCodeWorkingCopyChanged, this);
-        uiSourceCode.addEventListener(WebInspector.UISourceCode.Events.ContentChanged, this._uiSourceCodeContentChanged, this);
-
         return sourceFrame;
     },
 
@@ -640,39 +624,29 @@ WebInspector.ScriptsPanel.prototype = {
             this.panelEnablerView.show(this.element);
         }
 
-        this.pauseButton.removeStyleClass("liveEdit");
-        this.pauseButton.removeStyleClass("paused");
-        this.stepOverButton.disabled = true;
-        this.stepIntoButton.disabled = true;
-        this.stepOutButton.disabled = true;
-       
-        var uncommittedTabs = this._editorContainer.dirtySourceCodes().length;
-        if (uncommittedTabs) {
-            this.pauseButton.disabled = true;            
-            this.debuggerStatusElement.textContent = WebInspector.UIString("Editing ") + uncommittedTabs;
-            // TODO UI to reveal dirty tabs, eg click on Editing             
+        if (this._paused) {
+            this.pauseButton.addStyleClass("paused");
+
+            this.pauseButton.disabled = false;
+            this.stepOverButton.disabled = false;
+            this.stepIntoButton.disabled = false;
+            this.stepOutButton.disabled = false;
+
+            this.debuggerStatusElement.textContent = WebInspector.UIString("Paused");
         } else {
-            var liveEdits = this._editorContainer.contentChangedSourceCodes();
-            if (liveEdits && liveEdits.length) {  // then we had been editing and are now finished.
-                this.pauseButton.addStyleClass("liveEdit");
-                this.debuggerStatusElement.textContent = WebInspector.UIString("LiveEdit");
-                this.pauseButton.disabled = false;
-            } else if (this._paused) {
-                this.pauseButton.addStyleClass("paused");
-                this.debuggerStatusElement.textContent = WebInspector.UIString("Paused");            
-                this.pauseButton.disabled = false;
-                this.stepOverButton.disabled = false;
-                this.stepIntoButton.disabled = false;
-                this.stepOutButton.disabled = false;
-            } else {
-                this.pauseButton.disabled = this._waitingToPause;
-                if (this._waitingToPause)
-                    this.debuggerStatusElement.textContent = WebInspector.UIString("Pausing");
-                else if (this._stepping)
-                    this.debuggerStatusElement.textContent = WebInspector.UIString("Stepping");
-                else
-                    this.debuggerStatusElement.textContent = "";
-            }
+            this.pauseButton.removeStyleClass("paused");
+
+            this.pauseButton.disabled = this._waitingToPause;
+            this.stepOverButton.disabled = true;
+            this.stepIntoButton.disabled = true;
+            this.stepOutButton.disabled = true;
+
+            if (this._waitingToPause)
+                this.debuggerStatusElement.textContent = WebInspector.UIString("Pausing");
+            else if (this._stepping)
+                this.debuggerStatusElement.textContent = WebInspector.UIString("Stepping");
+            else
+                this.debuggerStatusElement.textContent = "";
         }
     },
 
@@ -735,30 +709,8 @@ WebInspector.ScriptsPanel.prototype = {
         this._setPauseOnExceptions(nextStateMap[this._pauseOnExceptionButton.state]);
     },
 
-    _commitEdits: function(liveEdits, callback) {
-        var commitedLiveEdits = liveEdits.slice(0);
-        var next = liveEdits.pop();
-        if (next) {
-            next.workingCopyCommitted(this._commitEdits.bind(this, liveEdits, callback));
-        } else {
-            callback();
-        }
-    },
-
     _togglePause: function()
     {
-        var liveEdits = this._editorContainer.contentChangedSourceCodes();
-        if (liveEdits && liveEdits.length) {
-            this._editorContainer.clearChangedSourceCodes();
-            this._commitEdits(liveEdits, function() {
-                if (this._paused) 
-                    this._togglePause();
-                else
-                    this._clearInterface();
-            }.bind(this));
-            return;
-        }
-        
         if (this._paused) {
             this._paused = false;
             this._waitingToPause = false;

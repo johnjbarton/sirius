@@ -89,6 +89,7 @@
     <file>Linkifier.js</file>
     <file>MemoryStatistics.js</file>
     <file>MetricsSidebarPane.js</file>
+    <file>NativeMemorySnapshotView.js</file>
     <file>NavigatorOverlayController.js</file>
     <file>NavigatorView.js</file>
     <file>NetworkItemView.js</file>
@@ -196,6 +197,7 @@
     <file>inspector.css</file>
     <file>inspectorCommon.css</file>
     <file>inspectorSyntaxHighlight.css</file>
+    <file>nativeMemoryProfiler.css</file>
     <file>navigatorView.css</file>
     <file>networkLogView.css</file>
     <file>networkPanel.css</file>
@@ -318,6 +320,7 @@
     <file>Images/timelineBarBlue.png</file>
     <file>Images/timelineBarGray.png</file>
     <file>Images/timelineBarGreen.png</file>
+    <file>Images/timelineBarLightPurple.png</file>
     <file>Images/timelineBarOrange.png</file>
     <file>Images/timelineBarPurple.png</file>
     <file>Images/timelineBarRed.png</file>

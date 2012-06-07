@@ -96,10 +96,6 @@
     content: url(Images/debuggerContinue.png);
 }
 
-#scripts-pause.liveEdit img {
-    content: url(Images/debuggerLiveEdit.png);
-}
-
 #scripts-step-over img {
     content: url(Images/debuggerStepOver.png);
 }

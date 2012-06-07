@@ -438,7 +438,8 @@ WebInspector.HeapSnapshotContainmentDataGrid.prototype = {
     {
         this.snapshotView = snapshotView;
         this.snapshot = snapshot;
-        var fakeEdge = { nodeIndex: nodeIndex || this.snapshot.rootNodeIndex };
+        var node = new WebInspector.HeapSnapshotNode(snapshot, nodeIndex || snapshot.rootNodeIndex);
+        var fakeEdge = { node: node };
         this.setRootNode(new WebInspector.HeapSnapshotObjectNode(this, false, fakeEdge, null));
         this.rootNode().sort();
     },
@@ -558,23 +559,24 @@ WebInspector.HeapSnapshotConstructorsDataGrid.prototype = {
         }
     },
 
+    _aggregatesReceived: function(key, aggregates)
+    {
+        for (var constructor in aggregates)
+            this.appendTopLevelNode(new WebInspector.HeapSnapshotConstructorNode(this, constructor, aggregates[constructor], key));
+        this.sortingChanged();
+    },
+
     _populateChildren: function()
     {
-        function aggregatesReceived(key, aggregates)
-        {
-            for (var constructor in aggregates)
-                this.appendTopLevelNode(new WebInspector.HeapSnapshotConstructorNode(this, constructor, aggregates[constructor], key));
-            this.sortingChanged();
-        }
 
         this.dispose();
         this.removeTopLevelNodes();
         this.resetSortingCache();
 
         var key = this._profileIndex === -1 ? "allObjects" : this._minNodeId + ".." + this._maxNodeId;
-        var filter = this._profileIndex === -1 ? null : "function(node) { var id = node.id; return id > " + this._minNodeId + " && id <= " + this._maxNodeId + "; }";
+        var filter = this._profileIndex === -1 ? null : "function(node) { var id = node.id(); return id > " + this._minNodeId + " && id <= " + this._maxNodeId + "; }";
 
-        this.snapshot.aggregates(false, key, filter, aggregatesReceived.bind(this, key));
+        this.snapshot.aggregates(false, key, filter, this._aggregatesReceived.bind(this, key));
     },
 
     _filterSelectIndexChanged: function(profiles, profileIndex)
