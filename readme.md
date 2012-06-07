@@ -8,10 +8,8 @@
   * Add extensions to support
     * Orion Web IDE
     * Others TODO
-
-### Coming soon
-
   * Extends `chrome.devtools` to add `chrome.devtools.remoteDebug` for extensions
+### Coming soon
   * Improvements for editing, including plugable editors
 
 ---
@@ -20,7 +18,7 @@ Requires Chrome version 20+
 
 ## Install
 
-  1. Clone this repo `git clone https://github.com/jankeromnes/sirius.git`
+  1. Clone or fork this repo `git clone https://github.com/johnjbarton/sirius.git`
   2. Open `chrome://extensions`
   3. Set developer mode
   4. Load unpacked extension
@@ -42,6 +40,8 @@ Requires Chrome version 20+
   
 ## Notes for development under Sirius
 
-  - `extension/atopwi/inspector/front-end` is a git-tx transplant from
-Chromium build `src/out/Release/inspector/`
+  - Do not commit to `master` branch directly
+  - For devtools related changes, branch from syncToWebKit and merge the result into master
+  - `extension/atopwi/inspector/front-end` is a git-tx transplant from the `gclient` branch of WebKit to the syncToWebKit branch of Sirius
+  - to update the devtools front end use `git-tx-pull inspector`
   - See `bin/git-tx`
