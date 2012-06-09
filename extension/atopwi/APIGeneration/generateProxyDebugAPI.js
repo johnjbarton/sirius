@@ -30,9 +30,7 @@ var generateProxyDebugAPI = {
         result.push("/* Machine generated from "+inspectorJSONUrl+' version: '+version+" on "+new Date()+" */\n");
         result.push('(function () {');
         result.push("// create chrome.devtools");
-        result.push("window.extensionInfo = {};");
-        result.push("var uid = window.location.toString();");  
-        result.push("platformExtensionAPI(injectedExtensionAPI(uid));");
+        result.push("if (!chrome || !chrome.devtools) return;");  
         result.push('\nchrome.devtools.protocol = {};');
         result.push("chrome.devtools.protocol.version = " + version + ';\n');
         
