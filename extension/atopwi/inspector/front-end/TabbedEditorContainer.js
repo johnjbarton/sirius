@@ -324,14 +324,19 @@ WebInspector.TabbedEditorContainer.prototype = {
         this._updateFileTitle(uiSourceCode);
     },
 
+    _makeUpEvalId: function() 
+    {
+        this._evalCount = this._evalCount || 0;
+        return "unsaveable_" + this._evalCount++;
+    },
+    
     _uiSourceCodeContentChanged: function(event)
     {
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.target;
         this._updateFileTitle(uiSourceCode);
-        if (uiSourceCode.url) {
-          this._changedUISourceCodes = this._changedUISourceCodes || {}; 
-          this._changedUISourceCodes[uiSourceCode.url] = uiSourceCode;
-        }
+        var key = uiSourceCode.url || this._makeUpEvalId();
+        this._changedUISourceCodes = this._changedUISourceCodes || {}; 
+        this._changedUISourceCodes[key] = uiSourceCode;
     },
     
     dirtySourceCodes: function() {
