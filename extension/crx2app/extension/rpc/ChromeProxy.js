@@ -34,15 +34,16 @@ function(              MetaObject,               JSONMarshall,               chr
       JSONMarshall.detach.apply(this, [this.getConnection()]);
     },
   
-    openNewWindow: function(onCreated) {
+    openNewWindow: function(createData, onCreated) {
       //********** workaround for http://code.google.com/p/chromium/issues/detail?id=108519
       var fakeBlankURL = window.crx2appBase+"/workaroundBug108519.html";
       //**********
-      this.windows.create({url: fakeBlankURL},  onCreated);
+      createData.url = fakeBlankURL;
+      this.windows.create(createData,  onCreated);
     },
     
-    openNewTab: function (url, onNewTab) {
-      this.openNewWindow( function(win) {
+    openNewTab: function (createData, onNewTab) {
+      this.openNewWindow(createData, function(win) {
         var tabId = win.tabs[0].id;
         onNewTab(tabId);
       });

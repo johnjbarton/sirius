@@ -106,8 +106,18 @@ function(            ChromeProxy)  {
       if (debug) {
         console.log("Debuggee parsed debuggeeSpec %o and got %o", debuggeeSpec, this);
       }
+      var high = window.screen.availHeight;
+      var wide = window.screen.availWidth / 2;
+      var createData = {
+        url: this.url,
+        left: wide,
+        width: wide,
+        height: high,
+        focused: false
+      };
+        
       this.chrome.openNewTab(
-        this.url, 
+        createData, 
         function(newTabId) {
           this.tabId = newTabId;
           window.beforeUnload = this.close.bind(this);
