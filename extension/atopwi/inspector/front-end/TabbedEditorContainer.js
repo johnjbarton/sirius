@@ -338,6 +338,13 @@ WebInspector.TabbedEditorContainer.prototype = {
     _uiSourceCodeWorkingCopyChanged: function(event)
     {
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.target;
+        var key = uiSourceCode.url || this._makeUpEvalId();
+        this._changedUISourceCodes = this._changedUISourceCodes || {}; 
+        if (uiSourceCode.isDirty()) 
+            this._changedUISourceCodes[key] = uiSourceCode;
+        else 
+            delete this._changedUISourceCodes[key]; // eg control Z    
+        
         this._updateTabHeader(uiSourceCode);
     },
 
@@ -350,10 +357,7 @@ WebInspector.TabbedEditorContainer.prototype = {
     _uiSourceCodeContentChanged: function(event)
     {
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.target;
-        this._updateFileTitle(uiSourceCode);
-        var key = uiSourceCode.url || this._makeUpEvalId();
-        this._changedUISourceCodes = this._changedUISourceCodes || {}; 
-        this._changedUISourceCodes[key] = uiSourceCode;
+        this._updateTabHeader(uiSourceCode);        
     },
     
     dirtySourceCodes: function() {
