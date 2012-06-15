@@ -221,6 +221,26 @@ WebInspector.TabbedPane.prototype = {
         tab.title = tabTitle;
         this._updateTabElements();
     },
+    
+    /** 
+     * @param {string} id
+     * @param {string} CSS class
+     */
+    addTabStyleClass: function(id, styleClass) {
+        var tab = this._tabsById[id];
+        tab.tabElement.addStyleClass(styleClass);
+        this._updateTabElements(); 
+    },
+
+    /** 
+     * @param {string} id
+     * @param {string} CSS class
+     */
+    removeTabStyleClass: function(id, styleClass) {
+        var tab = this._tabsById[id];
+        tab.tabElement.removeStyleClass(styleClass);
+        this._updateTabElements(); 
+    },
 
     /**
      * @param {string} id
