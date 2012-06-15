@@ -278,7 +278,8 @@ WebInspector.ScriptsPanel.prototype = {
     
     _uiSourceCodeWorkingCopyChanged: function(event)
     {
-        this._updateDebuggerButtons();  // The number of dirty editor tabs may have changed.
+        // After this event completes,  the number of dirty editor tabs may have changed.
+        setTimeout( this._updateDebuggerButtons.bind(this) ); 
     },
     
     _uiSourceCodeContentChanged: function(event)
@@ -736,10 +737,16 @@ WebInspector.ScriptsPanel.prototype = {
     },
 
     _commitEdits: function(liveEdits, callback) {
-        var commitedLiveEdits = liveEdits.slice(0);
         var next = liveEdits.pop();
         if (next) {
-            next.workingCopyCommitted(this._commitEdits.bind(this, liveEdits, callback));
+            function recurse(error) 
+            {
+                if (error) 
+                    console.error("Live Edit failed ", next);
+                    
+                this._commitEdits(liveEdits, callback)
+            }
+            next.workingCopyCommitted(recurse.bind(this));
         } else {
             callback();
         }
