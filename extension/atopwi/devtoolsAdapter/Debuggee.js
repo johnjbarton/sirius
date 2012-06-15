@@ -77,7 +77,24 @@ function(            ChromeProxy)  {
               tabs: { onRemoved: function() { console.log('tab removed');}}
               //debugger event listeners are added during load
             });
-          this.open(debuggeeSpec);
+          
+          
+          //this.open(debuggeeSpec);
+          this.parseDebuggee(debuggeeSpec);
+          this.attach(function() {
+              console.log("Debuggee attach ", this.chrome);
+              this.chrome.debugger.sendCommand(
+                  {tabId: this.tabId}, 
+                  "Page.reload",
+                  {},
+                  function (response) {
+                      if (!response) {
+                          console.error("Page.reload failed");
+                      }
+                  }
+              );
+          }.bind(this));
+          
     
         }.bind(this), 
         function errback(msg) {
@@ -134,22 +151,22 @@ function(            ChromeProxy)  {
       });
     },
 
-    attach: function() {
+    attach: function(callback) {
       this.chrome.debugger.attach(
         {tabId: this.tabId}, 
         '1.0', 
-        this.onAttach.bind(this)
+        this.onAttach.bind(this, callback)
       );
     },
     
-    onAttach: function() {
+    onAttach: function(callback) {
       if (debug) {
         console.log('atopwi chrome.debugger.attach complete '+this.tabId);
       }
        
       window.beforeUnload = this.detach.bind(this);
         
-      this.patchInspector();
+      this.patchInspector(callback);
     },
     
     detach: function() {
@@ -161,7 +178,7 @@ function(            ChromeProxy)  {
        }.bind(this));
     },
 
-    patchInspector: function(event) {
+    patchInspector: function(callback) {
       if (debug) {
         console.log("DOMContentLoaded on inspectorWindow ", this);
       }
@@ -202,6 +219,7 @@ function(            ChromeProxy)  {
         this.navigateToURL();
       }.bind(this);
       this.completeLoad.call(this.inspectorWindow.WebInspector);
+      callback && callback();
     },
     
     // When called as a WebApp, devtools extensions are loaded.
