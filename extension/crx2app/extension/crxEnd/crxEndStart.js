@@ -57,11 +57,12 @@ function obeyOptions() {
         // We need to allow it by finding the right instance of windowsAdapter and calling addTab.
         
         crxEnd.checkDebuggerOrigin(allowedSite.site, function onValidOrigin(validOrigin) {
+          WindowsAdapter.addUserSelectedTab(debuggeeTab.id);
+
           var windowsAdapter = crxEnd.getWindowsAdaptersByOrigin(validOrigin, debuggerTab);
           if (!windowsAdapter) {  // then this origin has not been seen
              windowsAdapter = crxEnd.createWindowsAdapter(validOrigin, debuggerTab);
           }
-          windowsAdapter.addUserSelectedTab(debuggeeTab.id);
     
           var url = allowedSite.site + '?tabId=' + debuggeeTab.id + '&' + 'url=' + onClickInfo.pageUrl;
           // now release the debugger

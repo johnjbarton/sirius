@@ -40,6 +40,10 @@ function WindowsAdapter(origin, debuggerTab) {
 WindowsAdapter.path = 'chrome.windows';
 WindowsAdapter.instanceCounter = 0;
 WindowsAdapter.userSelectedTabs = [];
+WindowsAdapter.addUserSelectedTab = function(tabId) {
+    WindowsAdapter.userSelectedTabs.push(tabId);
+};
+
 
 WindowsAdapter.prototype = {
   
@@ -56,10 +60,6 @@ WindowsAdapter.prototype = {
   },
 
   //------------------------------------------------------------------------------------ 
-  addUserSelectedTab: function(tabId) {
-    WindowsAdapter.userSelectedTabs.push(tabId);
-  },
-
   isAccessibleTab: function(tabId) {
     return (this.chromeTabIds.indexOf(tabId) > -1);
   },
