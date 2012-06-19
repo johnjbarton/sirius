@@ -40,13 +40,13 @@ WebInspector.DebuggerResourceBinding = function(uiSourceCodeProvider)
 }
 
 /**
- * @param {WebInspector.UISourceCode} uiSourceCode
+ * @param {WebInspector.JavaScriptSource} javaScriptSource
  * @param {string} newSource
  * @param {function(?Protocol.Error)} callback
  */
-WebInspector.DebuggerResourceBinding.setScriptSource = function(uiSourceCode, newSource, callback)
+WebInspector.DebuggerResourceBinding.setScriptSource = function(javaScriptSource, newSource, callback)
 {
-    var rawLocation = uiSourceCode.uiLocationToRawLocation(0, 0);
+    var rawLocation = javaScriptSource.uiLocationToRawLocation(0, 0);
     var script = WebInspector.debuggerModel.scriptForId(rawLocation.scriptId);
 
     /**
@@ -55,11 +55,7 @@ WebInspector.DebuggerResourceBinding.setScriptSource = function(uiSourceCode, ne
      */
     function didEditScriptSource(error)
     {
-        if (error) {
-            callback(error);
-        } else {
-            callback(null);
-        }
+        callback( error ? error : null);
     }
     WebInspector.debuggerModel.setScriptSource(script.scriptId, newSource, didEditScriptSource.bind(this));
 }
@@ -71,7 +67,7 @@ WebInspector.DebuggerResourceBinding.prototype = {
      */
     canSetContent: function(resource)
     {
-        var uiSourceCode = WebInspector.JavaScriptSource.javaScriptSourceForResource.get(resource);
+        var uiSourceCode = resource.uiSourceCode();
         return !!uiSourceCode && uiSourceCode.isEditable();
     },
 
@@ -86,24 +82,24 @@ WebInspector.DebuggerResourceBinding.prototype = {
         if (!majorChange)
             return;
 
-        var uiSourceCode = WebInspector.JavaScriptSource.javaScriptSourceForResource.get(resource);
-        if (!uiSourceCode) {
+        var javaScriptSource = /** @type {WebInspector.JavaScriptSource} */ resource.uiSourceCode();
+        if (!javaScriptSource) {
             userCallback("Resource is not editable");
             return;
         }
 
-        resource.requestContent(this._setContentWithInitialContent.bind(this, uiSourceCode, content, userCallback));
+        resource.requestContent(this._setContentWithInitialContent.bind(this, javaScriptSource, content, userCallback));
     },
 
     /**
-     * @param {WebInspector.UISourceCode} uiSourceCode
+     * @param {WebInspector.JavaScriptSource} javaScriptSource
      * @param {string} content
      * @param {function(?string)} userCallback
      * @param {?string} oldContent
      * @param {boolean} oldContentEncoded
      * @param {string} mimeType
      */
-    _setContentWithInitialContent: function(uiSourceCode, content, userCallback, oldContent, oldContentEncoded, mimeType)
+    _setContentWithInitialContent: function(javaScriptSource, content, userCallback, oldContent, oldContentEncoded, mimeType)
     {
         /**
          * @this {WebInspector.DebuggerResourceBinding}
@@ -114,7 +110,7 @@ WebInspector.DebuggerResourceBinding.prototype = {
             if (userCallback)
                 userCallback(error);
         }
-        WebInspector.DebuggerResourceBinding.setScriptSource(uiSourceCode, content, callback.bind(this));
+        WebInspector.DebuggerResourceBinding.setScriptSource(javaScriptSource, content, callback.bind(this));
     }
 }
 

@@ -382,11 +382,12 @@ WebInspector.ScriptsPanel.prototype = {
         this._navigator.reset();
         this._editorContainer.reset();
         this._updateScriptViewStatusBarItems();
-
         this.sidebarPanes.jsBreakpoints.reset();
         this.sidebarPanes.watchExpressions.reset();
         if (!preserveItems && this.sidebarPanes.workers)
             this.sidebarPanes.workers.reset();
+        WebInspector.RevisionHistoryView.reset();
+
         this._loadUISourceCodes();
     },
 
@@ -433,9 +434,13 @@ WebInspector.ScriptsPanel.prototype = {
         this._showSourceLine(uiLocation.uiSourceCode, uiLocation.lineNumber);
     },
 
-    showUISourceCode: function(uiSourceCode)
+    /**
+     * @param {WebInspector.UISourceCode} uiSourceCode
+     * @param {number} lineNumber
+     */
+    showUISourceCode: function(uiSourceCode, lineNumber)
     {
-        this._showSourceLine(uiSourceCode);
+        this._showSourceLine(uiSourceCode, lineNumber);
     },
 
     /**
@@ -593,7 +598,6 @@ WebInspector.ScriptsPanel.prototype = {
     _editorSelected: function(event)
     {
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.data;
-        WebInspector.RevisionHistoryView.uiSourceCodeSelected(uiSourceCode);
         this._showFile(uiSourceCode);
         this._navigatorController.hideNavigatorOverlay();
     },
@@ -1121,7 +1125,7 @@ WebInspector.ScriptsPanel.prototype = {
             return;
 
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ target;
-        contextMenu.appendItem(WebInspector.UIString("Revision history..."), this._showLocalHistory.bind(this, uiSourceCode));
+        contextMenu.appendItem(WebInspector.UIString("Local modifications..."), this._showLocalHistory.bind(this, uiSourceCode));
         if (uiSourceCode.resource() && uiSourceCode.resource().request)
             contextMenu.appendApplicableItems(uiSourceCode.resource().request);
     },
