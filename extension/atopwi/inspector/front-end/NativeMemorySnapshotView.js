@@ -100,12 +100,12 @@ WebInspector.NativeMemoryProfileType.prototype = {
                     if (size)
                         knownSize += size;
                 }
-                var unknownSize = memoryBlock.size - knownSize;
+                var otherSize = memoryBlock.size - knownSize;
 
-                if (unknownSize) {
+                if (otherSize) {
                     memoryBlock.children.push({
-                        name: "Unknown",
-                        size: unknownSize
+                        name: "Other",
+                        size: otherSize
                     });
                 }
             }
@@ -214,13 +214,14 @@ WebInspector.MemoryBlockViewProperties._initialize = function()
     {
         WebInspector.MemoryBlockViewProperties._standardBlocks[name] = new WebInspector.MemoryBlockViewProperties(fillStyle, name, WebInspector.UIString(description));
     }
-    addBlock("rgba(255, 255, 255, 0.8)", "ProcessPrivateMemory", "Total");
-    addBlock("rgba(240, 240, 250, 0.8)", "Unknown", "Unknown");
-    addBlock("rgba(250, 200, 200, 0.8)", "JSHeapAllocated", "JavaScript heap");
-    addBlock("rgba(200, 250, 200, 0.8)", "JSHeapUsed", "Used JavaScript heap");
-    addBlock("rgba(200, 170, 200, 0.8)", "MemoryCache", "Memory cache resources");
-    addBlock("rgba(250, 250, 150, 0.8)", "RenderTreeAllocated", "Render tree");
-    addBlock("rgba(200, 150, 150, 0.8)", "RenderTreeUsed", "Render tree used");
+    addBlock("hsl(  0,  0%, 100%)", "ProcessPrivateMemory", "Total");
+    addBlock("hsl(  0,  0%,  80%)", "Other", "Other");
+    addBlock("hsl( 90, 60%,  80%)", "JSHeapAllocated", "JavaScript heap");
+    addBlock("hsl( 90, 80%,  80%)", "JSHeapUsed", "Used JavaScript heap");
+    addBlock("hsl(210, 60%,  80%)", "InspectorData", "Inspector data");
+    addBlock("hsl( 30, 60%,  80%)", "MemoryCache", "Memory cache resources");
+    addBlock("hsl( 60, 60%,  80%)", "RenderTreeAllocated", "Render tree");
+    addBlock("hsl( 60, 60%,  80%)", "RenderTreeUsed", "Render tree used");
 }
 
 WebInspector.MemoryBlockViewProperties._forMemoryBlock = function(memoryBlock)
@@ -302,30 +303,31 @@ WebInspector.NativeMemoryPieChart.prototype = {
         ctx.stroke();
         ctx.closePath();
 
-        var startAngle = - Math.PI / 2;
-        var currentAngle = startAngle;
+        var currentAngle = 0;
         var memoryBlock = this._memorySnapshot;
 
         function paintPercentAndLabel(fraction, title, midAngle)
         {
             ctx.beginPath();
-            ctx.font = "14px Arial";
+            ctx.font = "13px Arial";
             ctx.fillStyle = "rgba(10, 10, 10, 0.8)";
 
-            var textX = x + radius * Math.cos(midAngle) / 2;
-            var textY = y + radius * Math.sin(midAngle) / 2;
-            ctx.fillText((100 * fraction).toFixed(0) + "%", textX, textY);
-
-            textX = x + radius * Math.cos(midAngle);
-            textY = y + radius * Math.sin(midAngle);
-            if (midAngle <= startAngle + Math.PI) {
-                textX += 10;
-                textY += 10;
-            } else {
-                var metrics = ctx.measureText(title);
-                textX -= metrics.width + 10;
-            }
+            var textX = x + (radius + 10) * Math.cos(midAngle);
+            var textY = y + (radius + 10) * Math.sin(midAngle);
+            var relativeOffset = -Math.cos(midAngle) / Math.sin(Math.PI / 12);
+            relativeOffset = Number.constrain(relativeOffset, -1, 1);
+            var metrics = ctx.measureText(title);
+            textX -= metrics.width * (relativeOffset + 1) / 2;
+            textY += 5;
             ctx.fillText(title, textX, textY);
+
+            // Do not print percentage if the sector is too narrow.
+            if (fraction > 0.03) {
+                textX = x + radius * Math.cos(midAngle) / 2;
+                textY = y + radius * Math.sin(midAngle) / 2;
+                ctx.fillText((100 * fraction).toFixed(0) + "%", textX - 8, textY + 5);
+            }
+
             ctx.closePath();
         }
 
