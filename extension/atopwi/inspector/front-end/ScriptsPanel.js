@@ -651,14 +651,14 @@ WebInspector.ScriptsPanel.prototype = {
         this.stepIntoButton.disabled = true;
         this.stepOutButton.disabled = true;
        
-        var uncommittedTabs = this._editorContainer.dirtySourceCodes().length;
-        if (uncommittedTabs) {
+        var unpersistedTabs = this._editorContainer.dirtySourceCodes();
+        if (unpersistedTabs.length) {
             this.pauseButton.disabled = true;            
-            this.debuggerStatusElement.textContent = WebInspector.UIString("Editing ") + uncommittedTabs;
+            this.debuggerStatusElement.textContent = WebInspector.UIString("Editing ") + unpersistedTabs.length;
             // TODO UI to reveal dirty tabs, eg click on Editing             
         } else {
-            var liveEdits = this._editorContainer.contentChangedSourceCodes();
-            if (liveEdits && liveEdits.length) {  // then we had been editing and are now finished.
+            var uncommittedTabs = this._editorContainer.contentChangedSourceCodes();
+            if (uncommittedTabs && uncommittedTabs.length) {  // then we had been editing and are now finished.
                 this.pauseButton.addStyleClass("liveEdit");
                 this.debuggerStatusElement.textContent = WebInspector.UIString("LiveEdit");
                 this.pauseButton.disabled = false;
@@ -740,15 +740,15 @@ WebInspector.ScriptsPanel.prototype = {
         this._setPauseOnExceptions(nextStateMap[this._pauseOnExceptionButton.state]);
     },
 
-    _commitEdits: function(liveEdits, callback) {
-        var next = liveEdits.pop();
+    _commitEdits: function(uncommittedTabs, callback) {
+        var next = uncommittedTabs.pop();
         if (next) {
             function recurse(error) 
             {
                 if (error) 
                     console.error("Live Edit failed ", next);
                     
-                this._commitEdits(liveEdits, callback)
+                this._commitEdits(uncommittedTabs, callback)
             }
             next.workingCopyCommitted(recurse.bind(this));
         } else {
@@ -758,10 +758,10 @@ WebInspector.ScriptsPanel.prototype = {
 
     _togglePause: function()
     {
-        var liveEdits = this._editorContainer.contentChangedSourceCodes();
-        if (liveEdits && liveEdits.length) {
+        var uncommittedTabs = this._editorContainer.contentChangedSourceCodes();
+        if (uncommittedTabs && uncommittedTabs.length) {
             this._editorContainer.clearChangedSourceCodes();
-            this._commitEdits(liveEdits, function() {
+            this._commitEdits(uncommittedTabs, function() {
                 if (this._paused) 
                     this._togglePause();
                 else

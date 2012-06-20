@@ -198,27 +198,19 @@ WebInspector.UISourceCode.prototype = {
     },
 
     /**
+     * The workingCopy has been saved to persistent storage.
      * @param {function(?string)} callback
      */
-    commitWorkingCopy: function(callback)
+    persistWorkingCopy: function(callback)
     {
-        /**
-         * @param {?string} error
-         */
-        function innerCallback(error)
-        {
-            delete this._committingWorkingCopy;
-            this.contentChanged(newContent, this._mimeType);
-            if (this._resource) 
-                this._resource.addRevision(this._content);    callback(error);
-        }
-
         var newContent = this._workingCopy;
-        this._committingWorkingCopy = true;
-        this.workingCopyCommitted(innerCallback.bind(this));
+        this.contentChanged(newContent, this._mimeType);
+        if (this._resource) 
+            this._resource.addRevision(this._content);    
     },
 
     /**
+     * The workingCopy has been pushed into the browser.
      * @param {function(?string)} callback
      */
     workingCopyCommitted: function(callback)

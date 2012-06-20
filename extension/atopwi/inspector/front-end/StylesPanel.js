@@ -160,13 +160,23 @@ WebInspector.StyleSourceFrame.prototype = {
     /**
      * @param {string} text
      */
-    commitEditing: function(text)
+    persistEditing: function(text)
     {
         if (!this._styleSource.isDirty())
             return;
 
         this._isCommittingEditing = true;
+        this._styleSource.persistWorkingCopy(this._didPersistContent.bind(this));
+
+        // Styles are committed to browser every time we persist.
         this._styleSource.commitWorkingCopy(this._didEditContent.bind(this));
+    },
+
+    _didPersistContent: function(error)
+    {
+        if (error) {
+            WebInspector.log(error, WebInspector.ConsoleMessage.MessageLevel.Error, true);
+        }
     },
 
     afterTextChanged: function(oldRange, newRange)

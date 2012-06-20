@@ -308,12 +308,20 @@ WebInspector.TabbedEditorContainer.prototype = {
         var tabId = this._tabIds.get(uiSourceCode);
         if (tabId) {
             var title = this._titleForFile(uiSourceCode);
+
+            if (uiSourceCode.isDivergedFromVM && uiSourceCode.isDivergedFromVM()) {
+                this._tabbedPane.addTabStyleClass(tabId, "scripts-tab-diverged");
+            } else {
+                this._tabbedPane.removeTabStyleClass(tabId, "scripts-tab-diverged");
+            }
+            
             if (uiSourceCode.isDirty()) {
                 this._tabbedPane.addTabStyleClass(tabId, "scripts-tab-editing");
                 title += "*";
             } else {
                 this._tabbedPane.removeTabStyleClass(tabId, "scripts-tab-editing"); 
             }
+            
             this._tabbedPane.changeTabTitle(tabId, title);
             
             if (!uiSourceCode.parsedURL.isValid) { // eg an eval, no way to save it
@@ -362,6 +370,8 @@ WebInspector.TabbedEditorContainer.prototype = {
     
     dirtySourceCodes: function() {
         var dirtyCodes = [];
+        // Once a tab is dirty we don't allow it to be removed. 
+        // Thus we need only scan the tabs, not all the uiSourceCodes.
         this._tabIds.values().forEach(function(tabId) {
             var uiSourceCode = this._files[tabId];
             if (uiSourceCode.isDirty()) {

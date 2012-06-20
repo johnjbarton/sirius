@@ -255,8 +255,8 @@ WebInspector.TextViewer.prototype = {
         var modifiers = WebInspector.KeyboardShortcut.Modifiers;
 
         this._shortcuts = {};
-        var commitEditing = this._commitEditing.bind(this);
-        this._shortcuts[WebInspector.KeyboardShortcut.makeKey("s", modifiers.CtrlOrMeta)] = commitEditing;
+        var persistEditing = this._persistEditing.bind(this);
+        this._shortcuts[WebInspector.KeyboardShortcut.makeKey("s", modifiers.CtrlOrMeta)] = persistEditing;
 
         var handleEnterKey = this._mainPanel.handleEnterKey.bind(this._mainPanel);
         this._shortcuts[WebInspector.KeyboardShortcut.makeKey(keys.Enter.code, WebInspector.KeyboardShortcut.Modifiers.None)] = handleEnterKey;
@@ -296,7 +296,7 @@ WebInspector.TextViewer.prototype = {
         contextMenu.show(event);
     },
 
-    _commitEditing: function()
+    _persistEditing: function()
     {
         if (this.readOnly())
             return false;

@@ -476,6 +476,15 @@ WebInspector.SourceFrame.prototype = {
     },
 
     /**
+     * Signal the 'text' should be saved as the new source 
+     * @param {string} text The new source for the resource in this frame
+     */
+    persistEditing: function(text) 
+    {
+    },
+
+    /**
+     * TODO remove parameter, not needed for commit to browser
      * @param {string} text 
      */
     commitEditing: function(text)
@@ -506,9 +515,10 @@ WebInspector.TextViewerDelegateForSourceFrame.prototype = {
         this._sourceFrame.afterTextChanged(oldRange, newRange);
     },
 
+    // TODO rename to persistEditing
     commitEditing: function()
     {
-        this._sourceFrame.commitEditing(this._sourceFrame._textModel.text);
+        this._sourceFrame.persistEditing(this._sourceFrame._textModel.text);
     },
 
     populateLineGutterContextMenu: function(contextMenu, lineNumber)

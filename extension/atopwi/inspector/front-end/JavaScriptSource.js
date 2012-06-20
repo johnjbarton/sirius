@@ -180,8 +180,13 @@ WebInspector.JavaScriptSource.prototype = {
      */
     isDivergedFromVM: function()
     {
-        // FIXME: We should return true if this._isDivergedFromVM is set as well once we provide a way to set breakpoints after LiveEdit failure.
-        return this.isDirty();
+        return this._isDivergedFromVM;
+    },
+
+    workingCopyChanged: function() {
+        // Upon a change we diverge unless this is undo.
+        // Note: _isDivergedFromVM !== _isDirty between the time we persist the change and commit it to VM.
+        this._isDivergedFromVM = this.isDirty();
     },
 
     /**
@@ -195,6 +200,8 @@ WebInspector.JavaScriptSource.prototype = {
         function innerCallback(error)
         {
             this._isDivergedFromVM = !!error;
+            this.urlChanged(this.url);  // re-style the tab header in case the state changed.
+            // TODO allow red error markers on the tab if (error)
             callback(error);
         }
 

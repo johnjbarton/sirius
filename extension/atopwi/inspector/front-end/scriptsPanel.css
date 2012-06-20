@@ -245,6 +245,10 @@ button.status-bar-item.scripts-navigator-show-hide-button.toggled-overlay
     display: none; /* Don't allow a dirty tab to be closed */ 
 }
 
+.scripts-tab-diverged {
+    background-color: rgb(250, 250, 210) !important;
+}
+
 .function-location-link {
     float: right;
     margin-left: 10px;

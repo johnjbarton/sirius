@@ -83,15 +83,15 @@ WebInspector.JavaScriptSourceFrame.prototype = {
     },
 
     /**
+     * TODO Maybe lift to SourceFrame?
      * @param {string} text 
      */
-    commitEditing: function(text)
+    persistEditing: function(text)
     {
         if (!this._javaScriptSource.isDirty())
             return;
 
-        this._isCommittingEditing = true;
-        this._javaScriptSource.commitWorkingCopy(this._didEditContent.bind(this));
+        this._javaScriptSource.persistWorkingCopy();
     },
 
     /**
@@ -151,7 +151,7 @@ WebInspector.JavaScriptSourceFrame.prototype = {
     {
         this._javaScriptSource.setWorkingCopy(this.textModel.text);
         if (!this._javaScriptSource.isDirty())
-            this._didEditContent(null);
+            this._didCommitContent(null);
     },
 
     beforeTextChanged: function()
@@ -172,7 +172,7 @@ WebInspector.JavaScriptSourceFrame.prototype = {
         WebInspector.SourceFrame.prototype.beforeTextChanged.call(this);
     },
 
-    _didEditContent: function(error)
+    _didCommitContent: function(error)
     {
         delete this._isCommittingEditing;
 
