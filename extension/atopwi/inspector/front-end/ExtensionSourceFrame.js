@@ -3,7 +3,6 @@
   function appendFrame(id, url) {
     var iframe = window.document.createElement('iframe');
     iframe.setAttribute('src', url);
-    iframe.setAttribute('style', 'height:100%; width:100%;');
     var elt = id;
     if (!id.ownerDocument) {
       elt = window.document.getElementById(id);
@@ -24,6 +23,7 @@ ExtensionEditorProxy.prototype = {
     initialize: function(element, onLoad) {
          this.orionFrame = appendFrame(element, '../../../OrionEditorEmbedded/editor.html');
          this.orionFrame.addEventListener('load', onLoad);
+         this.orionFrame.setAttribute('style', 'height:100%; width:100%;');
     },
     
     openResource: function(resource) {
