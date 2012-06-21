@@ -3,6 +3,7 @@
   function appendFrame(id, url) {
     var iframe = window.document.createElement('iframe');
     iframe.setAttribute('src', url);
+    iframe.setAttribute('style', 'height:100%; width:100%;');
     var elt = id;
     if (!id.ownerDocument) {
       elt = window.document.getElementById(id);
