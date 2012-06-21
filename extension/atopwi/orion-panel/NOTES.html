@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Orion Panel Notes</title>
+
+		<link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+
+		<style>
+			html {
+				font-family: 'Open Sans', sans-serif;
+				background-color: #999;
+			}
+
+			body {
+				margin-left: auto;
+				margin-right: auto;
+				width: 50%;
+			}
+
+			header {
+				text-align: center;
+			}
+
+			article {
+				background-color: white;
+				padding: 5px;
+				padding-top: 0px;
+				margin: 10px;
+			}
+
+			pre {
+				display: inline;
+				font-size: 16px;
+			}
+
+			ol {
+				padding-bottom: 15px;
+				padding-top: 15px;
+			}
+
+			ol:last-child {
+				padding-bottom: 0px;
+			}
+
+			h2 {
+				font-family: 'Open Sans';
+				font-weight: 700;
+				margin-bottom: -15px;
+			}
+
+			.finished {
+				text-decoration: line-through;
+			}
+
+			.error {
+				color: red;
+				font-weight: bold;
+			}
+
+			.success {
+				color: green;
+				font-weight: bold;
+			}
+
+			.milestone, .milestone a {
+				color: #F80;
+				font-weight: bold;
+				text-decoration: none;
+			}
+			
+		</style>
+
+	</head>
+
+	<body>
+
+		<header>
+			<h1>Orion Panel Notes</h1>
+			<h5>By: Zachariah Moreno</h5>
+		</header>
+
+		<article>
+			<h2 class="finished">Try Devtools-Save</h2>
+			<ol>
+				<li><a href="https://code.google.com/p/devtools-save/">https://code.google.com/p/devtools-save/</a></li>
+				<li>Installed &amp; Activated in Chrome Canary</li>
+				<li>Having difficulty providing local path in options</li>
+				<ol>
+					<li>Pulled down local copy of zachariahmoreno.com (looks like devtools-save wants a specific web path &amp; corresponding local path)</li>
+					<li>Changed remote path to http://www.zachariahmoreno.com &amp; local path to /Users/xachmoreno/Sites/zachariahmoreno.com/</li>
+				
+					<ol>
+						<li class="error">ERROR - missing .allow-devtools-save file in path from file to root</li>
+						<ol>
+							<li>added empty .allow-devtools-save file to local directory</li>
+							<li><img src="../../../pre-coding/devtools-save-TEST/Screen Shot 2012-06-17 at 2.58.36 PM"/></li>
+							<li class="success">SUCCESS</li>
+						</ol>
+					</ol>
+					<li><a href="http://code.google.com/p/devtools-save/wiki/BuildingDevToolsSave">Building DevTools-Save</a></li>
+						<ol>
+							<li>Install Depot Tools</li>
+								<ol>
+									<li>Cloned Depot Tools into desktop/git-clones</li>
+									<li>Add Depot Tools to $PATH variable - <a href="http://hathaway.cc/2008/06/how-to-edit-your-path-environment-variables-on-mac-os-x/">Help</a></li>
+										<ol>
+											<li>Terminal - <pre>touch ~/.bash_profile; open ~/.bash_profile</pre></li>
+											<li>Added <pre>export PATH="$PATH":`pwd`/depot_tools</pre> to bottom &amp; saved</li>
+											<li>Ran <pre>source ~/.bash_profile</pre></li>
+											<li>Ran <pre>echo $PATH</pre> retruned <pre>/opt/local/bin:/opt/local/sbin:/usr/local/bin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/bin:/usr/local/sbin:/opt/local/bin:/opt/local/sbin:/usr/local/bin:/usr/local/sbin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/bin:/usr/X11/bin:/usr/local/git/bin:/Users/xachmoreno/desktop/git-clones/depot_tools</pre></li>
+											<li class="success">SUCCESS</li>
+										</ol>
+									<li><pre>gclient.py config</pre> = Permission Denied</li>
+									<li><pre>config</pre> = </pre>usage: config [ -bcdo dir ] [ -p ] sysname</pre></li>
+									<li><a href="http://macosx.com/forums/mac-os-x-system-mac-software/314163-setting-execute-permissions-finder.html">Help - </a><pre>chmod a+x /Users/xachmoreno/Desktop/git-clones/depot_tools/gclient.py </pre> = <pre>usage: config [ -bcdo dir ] [ -p ] sysname</pre></li>
+									<li>John Barton - <pre>gclient config http://devtools-save.googlecode.com/svn/trunk --name src </pre></li>
+									<li><a href="http://superuser.com/questions/147043/where-to-find-the-bashrc-file-on-mac-os-x-snow-leopard-and-lion">Help - </a>.bashrc does not exist on Mac, create one and put <pre>export PATH="$PATH":`pwd`/depot_tools</pre> in it</li>
+									<li>
+									<li class="error">STRARTING OVER</li>
+								</ol>
+								<ol>
+									<li>Install Depot Tools</li>
+									<li class="success">SUCCESS</li>
+									<li></li>
+									<li>
+								</ol>
+							<li>obtain devtools-save.pem (or use your own key if you're just hacking) - skipped</li>
+							<li></li>
+						</ol>
+				</ol>
+			</ol>
+		</article>
+
+		<article>
+			<h2 class="finished">Create DevTools Panel</h2>
+			<ol>
+				<li><a href="http://code.google.com/chrome/extensions/manifest.html">http://code.google.com/chrome/extensions/manifest.html</a></li>
+				<li><a href="http://code.google.com/chrome/extensions/devtools.panels.html">http://code.google.com/chrome/extensions/devtools.panels.html</a></li>
+				<li>created manifest.json</li>
+				<ol>
+					<li>included <pre>"devtools_page": "devtools.html"</pre></li>
+				</ol>
+				<li>created devtools.html</li>
+				<ol>
+					<li>included <pre>script src="devtools.js"</pre></li>
+				</ol>
+				<li>created devtools.js</li>
+				<ol>
+					<li>included <pre>chrome.devtools.panels.create( "Orion", "dark-orion-24x24.png", "panel.html", function(panel) {  });</pre></li>
+					<ol>
+						<li class="error">console: Uncaught SyntaxError: Unexpected token function devtools.html:13</li>
+						<li>Removed <pre>function(panel) {  }</pre></li>
+						<ol>
+							<li class="success">SUCCESS</li>
+						</ol>
+					</ol>
+				</ol>
+				<li class="milestone">Updated <a href="http://wiki.eclipse.org/Orion/Chrome_Tools_Integration#Milestones">Milestone</a></li>
+			</ol>
+		</article>
+
+		<article>
+			<h2 class="finished">Embed Orion</h2>
+			<ol>
+				<li><a href="http://aniefer.blogspot.com/2011/02/embedding-orion-editor_02.html">http://aniefer.blogspot.com/2011/02/embedding-orion-editor_02.html</a></li>
+				<li><a href="http://orioneditor.blogspot.com/2012/01/using-orion-editor-with-almond.html">http://orioneditor.blogspot.com/2012/01/using-orion-editor-with-almond.html</a></li>
+				<li>Working in panel.html</li>
+					<ol>
+						<li>included <pre>script data-main="orionformatter" src="orionformatter.js"</pre> from <a href="https://gist.github.com/1556167">Gist</a></li>
+						<li>included <pre>script src="require.js"</pre> from <a href="http://requirejs.org/docs/download.html#requirejs">http://requirejs.org/docs/download.html#requirejs</a></li>
+						<li>included <pre>require({"orionformatter"});</pre></li>
+						<li><iframe width="560" height="315" src="http://www.youtube.com/embed/VGlDR1QiV3A" frameborder="0" allowfullscreen></iframe></li>
+						<li><iframe width="560" height="315" src="http://www.youtube.com/embed/9BYBNPvcqwo" frameborder="0" allowfullscreen></iframe></li>
+						<li>changed data-main to orionformatter</li>
+						<li>updated define() statement with my file structure</li>
+					</ol>
+				<li>Created embed-test directory to abstract embedding the orion editor</li>
+					<ol>
+						<li>set baseURL to '../embed-test'</li>
+						<li class="error">console: Failed to load resource i18n.js</li>
+							<ol>
+								<li>included i18n.js in root</li>
+								<li class="success">error fixed</li>
+							</ol>
+						<li class="error">Uncaught Error: NETWORK_ERR: XMLHttpRequest Exception 101 (util.js: line 22)</li>
+							<ol>
+								<li><a href="http://www.chromium.org/developers/how-tos/run-chromium-with-flags">http://www.chromium.org/developers/how-tos/run-chromium-with-flags</a></li>
+								<li>Terminal Command   Zach-Morenos-MacBook-Pro:~ xachmoreno$ /applications/google\ chrome\ canary.app/contents/macos/google\ chrome\ canary --remote-debugging-port=9222</li>
+								<li>Terminal Responce   terminate called throwing an exceptionAbort trap: 6</li>
+								<li class="error">ABANDONED</li>
+							</ol>
+						<li>moved embed-test to <a href="http://www.zachariahmoreno.com/portfolio/embed-test">http://www.zachariahmoreno.com/portfolio/embed-test</a> because XMLHttpRequest errors are likely caused by called files locally instead of on a web server - <a href="http://dojo-toolkit.33424.n3.nabble.com/Cross-origin-requests-are-only-supported-for-HTTP-td3743984.html">source</a></li>
+						<li>double checked that I have the latest verision on i18n.js - <span class="success">CURRENT</span></li>
+						<li>double checked that I have the latest veriosn of orion.client - <span class="error">OLD</span></li>
+							<ol>
+								<li>downloaded <a href="http://www.eclipse.org/downloads/download.php?file=/orion/drops/S-0.5M1-201204131740/eclipse-orion-0.5M1-macosx.cocoa.x86_64.zip">eclipse-orion-0.5M1-macosx.cocoa.x86_64.zip</a></li>
+								<li>pulled out downloads/eclipse/plugins/org.eclipse.orion.client.editor_0.1.0.v20120412-2022/web/orion</li>
+								<li>swapped with http://www.zachariahmoreno.com/portfolio/embed-test/orion (OLD VERSION)</li>
+							</ol>
+						<li>updated orionformatter.js</li>
+							<ol>
+								<li>updated define() method</li>
+							</ol>
+						<li class="error">Console Failed to Load resource orion/textview/nls/en-us/messages.js - file did not exist</li>
+						<li>duplicated messages.js > created en-us folder > moved messages.js into en-us folder</li>
+							<ol>
+								<li class="success">NO CONSOLE ERRORS</li>
+							</ol>
+						<li class="error"><a href="http://en.wikipedia.org/wiki/Internationalization_and_localization">i18n.js</a> stops on line 133 because require.mixin() method returns UNDEFINED</li>
+							<ol>
+								<li>triple checked my version on i18n.js, replaced live copy with copy from /Users/xachmoreno/Downloads/eclipse/plugins/org.eclipse.orion.client.core_0.2.0.v20120413-2137/web/requirejs - <span class="error">same error</span></li>
+								<li>in orionformatter.js I added i18n to the define() method</li>
+									<ol>
+										<li class="success">NO ERRORS</li>
+									</ol>
+							</ol>
+						<li>hard coded CSS references into index.html</li>
+							<ol>
+								<li class="error">demo code snippet flashing for 1 second then disappearing</li>
+								<li>asked John Barton, he said to try setting height</li>
+							</ol>
+						<li>set height on editor container</li>
+						<li class="success">SUCCESS</li>
+					</ol>
+				<li>Move embeded Orion into orion.panel/panel.html</li>
+					<ol>
+						<li><a href="http://wiki.eclipse.org/Orion/Server_API">Orion Server API</a></li>
+							<ol>
+								<li><a href="http://wiki.eclipse.org/Orion/Server_API/Preference_API">Preference API</a></li>
+								<li><a href="http://wiki.eclipse.org/Orion/Server_API/File_API">File API</a></li>
+								<li><a href="http://wiki.eclipse.org/Orion/Server_API/Workspace_API">Workspace API</a></li>
+								<li><a href="http://wiki.eclipse.org/Orion/Server_API/Transfer_API">Transfer API</a></li>
+								<li><a href="http://wiki.eclipse.org/Orion/Server_API/Git_API">Git API</a></li>
+								<li><a href="http://wiki.eclipse.org/Orion/Server_API/User_API">User API</a></li>
+								<li><a href="http://wiki.eclipse.org/Orion/Server_API/Site_Configuration_API">Site Configuration API</a></li>
+							</ol>
+						<li>Forked <a href="https://github.com/XachMoreno/orion.server">Eclipse/Orion.Server</a> on GitHub</li>
+							<ol>
+								<li>Began reading docs in orion.server/doc/org.eclipse.orion.doc.isv/WikiDoc/Orion</li>
+							</ol>
+						<li class="error">SET ASIDE &amp; MOVED ON</li>
+					</ol>
+				<li>Embed local Orion within panel.html</li>
+					<ol>
+						<li>Downloaded latest copy of Orion for Mac &amp; put it in the orion-0.4-mac folder</li>
+							<ol>
+								<li><a href="http://stackoverflow.com/questions/2652094/start-an-external-application-from-a-google-chrome-extension?">StackOverFlow - NPAPI PlugIn</a></li>
+								<li><a href="http://code.google.com/chrome/extensions/npapi.html">Chrome NPAPI PlugIn Extension Docs</a></li>
+								<li><a href="https://developer.mozilla.org/en/Plugins">Mozilla PlugIns</a></li>
+								<li><a href="https://developer.mozilla.org/en/Gecko_Plugin_API_Reference">Gecko NPAPI Docs</a></li>
+								<li class="error">"NO NPAPI, assume Orion is running" - John Barton</li>
+							</ol>
+						<li>Downloaded latest copy of Orion for Windows &amp; put it in the orion-0.4-win folder</li>
+							<ol>
+								<li><a href="http://bytes.com/topic/javascript/answers/91571-how-launch-windows-application-webpage-using-java">Launch .exe with JavaScript</a></li>
+								<li><a href="http://www.google.com/url?sa=t&rct=j&q=&esrc=s&source=web&cd=3&ved=0CGgQFjAC&url=http%3A%2F%2Fwww.yaldex.com%2Fwjscript%2FsgProgrammingFileSystemObject.htm&ei=xALNT671Fcawgweb2rXVDg&usg=AFQjCNEw0ORQhjl19TtL8NVSaC_Ay8FEhQ">FileSystemObject</a></li>
+							</ol>
+						<li>Downloaded latest copy of Orion for Linux &amp; put it in the orion-0.4-lnx folder</li>
+						<li>Used iframe to embed full orion local - src="http://localhost:8080"</li>
+							<ol>
+								<li class="success">SUCCESS</li>
+								<li class="error">ABANDONED</li>
+							</ol>
+					</ol>
+				<li>Created & switched to 'embedded' branch & removed full copies of Orion</li>
+				<li>Copied structure &amp; code from embed-test to root of orion-panel</li>
+				<li>Updated paths in panel.html & orionformatter.js to support new structure</li>
+				<li class="success">SUCCESS</li>
+					<ol>
+						<li class="milestone">Updated <a href="http://wiki.eclipse.org/Orion/Chrome_Tools_Integration">Milestones</a></li>
+					</ol>
+			</ol>
+		</article>
+
+		<article>
+			<h2>Pull in client side code</h2>
+			<ol>
+				<li><a href="http://code.google.com/chrome/extensions/debugger.html">http://code.google.com/chrome/extensions/debugger.html</a></li>
+				<li><a href="https://developers.google.com/chrome-developer-tools/docs/remote-debugging#extension">https://developers.google.com/chrome-developer-tools/docs/remote-debugging#extension</a></li>
+				<li><a href="http://code.google.com/chrome/extensions/samples.html#8f52a8a59c6fc16cb0d1ed0680b7f005be033d58">http://code.google.com/chrome/extensions/samples.html#8f52a8a59c6fc16cb0d1ed0680b7f005be033d58</a></li>
+				<li><a href="http://www.developerdrive.com/2012/06/allowing-users-to-edit-text-content-with-html5/">HTML5 Local Storage tutorial</a></li>
+				<li><a href="http://code.google.com/chrome/extensions/contextMenus.html">chrome.contextMenus</a></li>
+				<li>Created js/getdocs.js</li>
+					<ol>
+						<li><a href="https://developers.google.com/chrome-developer-tools/docs/protocol/1.0/dom#command-getDocument">chrome.DOM.getDocument</a></li>
+						<li><a href="https://groups.google.com/forum/?fromgroups#!topic/google-chrome-developer-tools/PAeHj2gBBCU">Remote DOM Modifications - Pavel Feldman</a></li>
+					</ol>
+				<li>fixed require baseURL issue</li>
+				<li>updated manifest to version 2 & removed background.html</li>
+				<li>manifest v2 breaks orion.client - changed back to v1 & filed issue #3</li>
+				<li>moved min chrome version to 19</li>
+				<li>created getDocs branch</li>
+					<ol>
+						<li><a href="http://www.screenr.com/zaH8">chrome.devtools.getResources example</a></li>
+						<li>copied code from example into getdocs.js - removed .experimental.</li>
+						<li><a href="http://code.google.com/chrome/extensions/devtools.inspectedWindow.html">Docs</a></li>
+							<ol>
+								<li class="error">Uncaught TypeError: Cannot read property 'inspectedWindow' of undefined</li>
+								<li>chrome.devtools.inspectedWindow.getResources is <strong>not</strong> in experimental (<a href="http://code.google.com/chrome/extensions/dev/experimental.html">list of experimental APIs</a>)</li>
+								<li>Asked for help on IRC #chromium-extensions</li>
+									<ol>
+										<li>attempted copying code from getdocs.js &amp; pasted it in panel.html, devtools.html, &amp; devtools.js</li>
+										<li class="error">SAME ERROR</li>
+									</ol>
+								<li>Undocked DevTools, opened Orion panel, opened another DevTools window, console is logging resources of inspected window</li>
+								<li class="success">SUCCESS</li>
+							</ol>
+						<li>added <pre>resources.getContent()</pre> to <pre>getResource()</pre></li>
+							<ol>
+								<li class="error">Uncaught TypeError: Object [object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object],[object Object] has no method 'getContent' - getdocs.js:13</li>
+							</ol>
+						<li class="milestone">Updated <a href="http://wiki.eclipse.org/Orion/Chrome_Tools_Integration#Milestones">Milestone</a> dates</li>
+					</ol>
+			</ol>
+		</article>
+
+		<article>
+			<h2>Enhancements</h2>
+			<ol>
+				<li><a href="http://www.red-team-design.com/google-play-minimal-tabs-with-css3-jquery">Google Play Tabs</a></li>
+				<li>Embed Adobe Brackets editor (code mirror)</li>
+				<li>Integrate collaborative real-time editing (Operation Transform)</li>
+					<ol>
+						<li><a href="http://en.wikipedia.org/wiki/Operational_transformation">Wikipedia - Operational Tranform</a></li>
+						<li><a href="http://www.codecommit.com/blog/java/understanding-and-applying-operational-transformation">Understanding &amp; Applying Operatonal Transform</a></li>
+						<li><a href="http://stackoverflow.com/questions/2043165/operational-transformation-library">StackOverflow - Operation Transform Library?</a></li>
+						<li><a href="http://code.google.com/p/google-diff-match-patch/">Google Diff-Match-Patch API</a></li>
+						<li><iframe width="420" height="315" src="http://www.youtube.com/embed/84zqbXUQIHc" frameborder="0" allowfullscreen></iframe></li>
+						<li><iframe width="560" height="315" src="http://www.youtube.com/embed/3ykZYKCK7AM" frameborder="0" allowfullscreen></iframe></li>
+					</ol>
+				<li>Leverage Chrome's OAuth sign in for saving sftp credentials</li>
+				<li>chop style code review messages</li>
+				<li>contributor diff like MS Word Track Changes</li>
+				<li>extend editor API to Web Components</li>
+			</ol>
+		</article>
+
+		<article>
+			<h2>Resources</h2>
+			<ol>
+				<li><a href="https://groups.google.com/forum/?fromgroups#!msg/google-chrome-developer-tools/L1nemsmtnJI/aO1nldE8kuwJ">Contributing to Chrome Developer Tools - Pavel Feldman</a></li>
+			</ol>
+		</article>
+		
+
+	</body>
+
+</html>

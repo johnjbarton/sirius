@@ -1,0 +1,31 @@
+{
+  "name": "Orion Panel",
+  "version": "0.1",
+  "manifest_version": 1,
+  "minimum_chrome_version": "19",
+  "description": "Orion Editor embedded into a DevTools panel",
+
+  "icons": {
+     "16": "/img/orion16.png",
+     "24": "/img/orion24.png",
+     "128": "/img/orion128.png"
+  },
+
+  "page_action": {
+    "default_icon": "/img/orion16.png",
+    "default_title": "Embedded Orion"
+   },
+
+  "devtools_page": "devtools.html",
+
+  "permissions" :
+    [
+      "experimental",
+      "*://*/*",
+      "tabs",
+      "contextMenus",
+      "webNavigation",
+      "webRequest",
+      "debugger"
+    ]
+}

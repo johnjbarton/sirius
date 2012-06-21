@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!-- Require JS -->
+		<script data-main="orionformatter" src="js/require.js"></script>
+
+		<!-- Require Base Folder -->
+		<script type="text/javascript">
+			 require({
+			   baseUrl: 'orion-embed'
+			 });
+		</script>
+
+		<!-- Orion.Client Styles -->
+		<link rel="stylesheet" href="css/default-theme.css">
+		<link rel="stylesheet" href="orion-embed/orion/editor/editor.css">
+		<link rel="stylesheet" href="orion-embed/orion/textview/annotations.css">
+		<link rel="stylesheet" href="orion-embed/orion/textview/rulers.css">
+		<link rel="stylesheet" href="orion-embed/orion/textview/textview.css">
+		<link rel="stylesheet" href="orion-embed/orion/textview/tooltip.css">
+
+		<!-- Embedded Orion Styles -->
+		<link rel="stylesheet" href="css/embed.css">
+	</head>
+	<body>
+
+<pre name="orion" class="js writable ruler">
+function myFunction()
+{
+	setTimeout(function(){alert("Hello")},3000);
+}
+</pre>
+
+	</body>
+</html>
