@@ -32,6 +32,7 @@ ExtensionEditorProxy.prototype = {
 
 };
 
+
 function ExtensionSourceFrame(scriptsPanel, uiSourceCode) {
     WebInspector.View.call(this);
     this.element.addStyleClass("script-view");
