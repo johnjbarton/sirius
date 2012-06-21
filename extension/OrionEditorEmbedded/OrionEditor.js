@@ -36,10 +36,14 @@ function(require,                               orion,                       Rev
 
   // These stylesheets will be inserted into the iframe containing the editor.
   var stylesheets = [
-    "orion/textview/textview.css", 
-    "orion/textview/rulers.css", 
-    "examples/textview/textstyler.css", 
-    "examples/editor/htmlStyles.css"];
+    "orion/textview/textview.css",
+    "orion/textview/rulers.css",
+    "orion/textview/annotations.css",
+    "orion/textview/tooltip.css",
+    "examples/textview/textstyler.css",
+    "examples/textview/themes/orion.css",
+    "examples/editor/htmlStyles.css",
+    "examples/editor/embeddededitor.css"];
   // orion.client/bundles/org.eclipse.orion.client.editor/web/
   stylesheets = stylesheets.map(function(sheet) {
     return require.toUrl("orion/"+"../"+sheet);
