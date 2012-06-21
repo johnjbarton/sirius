@@ -1,1 +1,0 @@
-<h1><a href="#">Eclipse Orion Chrome DevTools Extension</a></h1>
