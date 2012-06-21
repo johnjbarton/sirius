@@ -22,7 +22,7 @@ ExtensionEditorProxy.prototype = {
     
     initialize: function(element, onLoad) {
          this.orionFrame = appendFrame(element, '../../../OrionEditorEmbedded/editor.html');
-         this.orionFrame.addEventListener('load', onLoad);
+         window.addEventListener('eddy', onLoad);
          this.orionFrame.setAttribute('style', 'height:100%; width:100%;');
     },
     

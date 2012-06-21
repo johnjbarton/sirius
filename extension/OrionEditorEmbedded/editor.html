@@ -10,6 +10,8 @@ require(
   function(editorInserter){
     window.editor = editorInserter.createEditor(document.body, '100%');
     editor.installTextView();
+    var event = new CustomEvent("eddy", {});
+    window.parent.dispatchEvent(event);
   }
 );
 </script>
