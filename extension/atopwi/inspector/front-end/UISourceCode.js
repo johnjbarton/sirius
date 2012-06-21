@@ -64,6 +64,7 @@ WebInspector.UISourceCode = function(url, resource, contentProvider, sourceMappi
 
 WebInspector.UISourceCode.Events = {
     ContentChanged: "ContentChanged",
+    ContentCommitted: "ContentCommitted",
     WorkingCopyChanged: "WorkingCopyChanged",
     TitleChanged: "TitleChanged",
     ConsoleMessageAdded: "ConsoleMessageAdded",

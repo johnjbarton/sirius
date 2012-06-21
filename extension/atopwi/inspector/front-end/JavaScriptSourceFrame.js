@@ -56,6 +56,8 @@ WebInspector.JavaScriptSourceFrame = function(scriptsPanel, javaScriptSource)
     this._breakpointManager.addEventListener(WebInspector.BreakpointManager.Events.BreakpointRemoved, this._breakpointRemoved, this);
 
     this._javaScriptSource.addEventListener(WebInspector.UISourceCode.Events.ContentChanged, this._onContentChanged, this);
+    this._javaScriptSource.addEventListener(WebInspector.UISourceCode.Events.ContentCommitted, this._onContentCommitted, this);
+    
     this._javaScriptSource.addEventListener(WebInspector.UISourceCode.Events.ConsoleMessageAdded, this._consoleMessageAdded, this);
     this._javaScriptSource.addEventListener(WebInspector.UISourceCode.Events.ConsoleMessageRemoved, this._consoleMessageRemoved, this);
     this._javaScriptSource.addEventListener(WebInspector.UISourceCode.Events.ConsoleMessagesCleared, this._consoleMessagesCleared, this);
@@ -151,7 +153,7 @@ WebInspector.JavaScriptSourceFrame.prototype = {
     {
         this._javaScriptSource.setWorkingCopy(this.textModel.text);
         if (!this._javaScriptSource.isDirty())
-            this._didCommitContent(null);
+            this._onContentCommitted(null);
     },
 
     beforeTextChanged: function()
@@ -172,14 +174,12 @@ WebInspector.JavaScriptSourceFrame.prototype = {
         WebInspector.SourceFrame.prototype.beforeTextChanged.call(this);
     },
 
-    _didCommitContent: function(error)
+    /**
+     * @param {WebInspector.Event} event
+     */
+    _onContentCommitted: function(event) 
     {
         delete this._isCommittingEditing;
-
-        if (error) {
-            WebInspector.log(error, WebInspector.ConsoleMessage.MessageLevel.Error, true);
-            return;
-        }
 
         // Restore all muted breakpoints.
         for (var lineNumber = 0; lineNumber < this.textModel.linesCount; ++lineNumber) {

@@ -745,9 +745,12 @@ WebInspector.ScriptsPanel.prototype = {
         if (next) {
             function recurse(error) 
             {
-                if (error) 
-                    console.error("Live Edit failed ", next);
-                    
+                if (error) {
+                    WebInspector.log(error, WebInspector.ConsoleMessage.MessageLevel.Error, true);
+                    // Stop committing changes on the first error.
+                    return;
+                }
+
                 this._commitEdits(uncommittedTabs, callback)
             }
             next.workingCopyCommitted(recurse.bind(this));

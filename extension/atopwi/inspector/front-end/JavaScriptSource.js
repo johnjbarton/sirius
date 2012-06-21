@@ -200,6 +200,8 @@ WebInspector.JavaScriptSource.prototype = {
         function innerCallback(error)
         {
             this._isDivergedFromVM = !!error;
+            this.dispatchEventToListeners(WebInspector.UISourceCode.Events.ContentCommitted, {error: error});
+
             this.urlChanged(this.url);  // re-style the tab header in case the state changed.
             // TODO allow red error markers on the tab if (error)
             callback(error);
