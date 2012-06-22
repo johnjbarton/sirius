@@ -17,6 +17,7 @@ InspectorBackend.registerCommand("Inspector.disable", [], []);
 // Memory.
 InspectorBackend.registerMemoryDispatcher = InspectorBackend.registerDomainDispatcher.bind(InspectorBackend, "Memory");
 InspectorBackend.registerCommand("Memory.getDOMNodeCount", [], ["domGroups", "strings"]);
+InspectorBackend.registerCommand("Memory.getProcessMemoryDistribution", [], ["distribution"]);
 
 // Page.
 InspectorBackend.registerPageDispatcher = InspectorBackend.registerDomainDispatcher.bind(InspectorBackend, "Page");
@@ -118,7 +119,7 @@ InspectorBackend.registerCommand("IndexedDB.requestData", [{"name": "requestId",
 // DOMStorage.
 InspectorBackend.registerDOMStorageDispatcher = InspectorBackend.registerDomainDispatcher.bind(InspectorBackend, "DOMStorage");
 InspectorBackend.registerEvent("DOMStorage.addDOMStorage", ["storage"]);
-InspectorBackend.registerEvent("DOMStorage.updateDOMStorage", ["storageId"]);
+InspectorBackend.registerEvent("DOMStorage.domStorageUpdated", ["storageId"]);
 InspectorBackend.registerCommand("DOMStorage.enable", [], []);
 InspectorBackend.registerCommand("DOMStorage.disable", [], []);
 InspectorBackend.registerCommand("DOMStorage.getDOMStorageEntries", [{"name": "storageId", "type": "string", "optional": false}], ["entries"]);
@@ -136,8 +137,12 @@ InspectorBackend.registerCommand("ApplicationCache.getApplicationCacheForFrame",
 
 // FileSystem.
 InspectorBackend.registerFileSystemDispatcher = InspectorBackend.registerDomainDispatcher.bind(InspectorBackend, "FileSystem");
+InspectorBackend.registerEvent("FileSystem.fileSystemRootReceived", ["requestId", "errorCode", "root"]);
+InspectorBackend.registerEvent("FileSystem.directoryContentReceived", ["requestId", "errorCode", "entries"]);
 InspectorBackend.registerCommand("FileSystem.enable", [], []);
 InspectorBackend.registerCommand("FileSystem.disable", [], []);
+InspectorBackend.registerCommand("FileSystem.requestFileSystemRoot", [{"name": "origin", "type": "string", "optional": false}, {"name": "type", "type": "string", "optional": false}], ["requestId"]);
+InspectorBackend.registerCommand("FileSystem.requestDirectoryContent", [{"name": "url", "type": "string", "optional": false}], ["requestId"]);
 
 // DOM.
 InspectorBackend.registerDOMDispatcher = InspectorBackend.registerDomainDispatcher.bind(InspectorBackend, "DOM");
@@ -221,7 +226,7 @@ InspectorBackend.registerEvent("Debugger.breakpointResolved", ["breakpointId", "
 InspectorBackend.registerEvent("Debugger.paused", ["callFrames", "reason", "data"]);
 InspectorBackend.registerEvent("Debugger.resumed", []);
 InspectorBackend.registerCommand("Debugger.causesRecompilation", [], ["result"]);
-InspectorBackend.registerCommand("Debugger.supportsNativeBreakpoints", [], ["result"]);
+InspectorBackend.registerCommand("Debugger.supportsSeparateScriptCompilationAndExecution", [], ["result"]);
 InspectorBackend.registerCommand("Debugger.enable", [], []);
 InspectorBackend.registerCommand("Debugger.disable", [], []);
 InspectorBackend.registerCommand("Debugger.setBreakpointsActive", [{"name": "active", "type": "boolean", "optional": false}], []);
@@ -237,10 +242,13 @@ InspectorBackend.registerCommand("Debugger.resume", [], []);
 InspectorBackend.registerCommand("Debugger.searchInContent", [{"name": "scriptId", "type": "string", "optional": false}, {"name": "query", "type": "string", "optional": false}, {"name": "caseSensitive", "type": "boolean", "optional": true}, {"name": "isRegex", "type": "boolean", "optional": true}], ["result"]);
 InspectorBackend.registerCommand("Debugger.canSetScriptSource", [], ["result"]);
 InspectorBackend.registerCommand("Debugger.setScriptSource", [{"name": "scriptId", "type": "string", "optional": false}, {"name": "scriptSource", "type": "string", "optional": false}, {"name": "preview", "type": "boolean", "optional": true}], ["callFrames", "result"]);
+InspectorBackend.registerCommand("Debugger.restartFrame", [{"name": "callFrameId", "type": "string", "optional": false}], ["callFrames", "result"]);
 InspectorBackend.registerCommand("Debugger.getScriptSource", [{"name": "scriptId", "type": "string", "optional": false}], ["scriptSource"]);
 InspectorBackend.registerCommand("Debugger.getFunctionDetails", [{"name": "functionId", "type": "string", "optional": false}], ["details"]);
 InspectorBackend.registerCommand("Debugger.setPauseOnExceptions", [{"name": "state", "type": "string", "optional": false}], []);
 InspectorBackend.registerCommand("Debugger.evaluateOnCallFrame", [{"name": "callFrameId", "type": "string", "optional": false}, {"name": "expression", "type": "string", "optional": false}, {"name": "objectGroup", "type": "string", "optional": true}, {"name": "includeCommandLineAPI", "type": "boolean", "optional": true}, {"name": "doNotPauseOnExceptionsAndMuteConsole", "type": "boolean", "optional": true}, {"name": "returnByValue", "type": "boolean", "optional": true}], ["result", "wasThrown"]);
+InspectorBackend.registerCommand("Debugger.compileScript", [{"name": "expression", "type": "string", "optional": false}, {"name": "sourceURL", "type": "string", "optional": false}], ["scriptId", "syntaxErrorMessage"]);
+InspectorBackend.registerCommand("Debugger.runScript", [{"name": "contextId", "type": "number", "optional": true}, {"name": "scriptId", "type": "string", "optional": false}, {"name": "objectGroup", "type": "string", "optional": true}, {"name": "doNotPauseOnExceptionsAndMuteConsole", "type": "boolean", "optional": true}], ["result", "wasThrown"]);
 
 // DOMDebugger.
 InspectorBackend.registerCommand("DOMDebugger.setDOMBreakpoint", [{"name": "nodeId", "type": "number", "optional": false}, {"name": "type", "type": "string", "optional": false}], []);
@@ -287,5 +295,10 @@ InspectorBackend.registerCommand("Worker.sendMessageToWorker", [{"name": "worker
 InspectorBackend.registerCommand("Worker.connectToWorker", [{"name": "workerId", "type": "number", "optional": false}], []);
 InspectorBackend.registerCommand("Worker.disconnectFromWorker", [{"name": "workerId", "type": "number", "optional": false}], []);
 InspectorBackend.registerCommand("Worker.setAutoconnectToWorkers", [{"name": "value", "type": "boolean", "optional": false}], []);
+
+// WebGL.
+InspectorBackend.registerWebGLDispatcher = InspectorBackend.registerDomainDispatcher.bind(InspectorBackend, "WebGL");
+InspectorBackend.registerCommand("WebGL.enable", [], []);
+InspectorBackend.registerCommand("WebGL.disable", [], []);
 
 
