@@ -24,7 +24,7 @@ body {
 <textarea rows="50" cols="120" id='src'></textarea>
 </body>
 <script>
-var inspectorBackend = generateProxyDebugAPI.loadInspectorJSON("../inspector/Inspector.json");
+var inspectorBackend = generateProxyDebugAPI.loadInspectorJSON("http://trac.webkit.org/export/121058/trunk/Source/WebCore/inspector/Inspector-1.0.json");
 document.querySelector('#src').value = inspectorBackend;
 </script>
 </html>
