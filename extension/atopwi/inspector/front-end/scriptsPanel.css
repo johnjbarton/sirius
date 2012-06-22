@@ -229,6 +229,22 @@ button.status-bar-item.scripts-navigator-show-hide-button.toggled-overlay
     border-bottom: 1px solid #BBB;
 }
 
+.scripts-tab-title-unsaveable-source-warning .tabbed-pane-header-tab-title:after {
+    content: url(Images/warningIcon.png);
+}
+
+.scripts-tab-title-unsaveable-source-warning:hover { 
+    content: attr(title); 
+}
+
+.scripts-tab-editing .tabbed-pane-header-tab-close-button {
+    display: none; /* Don't allow a dirty tab to be closed */ 
+}
+
+.scripts-tab-diverged {
+    background-color: rgb(250, 250, 210) !important;
+}
+
 .function-location-link {
     float: right;
     margin-left: 10px;

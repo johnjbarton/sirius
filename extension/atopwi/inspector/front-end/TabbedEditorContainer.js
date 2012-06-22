@@ -128,6 +128,7 @@ WebInspector.TabbedEditorContainer.prototype = {
     },
 
     /**
+     * Should only be called by _updateTabHeader()
      * @param {WebInspector.UISourceCode} uiSourceCode
      * @return {string}
      */
@@ -148,8 +149,6 @@ WebInspector.TabbedEditorContainer.prototype = {
             title = displayName || WebInspector.UIString("(program)");
         }
         
-        if (uiSourceCode.isDirty())
-            title += "*";
         return title;
     },
 
@@ -203,6 +202,7 @@ WebInspector.TabbedEditorContainer.prototype = {
     },
 
     /**
+     * Should only be called by _updateTabHeader
      * @param {WebInspector.UISourceCode} uiSourceCode
      * @return {string}
      */
@@ -218,14 +218,15 @@ WebInspector.TabbedEditorContainer.prototype = {
     _appendFileTab: function(uiSourceCode, userGesture)
     {
         var view = this._delegate.viewForFile(uiSourceCode);
-        var title = this._titleForFile(uiSourceCode);
-        var tooltip = this._tooltipForFile(uiSourceCode);
+        var title = "";   // see _updateTabHeader 
+        var tooltip = "";
 
         var tabId = this._generateTabId();
         this._tabIds.put(uiSourceCode, tabId);
         this._files[tabId] = uiSourceCode;
 
         this._tabbedPane.appendTab(tabId, title, view, tooltip, userGesture);
+        this._updateTabHeader(uiSourceCode);
 
         uiSourceCode.addEventListener(WebInspector.UISourceCode.Events.TitleChanged, this._uiSourceCodeTitleChanged, this);
         uiSourceCode.addEventListener(WebInspector.UISourceCode.Events.WorkingCopyChanged, this._uiSourceCodeWorkingCopyChanged, this);
@@ -295,39 +296,63 @@ WebInspector.TabbedEditorContainer.prototype = {
         this._tabIds.put(uiSourceCode, tabId);
         this._files[tabId] = uiSourceCode;
 
-        this._tabbedPane.changeTabTitle(tabId, this._titleForFile(uiSourceCode));
         this._tabbedPane.changeTabView(tabId, this._delegate.viewForFile(uiSourceCode));
-        this._tabbedPane.changeTabTooltip(tabId, this._tooltipForFile(uiSourceCode));
+        this._updateTabHeader(uiSourceCode);
     },
 
     /**
      * @param {WebInspector.UISourceCode} uiSourceCode
      */
-    _updateFileTitle: function(uiSourceCode)
+    _updateTabHeader: function(uiSourceCode)
     {
         var tabId = this._tabIds.get(uiSourceCode);
         if (tabId) {
             var title = this._titleForFile(uiSourceCode);
+
+            if (uiSourceCode.isDivergedFromVM && uiSourceCode.isDivergedFromVM()) {
+                this._tabbedPane.addTabStyleClass(tabId, "scripts-tab-diverged");
+            } else {
+                this._tabbedPane.removeTabStyleClass(tabId, "scripts-tab-diverged");
+            }
+            
+            if (uiSourceCode.isDirty()) {
+                this._tabbedPane.addTabStyleClass(tabId, "scripts-tab-editing");
+                title += "*";
+            } else {
+                this._tabbedPane.removeTabStyleClass(tabId, "scripts-tab-editing"); 
+            }
+            
             this._tabbedPane.changeTabTitle(tabId, title);
+            
+            if (!uiSourceCode.parsedURL.isValid) { // eg an eval, no way to save it
+              if (uiSourceCode.isDirty()) {
+                  this._tabbedPane.addTabStyleClass(tabId, "scripts-tab-title-unsaveable-source-warning");
+              } else {
+                  this._tabbedPane.removeTabStyleClass(tabId, "scripts-tab-title-unsaveable-source-warning");
+              }
+              this._tabbedPane.changeTabTooltip(tabId, WebInspector.UIString("Generated (unsaveable) Source"));
+            } else {
+              this._tabbedPane.changeTabTooltip(tabId, this._tooltipForFile(uiSourceCode));
+            }
         }
     },
 
     _uiSourceCodeTitleChanged: function(event)
     {
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.target;
-        this._updateFileTitle(uiSourceCode);
+        this._updateTabHeader(uiSourceCode);
     },
 
     _uiSourceCodeWorkingCopyChanged: function(event)
     {
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.target;
-        this._updateFileTitle(uiSourceCode);
+        this._updateTabHeader(uiSourceCode);
     },
-
+    
     _uiSourceCodeContentChanged: function(event)
     {
         var uiSourceCode = /** @type {WebInspector.UISourceCode} */ event.target;
-        this._updateFileTitle(uiSourceCode);
+        this._updateTabHeader(uiSourceCode);        
     },
 
     reset: function()
