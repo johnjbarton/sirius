@@ -295,19 +295,6 @@ WebInspector.TimelinePresentationModel.prototype = {
 
     filteredRecords: function()
     {
-        function filter(record)
-        {
-            for (var i = 0; i < this._filters.length; ++i) {
-                if (!this._filters[i].accept(record))
-                    return false;
-            }
-            return true;
-        }
-        return this._filterRecords(filter.bind(this));
-    },
-
-    _filterRecords: function(filter)
-    {
         var recordsInWindow = [];
 
         var stack = [{children: this._rootRecord.children, index: 0, parentIsCollapsed: false}];
@@ -318,7 +305,7 @@ WebInspector.TimelinePresentationModel.prototype = {
                  var record = records[entry.index];
                  ++entry.index;
 
-                 if (filter(record)) {
+                 if (this.isVisible(record)) {
                      ++record.parent._invisibleChildrenCount;
                      if (!entry.parentIsCollapsed)
                          recordsInWindow.push(record);
@@ -339,6 +326,15 @@ WebInspector.TimelinePresentationModel.prototype = {
         }
 
         return recordsInWindow;
+    },
+
+    isVisible: function(record)
+    {
+        for (var i = 0; i < this._filters.length; ++i) {
+            if (!this._filters[i].accept(record))
+                return false;
+        }
+        return true;
     }
 }
 

@@ -42,7 +42,7 @@ WebInspector.TimelinePanel = function()
 
     this._overviewPane = new WebInspector.TimelineOverviewPane(this._model);
     this._overviewPane.addEventListener(WebInspector.TimelineOverviewPane.Events.WindowChanged, this._scheduleRefresh.bind(this, false));
-    this._overviewPane.addEventListener(WebInspector.TimelineOverviewPane.Events.ModeChanged, this._timelinesOverviewModeChanged, this);
+    this._overviewPane.addEventListener(WebInspector.TimelineOverviewPane.Events.ModeChanged, this._overviewModeChanged, this);
     this._overviewPane.show(this.element);
 
     this.element.addEventListener("contextmenu", this._contextMenu.bind(this), true);
@@ -77,7 +77,9 @@ WebInspector.TimelinePanel = function()
     this._itemsGraphsElement = this._timelineGrid.itemsGraphsElement;
     this._itemsGraphsElement.id = "timeline-graphs";
     this._containerContentElement.appendChild(this._timelineGrid.element);
+    this._timelineGrid.gridHeaderElement.id = "timeline-grid-header";
     this._memoryStatistics.setMainTimelineGrid(this._timelineGrid);
+    this.element.appendChild(this._timelineGrid.gridHeaderElement);
 
     this._topGapElement = document.createElement("div");
     this._topGapElement.className = "timeline-gap";
@@ -104,9 +106,9 @@ WebInspector.TimelinePanel = function()
     this._boundariesAreValid = true;
     this._scrollTop = 0;
 
-    this._popoverHelper = new WebInspector.PopoverHelper(this._containerElement, this._getPopoverAnchor.bind(this), this._showPopover.bind(this));
-    this._containerElement.addEventListener("mousemove", this._mouseMove.bind(this), false);
-    this._containerElement.addEventListener("mouseout", this._mouseOut.bind(this), false);
+    this._popoverHelper = new WebInspector.PopoverHelper(this.element, this._getPopoverAnchor.bind(this), this._showPopover.bind(this));
+    this.element.addEventListener("mousemove", this._mouseMove.bind(this), false);
+    this.element.addEventListener("mouseout", this._mouseOut.bind(this), false);
 
     // Disable short events filter by default.
     this.toggleFilterButton.toggled = true;
@@ -128,6 +130,8 @@ WebInspector.TimelinePanel = function()
     this._presentationModel.addFilter(this._overviewPane);
     this._presentationModel.addFilter(new WebInspector.TimelineCategoryFilter()); 
     this._presentationModel.addFilter(new WebInspector.TimelineIsLongFilter(this)); 
+
+    this._overviewModeSetting = WebInspector.settings.createSetting("timelineOverviewMode", WebInspector.TimelineOverviewPane.Mode.Events);
 }
 
 // Define row height, should be in sync with styles for timeline graphs.
@@ -402,10 +406,12 @@ WebInspector.TimelinePanel.prototype = {
         this._overviewPane.zoomToFrame(frameBar._frame);
     },
 
-    _timelinesOverviewModeChanged: function(event)
+    _overviewModeChanged: function(event)
     {
-        var shouldShowMemory = event.data === WebInspector.TimelineOverviewPane.Mode.Memory;
-        var frameMode = event.data === WebInspector.TimelineOverviewPane.Mode.Frames;
+        var mode = event.data;
+        var shouldShowMemory = mode === WebInspector.TimelineOverviewPane.Mode.Memory;
+        var frameMode = mode === WebInspector.TimelineOverviewPane.Mode.Frames;
+        this._overviewModeSetting.set(mode);
         if (frameMode !== this._frameMode) {
             this._frameMode = frameMode;
             this._glueParentButton.disabled = frameMode;
@@ -480,8 +486,8 @@ WebInspector.TimelinePanel.prototype = {
 
     _onTimelineEventRecorded: function(event)
     {
-        this._innerAddRecordToTimeline(event.data, this._rootRecord());
-        this._scheduleRefresh(false);
+        if (this._innerAddRecordToTimeline(event.data, this._rootRecord()))
+            this._scheduleRefresh(false);
     },
 
     _innerAddRecordToTimeline: function(record, parentRecord)
@@ -490,12 +496,18 @@ WebInspector.TimelinePanel.prototype = {
         ++this._allRecordsCount;
         var recordTypes = WebInspector.TimelineModel.RecordType;
         var timeStampRecords = this._timeStampRecords;
-        function addTimestampRecords(record)
+        var hasVisibleRecords = false;
+        var presentationModel = this._presentationModel;
+        function processRecord(record)
         {
             if (WebInspector.TimelinePresentationModel.isEventDivider(record))
                 timeStampRecords.push(record);
+            hasVisibleRecords |= presentationModel.isVisible(record);
         }
-        WebInspector.TimelinePresentationModel.forAllRecords([ formattedRecord ], addTimestampRecords);
+        var records = [ formattedRecord ];
+        WebInspector.TimelinePresentationModel.forAllRecords(records, processRecord);
+        // Tell caller update is necessary either if we added a visible record or if we re-parented a record.
+        return hasVisibleRecords || formattedRecord.parent !== this._presentationModel.rootRecord;
     },
 
     sidebarResized: function(event)
@@ -507,12 +519,15 @@ WebInspector.TimelinePanel.prototype = {
         // Min width = <number of buttons on the left> * 31
         this.statusBarFilters.style.left = Math.max((this.statusBarItems.length + 2) * 31, width) + "px";
         this._memoryStatistics.setSidebarWidth(width);
+        this._timelineGrid.gridHeaderElement.style.left = width + "px";
+        this._timelineGrid.gridHeaderElement.style.width = this._itemsGraphsElement.offsetWidth + "px";
     },
 
     onResize: function()
     {
         this._closeRecordDetails();
         this._scheduleRefresh(false);
+        this._timelineGrid.gridHeaderElement.style.width = this._itemsGraphsElement.offsetWidth + "px";
     },
 
     _clearPanel: function()
@@ -534,6 +549,7 @@ WebInspector.TimelinePanel.prototype = {
         this._adjustScrollPosition(0);
         this._closeRecordDetails();
         this._allRecordsCount = 0;
+        this._automaticallySizeWindow = true;
     },
 
     elementsToRestoreScrollPositionsFor: function()
@@ -548,6 +564,7 @@ WebInspector.TimelinePanel.prototype = {
             WebInspector.TimelinePanel._categoryStylesInitialized = true;
             this._injectCategoryStyles();
         }
+        this._overviewPane.setMode(this._overviewModeSetting.get());
         this._refresh();
         WebInspector.drawer.currentPanelCounters = this.recordsCounter;
     },
@@ -580,7 +597,7 @@ WebInspector.TimelinePanel.prototype = {
             this._refresh();
         else {
             if (!this._refreshTimeout)
-                this._refreshTimeout = setTimeout(this._refresh.bind(this), 100);
+                this._refreshTimeout = setTimeout(this._refresh.bind(this), 300);
         }
     },
 
@@ -652,6 +669,15 @@ WebInspector.TimelinePanel.prototype = {
         // Convert visible area to visible indexes. Always include top-level record for a visible nested record.
         var startIndex = Math.max(0, Math.min(Math.floor(visibleTop / rowHeight) - 1, recordsInWindow.length - 1));
         var endIndex = Math.min(recordsInWindow.length, Math.ceil(visibleBottom / rowHeight));
+        var lastVisibleLine = Math.max(0, Math.floor(visibleBottom / rowHeight) - 1);
+        if (this._automaticallySizeWindow && recordsInWindow.length > lastVisibleLine) {
+            this._automaticallySizeWindow = false;
+            // If we're at the top, always use real timeline start as a left window bound so that expansion arrow padding logic works.
+            var windowStartTime = startIndex ? recordsInWindow[startIndex].startTime : this._model.minimumRecordTime();
+            this._overviewPane.setWindowTimes(windowStartTime, recordsInWindow[Math.max(0, lastVisibleLine - 1)].endTime);
+            recordsInWindow = this._presentationModel.filteredRecords();
+            endIndex = Math.min(recordsInWindow.length, lastVisibleLine);
+        }
 
         // Resize gaps first.
         const top = (startIndex * rowHeight) + "px";
