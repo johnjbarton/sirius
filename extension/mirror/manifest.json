@@ -1,0 +1,18 @@
+{
+  "name": "CodeMirror",
+  "description": "Extends the Developer Tools with CodeMirror.",
+  "version": "0.1",
+  "icons": {
+    "16": "img/mirror16.png",
+    "32": "img/mirror32.png",
+    "48": "img/mirror48.png",
+    "128": "img/mirror128.png"
+  },
+  "devtools_page": "devtools.html",
+  "permissions": [
+    "tabs",
+    "http://*/",
+    "https://*/"
+  ],
+  "manifest_version": 2
+}
