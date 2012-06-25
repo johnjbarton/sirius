@@ -1,10 +1,10 @@
 /*globals console chrome */
 function testLowLevel() {
 
-  // existence of chrome.devtools.remoteDebug tested in 
+  // existence of chrome.experimental.devtools.remoteDebug tested in 
   // chrome/src/chrome/test/data/devtools/extensions/devtools_extension/devtools.js
 
-  console.log("Testing Low-level API: chrome.devtools.remoteDebug");
+  console.log("Testing Low-level API: chrome.experimental.devtools.remoteDebug");
 
   var domainListener = {
     loadEventFired: function(timestamp) {
@@ -13,15 +13,15 @@ function testLowLevel() {
       } else {
         console.error('FAIL wrong argument to loadEventFired');
       }
-      chrome.devtools.remoteDebug.removeDomainListener('Page', domainListener);
+      chrome.experimental.devtools.remoteDebug.removeDomainListener('Page', domainListener);
       testHighLevel();
     }
   };
 
-  chrome.devtools.remoteDebug.registerEvent('Page.loadEventFired', ['timestamp']);
-  chrome.devtools.remoteDebug.addDomainListener('Page', domainListener);
+  chrome.experimental.devtools.remoteDebug.registerEvent('Page.loadEventFired', ['timestamp']);
+  chrome.experimental.devtools.remoteDebug.addDomainListener('Page', domainListener);
   
-  chrome.devtools.remoteDebug.sendCommand('Page.reload', {}, function(result) {
+  chrome.experimental.devtools.remoteDebug.sendCommand('Page.reload', {}, function(result) {
       console.log('PASS low-level sendCommand');
   });
 
