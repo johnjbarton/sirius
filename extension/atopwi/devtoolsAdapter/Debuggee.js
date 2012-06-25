@@ -204,6 +204,43 @@ function(            ChromeProxy)  {
 
       var WebInspector = this.inspectorWindow.WebInspector;
       WebInspector.attached = true; // small icons for embed in orion
+
+      function runAllTests() {
+        var testFrames = document.querySelectorAll('.layoutTest');
+        console.log("runAllTests starts with "+testFrames.length+' frames');
+        for(var i = 0; i < testFrames.length; i++) {
+          var frame = testFrames[i];
+          frame.contentWindow.layoutTestController = {
+            dumpAsText: function() {},
+            waitUntilDone: function() {},
+            notifyDone: function() {},
+            evaluateInWebInspector: function(runTestCallId, toEvaluate) {
+              console.log("evaluateInWebInspector "+runTestCallId, toEvaluate);
+              eval(toEvaluate);
+            }
+          };
+          console.log("runAllTests at "+frame.contentWindow.location);
+          // InspectorTest calls all functions named "initialize_*" before running tests
+          frame.contentWindow.initialize_sirius = function() {
+            // Override 
+            InspectorTest.runExtensionTests = function() {
+              RuntimeAgent.evaluate("location.href", "console", false, function(error, result) {
+                if (error)
+                   return;
+                var pageURL = result.value;
+                console.log("pageURL "+pageURL);
+                var extensionURL = 
+                  pageURL.replace(/^(https?:\/\/[^/]*\/).*$/,"$1") +
+                      "devtoolsAdapter/extension-main.html";
+                  WebInspector.addExtensions([{ startPage: extensionURL, name: "test extension", exposeWebInspectorNamespace: true }]);
+              });              
+            }
+            console.log("initialize_sirius");
+          };
+          frame.contentWindow.runTest();
+        }; 
+      }
+      setTimeout(runAllTests, 3000);     
       
       this.completeLoad = WebInspector.delayLoaded; // set by openInspector
     
