@@ -61,6 +61,7 @@ WebInspector.ExtensionServer = function()
     this._registerHandler(commands.GetResourceContent, this._onGetResourceContent.bind(this));
     this._registerHandler(commands.Log, this._onLog.bind(this));
     this._registerHandler(commands.Reload, this._onReload.bind(this));
+    this._registerHandler(commands.SendCommand, this._onSendCommand.bind(this));
     this._registerHandler(commands.SetOpenResourceHandler, this._onSetOpenResourceHandler.bind(this));
     this._registerHandler(commands.SetResourceContent, this._onSetResourceContent.bind(this));
     this._registerHandler(commands.SetSidebarHeight, this._onSetSidebarHeight.bind(this));
@@ -558,7 +559,16 @@ WebInspector.ExtensionServer.prototype = {
             return this._status.E_NOTFOUND(message.resultId);
         auditRun.cancel();
     },
-
+    
+    _onSendCommand: function(message, port) 
+    {
+        function dispatchSendCommandReply(result) 
+        {
+            this._dispatchCallback(message.requestId, port, result);
+        }
+        InspectorBackend._wrapCallbackAndSendMessageObject(message.method, message.params, dispatchSendCommandReply.bind(this));
+    },
+    
     _dispatchCallback: function(requestId, port, result)
     {
         if (requestId)
@@ -641,6 +651,11 @@ WebInspector.ExtensionServer.prototype = {
         this._postNotification(WebInspector.extensionAPI.Events.TimelineEventRecorded, event.data);
     },
 
+    _notifyRemoteDebugEvent: function(data) {
+        var domain = data.method.split('.')[0];
+    	this._postNotification(WebInspector.extensionAPI.Events.RemoteDebug + domain, data);	
+    },
+
     /**
      * @param {Array.<ExtensionDescriptor>} extensions
      */
@@ -687,11 +702,13 @@ WebInspector.ExtensionServer.prototype = {
 
     _registerExtension: function(origin, port)
     {
+        // TODO make _registeredExtensions an array to allow multiple extensions/origin
         if (!this._registeredExtensions.hasOwnProperty(origin)) {
             if (origin !== window.location.origin) // Just ignore inspector frames.
                 console.error("Ignoring unauthorized client request from " + origin);
             return;
         }
+        InspectorBackend.registerExtensionDispatcher(this._notifyRemoteDebugEvent.bind(this));
         port._extensionOrigin = origin;
         port.addEventListener("message", this._onmessage.bind(this), false);
         port.start();
