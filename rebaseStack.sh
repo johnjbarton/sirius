@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+set -e -x
 git rebase syncToWebKit iframeable
 git rebase iframeable remoteDebug
 git rebase remoteDebug DebuggerProtocol
