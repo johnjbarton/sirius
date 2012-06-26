@@ -12,6 +12,7 @@
      window.extensionInfo = {};
 
     var id = window.location.host + window.location.pathname;
+    id = id.replace('/', '_').replace('.','_');
     // Build the chrome.devtools API
     //
     platformExtensionAPI(injectedExtensionAPI(id));
