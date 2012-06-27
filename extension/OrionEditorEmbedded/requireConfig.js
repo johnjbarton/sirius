@@ -5,12 +5,10 @@
 
 require({
     paths: {
-      'MetaObject': '../../../MetaObject',
       'OrionEditorEmbedded': '../../OrionEditorEmbedded',
       'orion': '../../../orion.client/bundles/org.eclipse.orion.client.editor/web/orion',
-      'text': '../../../MetaObject/requirejs/text',
-      'i18n': '../../../MetaObject/requirejs/i18n',
-      'q': '../MetaObject/q',
+      'text': '../orion.client/bundles/org.eclipse.orion.client.core/web/requirejs/text',
+      'i18n': '../orion.client/bundles/org.eclipse.orion.client.core/web/requirejs/i18n',
       'overrides': '../../overrides'
     }
 }); 
