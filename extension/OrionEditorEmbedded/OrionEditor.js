@@ -13,8 +13,8 @@
 
 // almost the embeddededitor code
 
-define(['require', 'OrionEditorEmbedded/orionAssembly', 'OrionEditorEmbedded/revisionByOrion'], 
-function(require,                               orion,                       RevisionControl){
+define(['require', 'OrionEditorEmbedded/orionAssembly'], 
+function(require,                               orion){
 
   // Syntax highlighting is triggered by an editor callback 'lineStyle' event
   function ErrorStyler(view) {
@@ -39,7 +39,8 @@ function(require,                               orion,                       Rev
     "orion/textview/textview.css", 
     "orion/textview/rulers.css", 
     "examples/textview/textstyler.css", 
-    "examples/editor/htmlStyles.css"];
+    "examples/editor/htmlStyles.css",
+    "examples/editor/embeddededitor.css"];
   // orion.client/bundles/org.eclipse.orion.client.editor/web/
   stylesheets = stylesheets.map(function(sheet) {
     return require.toUrl("orion/"+"../"+sheet);
@@ -54,9 +55,9 @@ function(require,                               orion,                       Rev
   });
     
   var contentAssistFactory = function(editor) {
-    var contentAssist = new orion.editor.ContentAssist(editor, "contentassist");
-    var cssContentAssistProvider = new orion.editor.CssContentAssistProvider();
-    var jsContentAssistProvider = new orion.editor.JavaScriptContentAssistProvider();
+    var contentAssist = new orion.editor.contentAssist.ContentAssist(editor, "contentassist");
+    var cssContentAssistProvider = new orion.editor.cssContentAssist.CssContentAssistProvider();
+    var jsContentAssistProvider = new orion.editor.jsContentAssist.JavaScriptContentAssistProvider();
     contentAssist.addEventListener("show", function() {
 		if (/\.css$/.test(contentName)) {
 			contentAssist.setProviders([cssContentAssistProvider]);
@@ -78,15 +79,15 @@ function(require,                               orion,                       Rev
   var keyBindingFactory = function(editor, keyModeStack, undoStack, contentAssist) {
     
     // Create keybindings for generic editing
-    var genericBindings = new orion.editor.TextActions(editor, undoStack);
+    var genericBindings = new orion.editor.editorFeatures.TextActions(editor, undoStack);
     keyModeStack.push(genericBindings);
     
     // create keybindings for source editing
-    var codeBindings = new orion.editor.SourceCodeActions(editor, undoStack, contentAssist);
+    var codeBindings = new orion.editor.editorFeatures.SourceCodeActions(editor, undoStack, contentAssist);
     keyModeStack.push(codeBindings);
     
     // save binding
-    editor.getTextView().setKeyBinding(new orion.textview.KeyBinding("s", true), "save");
+    editor.getTextView().setKeyBinding(new orion.textview.keyBinding.KeyBinding("s", true), "save");
     editor.getTextView().setAction("save", function(){
         save(editor);
         return true;
@@ -102,11 +103,11 @@ function(require,                               orion,                       Rev
     }
   };
   
-  var annotationFactory = new orion.editor.AnnotationFactory();
+  var annotationFactory = new orion.editor.editorFeatures.AnnotationFactory();
   
   function OrionEditor(editorElement) {
     var textViewFactory = function() {
-      return new orion.textview.TextView({
+      return new orion.textview.textView.TextView({
         parent: editorElement,
         tabSize: 2
       });
@@ -114,19 +115,19 @@ function(require,                               orion,                       Rev
 
     var config = {
       textViewFactory: textViewFactory,
-      undoStackFactory: new orion.editor.UndoFactory(),
+      undoStackFactory: new orion.editor.editorFeatures.UndoFactory(),
       annotationFactory: annotationFactory,
-      lineNumberRulerFactory: new orion.editor.LineNumberRulerFactory(),
+      lineNumberRulerFactory: new orion.editor.editorFeatures.LineNumberRulerFactory(),
       contentAssistFactory: contentAssistFactory,
       keyBindingFactory: keyBindingFactory, 
       statusReporter: statusReporter,
       domNode: editorElement
     };
     
-    orion.editor.Editor.call(this, config);
+    orion.editor.editor.Editor.call(this, config);
   }
 
-  OrionEditor.prototype = orion.editor.Editor.prototype;
+  OrionEditor.prototype = orion.editor.editor.Editor.prototype;
 
   return OrionEditor;
 

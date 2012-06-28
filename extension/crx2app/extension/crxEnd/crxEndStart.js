@@ -47,7 +47,7 @@ function obeyOptions() {
     if (name && name !== '(none)') {
       // open blank and update to avoid racing debugger attaching to the tab   
       //********** workaround for http://code.google.com/p/chromium/issues/detail?id=108519
-      var crx2appBase = window.crx2appBase; 
+      var crx2appBase = window.crx2appBase || "crx2app/extension"; 
       var fakeBlankURL = crx2appBase + '/workaroundBug108519.html';
       //**********
       buildContextMenuItem(name, fakeBlankURL, function onDebuggerWindowCreated(onClickInfo, debuggeeTab, win) {
