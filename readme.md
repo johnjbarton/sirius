@@ -48,6 +48,7 @@ Requires Chrome version 20+
     -- remoteDebug adds chrome.experimental.devtools.remoteDebug to allow extensions to access backend
     -- DebuggerProtocol implements chrome.experiment.devtools.protocol using remoteDebug
     -- extendable builds on DebuggerProtocol to add extensions to Sirius
+    -- purple adds a panel for exploring querypoint debugging
     -- master points to the top of the patch stack
 
   - For devtools related changes, branch from syncToWebKit and merge the result into master
@@ -56,8 +57,7 @@ Requires Chrome version 20+
   -- See `bin/git-tx`
 
   - To maintain the patch stack:
-  -- git rebase syncToWebKit iframeable
-  -- git rebase iframeable remoteDebug
-  -- git rebase remoteDebug DebuggerProtocol
-  -- git rebase DebuggerProtocol extendable
-  -- git rebase extendable master
+     rebaseStack.sh  rebase all branches
+     forcePushStack.sh  push all branches forcibly
+
+     Because we are always rebasing, don't use "git pull". Just clone a new copy.
