@@ -1,6 +1,19 @@
-<!doctype html>
+<!doctype html style="height: 100%;">
 <meta charset=utf-8>
 <title> Purple Panel </title>
 <script src="../orion.client/bundles/org.eclipse.orion.client.core/web/requirejs/require.js"></script>
 <script src="../OrionEditorEmbedded/requireConfig.js"></script>
 <script src="LoadOrionEditorEmbedded.js"></script>
+ <body class="claro" style="width: 100%; height: 100%;">
+	<div id="logo" style="height: 28px; background: #404040; text-align: left;">
+		<img src="img/skinnyheaderlogo.png" alt="Orion">
+		<span id="bar" style="height: 28px; vertical-align: top; color: #FFFFFF;">
+			<span id="status" style="height: 28px; vertical-align: top; color: #FFFFFF;"></span>
+			<div id="actions" style="height: 28px; padding-right: 8px; vertical-align: top; float: right; color: #FFFFFF;">
+				<a id="save">Save</a>
+			</div>
+		</span>
+	</div>
+    <div id="editor" style="width: 100%; height: 90%;"></div>
+	<div id="contentassist" class="contentassist"></div>
+</body>
