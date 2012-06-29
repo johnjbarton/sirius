@@ -1,0 +1,176 @@
+/* Copyright 2011 Google Inc. 
+ * see Purple/license.txt for BSD license
+ * johnjbarton@google.com
+ */
+html, body, iframe {
+  height: 100%;
+  width: 100%;
+  margin: 0;  /* kill off any margin so we control */
+  border: none;
+}
+body {
+  font-family:Verdana,Geneva,sans-serif;
+  font-size: small;
+}
+.hide {
+  display: none;
+}
+#debuggee {
+  margin: 20px;
+}
+.crx2appConnection {
+  display: none;
+}
+
+#log > DIV { /* a bit of space on each end of the log rows */
+  padding-left: 1ex; 
+  padding-right: 1ex;
+}
+.partLink:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.partLink {
+  font-weight: bold;
+  color: blue;
+}
+  
+.console-error {
+  color: red;
+}  
+.internalError {
+  color: purple;
+}
+.console-warn {
+  color: yellow;
+}  
+
+.console-log {
+  color: gray;
+}  
+.consoleCleared {
+  color: white;
+  background-color: black;
+  text-align: center;
+}
+
+.linkedText {
+  width: 100%;
+}
+.linkedText .messageLink { /* when the link is on a line with a message */
+  float: right;
+}
+
+
+.vCentering img {
+  vertical-align: middle;
+}
+
+.objectMore {
+  position: relative; /* Allow nested popOver elements to be position absolute */
+}
+
+.popOverEnlarger {  /* Wrap the popover in a invisible border so small mouse motion after popup does not popdown */
+  position: absolute;
+  padding: 2ex;
+  z-index: 1;
+  display: none; /* show while poppedOver */
+  left: 0; /* XXXjjb I don't understand why this makes the position correct */
+}
+
+.popOver {
+  outline:none;
+/*  -webkit-transition: all 0.25s ease-in-out; */
+  border-radius: 3px;
+  color:gray;
+  box-shadow: 0 0 15px gray;
+  border:1px solid gray; 
+  background-color: lightyellow;
+  padding: 1ex;
+}
+
+.popOver .objectProperties {
+  display: block; /* shortTag narrow in popOver */
+  padding-left: 2ex;
+}
+
+.objectMore > .openedTwisty { /* immediate child selectors, so nested objectMore works */
+  display: none;
+}
+.poppedOver > .openedTwisty {
+  display: inline;
+}
+.poppedOver > .closedTwisty {
+  display: none;
+}
+.poppedOver > .popOverEnlarger { /* immediate child selector so nested objectMore works */
+  display: inline;
+}
+
+.hasMore + * {
+  display: none;
+}
+
+.hasMore > .openedTwisty {
+  display: none;
+}
+.hadMore > .closedTwisty {
+  display: none;
+}
+
+/* LazyDisclosureRep */
+.openedLazy {
+  display: none;
+}
+.closedLazy {
+  display: inline;
+}
+.lazyOpened > .openedLazy {
+  display: inline;
+}
+.lazyOpened > .closedLazy {
+  display: none;
+}
+.lazyClosed {
+  display: none;
+}
+
+.callStack {
+  padding-left: 1em;
+}
+
+.callStackFrame {
+  color: green;
+}
+.callStackFrame TD {
+  padding-left: 2em;
+}
+.callStackFrame .partLink {
+  text-align: right;
+}
+
+.StringRep {
+  color: blue;
+}
+
+.sourceCodeJS {
+	font-family: monospace;
+	font-size: 10pt;
+	color: black;
+}
+
+.p_id {
+  display: none; /* no log serial number unless the browserLog is showing */
+}
+
+.browserLog .p_id {
+ display: inline;
+ min-width: 3ex;
+ float: left; /* "you can't assign a width to an inline element, only padding/margin so you'll need to make it float" */
+}
+
+.browserLog .p_id + * {
+  display: inline;
+  margin-left: 3px;
+}
