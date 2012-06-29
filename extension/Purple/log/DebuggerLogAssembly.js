@@ -3,15 +3,13 @@
 
 /*globals define */
 
-define(['log/javaScriptEventHandler', 'log/consoleEventHandler', 'log/networkEventHandler', 'resources/Resources'], 
-function(            jsEventHandler,       consoleEventHandler,       networkEventHandler,             resources) {
+define(['log/consoleLog',  'resources/Resources'], 
+function(    consoleLog,              resources) {
 
   var DebuggerLogAssembly = {
      
     initialize: function(clock) {
-      jsEventHandler.initialize(clock);
-      networkEventHandler.initialize(clock);
-      consoleEventHandler.initialize(clock);
+      consoleLog.initialize(clock);
       resources.initialize(clock);
     },
      
@@ -23,30 +21,18 @@ function(            jsEventHandler,       consoleEventHandler,       networkEve
  
     
     onPreAttach: function(debuggerProxy) {
-      jsEventHandler.connect(debuggerProxy, this.viewport);
-      networkEventHandler.connect(debuggerProxy, this.viewport);
-      consoleEventHandler.connect(debuggerProxy, this.viewport);
+      consoleLog.connect(debuggerProxy, this.viewport);
     },
 
     onPostAttach: function(debuggerProxy) {
-      return Q.all([
-        debuggerProxy.Debugger.enable(),
-        debuggerProxy.Network.enable(),
         debuggerProxy.Console.enable()
-        ]);
     },
     
     showAll: function() {
-      jsEventHandler.show();
-      networkEventHandler.show();
-      consoleEventHandler.show();
+      consoleLog.show();
     }
     
   };
-  
-  // Are we having fun yet?
-  DebuggerLogAssembly.onPreAttach = DebuggerLogAssembly.onPreAttach.bind(DebuggerLogAssembly);
-  DebuggerLogAssembly.onPostAttach = DebuggerLogAssembly.onPostAttach.bind(DebuggerLogAssembly);
   
   return DebuggerLogAssembly;
 });
