@@ -41,6 +41,7 @@ var LogBase = MetaObject.extend({
   toggleEnable: function() {
     throw new Error("unimplemented")
   },
+});  
   
   return LogBase;
 });

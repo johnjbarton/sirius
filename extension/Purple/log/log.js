@@ -17,10 +17,10 @@ function initialize() {
        var globalClock = {p_id: 0};
        DebuggerLogAssembly.initialize(globalClock);
        
-       DebuggerLogAssembly.connect(viewport);
+       DebuggerLogAssembly.connect();
 
        function detach() {
-         connection.detach();
+         console.log("detach?");
        }
 
        window.addEventListener('unload', detach, false);

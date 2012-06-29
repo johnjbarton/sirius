@@ -1,7 +1,7 @@
 // See Purple/license.txt for Google BSD license
 // Copyright 2011 Google, Inc. johnjbarton@johnjbarton.com
 
-define(['domplate/lib/domplate', '../resources/Resources', 'lib/element', 'lib/reps', 'lib/Rep'], 
+define(['domplate/lib/domplate', '../resources/Resources', 'lib/element', 'reps/reps', 'reps/Rep'], 
 function (                   domplate,                Resources,       Element,        reps,      Rep) {
   
   with(domplate.tags) {

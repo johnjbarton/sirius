@@ -3,7 +3,7 @@
 
 /*globals define window */
 
-define(['domplate/lib/domplate', '../resources/Resources', '../lib/reps', '../lib/Rep', 'editor/editorInserter'], 
+define(['domplate/lib/domplate', '../resources/Resources', 'reps/reps', '../reps/Rep', 'OrionEditorEmbedded/editorInserter'], 
 function (                   domplate,                Resources,          Reps,          Rep,          editorInserter) {
   
   var thePurple = window.purple;
@@ -112,7 +112,7 @@ function (                   domplate,                Resources,          Reps, 
   }
   
   
-  Reps.registerPart(PartLinkRep);
+  Reps.add(PartLinkRep);
   
   return PartLinkRep;
 });

@@ -1,7 +1,7 @@
 // See Purple/license.txt for Google BSD license
 // Copyright 2011 Google, Inc. johnjbarton@johnjbarton.com
 
-define(['domplate/lib/domplate', '../resources/PartLinkRep', '../lib/reps'], function (domplate, PartLinkRep, Reps) {
+define(['domplate/lib/domplate', '../resources/PartLinkRep', 'reps/reps'], function (domplate, PartLinkRep, Reps) {
   
   with(domplate.tags) {
     
