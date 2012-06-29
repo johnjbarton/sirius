@@ -5,7 +5,7 @@
 
 /*globals define window console document */
 
-define(['lib/Assembly', 'log/consoleEntryRep','../resources/objRep','lib/reps' ], 
+define(['lib/Assembly', 'log/consoleEntryRep','../resources/objRep','reps/reps' ], 
 function(    Assembly,       consoleEntryRep,               ObjRep,      reps) {
   
   'use strict';

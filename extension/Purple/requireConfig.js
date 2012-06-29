@@ -6,12 +6,18 @@
 require({
     paths: {
       'OrionEditorEmbedded': '../../OrionEditorEmbedded',
-      'orion': '../../../orion.client/bundles/org.eclipse.orion.client.editor/web/orion',
+      'orion': '../orion.client/bundles/org.eclipse.orion.client.editor/web/orion',
       'text': '../orion.client/bundles/org.eclipse.orion.client.core/web/requirejs/text',
       'i18n': '../orion.client/bundles/org.eclipse.orion.client.core/web/requirejs/i18n',
-       'log': "../log",
-       'resources': "../resources",
-       'domplate': "ui/domplate"
+       'log': "./log",
+       'resources': "resources",
+       'reps': "reps",
+       'domplate': "ui/domplate",
+       'MetaObject': '../MetaObject/'
     }
-}); 
+});
 
+require(["debugRequire"], function(d) {});
+require.onError = function (err) {
+        console.error("requirejs ", err);
+    };

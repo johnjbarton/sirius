@@ -3,8 +3,8 @@
 
 /*globals define window console*/
 
-define(['domplate/lib/domplate', 'resources/PartLinkRep', 'resources/Resources', 'lib/reps',  'lib/Rep', 'lib/string', 'editor/EditorInterface'], 
-function (                    domplate,             PartLinkRep,             Resources,       Reps,        Rep,          Str,          EditorInterface) {
+define(['domplate/lib/domplate', 'resources/PartLinkRep', 'resources/Resources', 'reps/reps',  'reps/Rep', 'firebugSource/Str'], 
+function (                    domplate,                   PartLinkRep,                    Resources,            Reps,          Rep,                          Str) {
   
   var dp = domplate.tags;
   
@@ -91,7 +91,7 @@ function (                    domplate,             PartLinkRep,             Res
         }
       }
     );
-    Reps.registerPart(stackFrameRep);
+    Reps.add(stackFrameRep);
     
     var callStackRep = domplate.domplate({
       tag: dp.TABLE({'class':'callStack'},
@@ -165,7 +165,7 @@ function (                    domplate,             PartLinkRep,             Res
         }
       }
     );
-    Reps.registerPart(editingFrameRep);
+    Reps.add(editingFrameRep);
 
     var editingStackRep = domplate.domplate({
       tag: 
@@ -294,7 +294,7 @@ function (                    domplate,             PartLinkRep,             Res
       }
     });
   
-  Reps.registerPart(consoleEntryRep);
+  Reps.add(consoleEntryRep);
   
   return consoleEntryRep;
 });

@@ -123,6 +123,7 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
   // as panels load lazily, grab the editor when it's ready
   panel.onShown.addListener(function(window) {
     panel_window = window;
+    panel_window.chrome.devtools = chrome.devtools;
     attachToPanel(panel_window);
   });
 
