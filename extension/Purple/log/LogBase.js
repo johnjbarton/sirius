@@ -4,7 +4,7 @@
 /*globals define console */
 
 define(['MetaObject/MetaObject', 'log/SparseArray'], 
-function (                  MetaObject,         SparseArray){
+function (          MetaObject,        SparseArray){
   
 var LogBase = MetaObject.extend({
     
@@ -13,9 +13,8 @@ var LogBase = MetaObject.extend({
     this.store = SparseArray.new(name);
   },
   
-  connect: function(hasEnableDisable, viewport) {
+  connect: function(hasEnableDisable) {
     this.hasEnableDisable = hasEnableDisable;
-    this.viewport = viewport;
   },
   
   disconnect: function() {
@@ -43,35 +42,6 @@ var LogBase = MetaObject.extend({
     throw new Error("unimplemented")
   },
   
-  // Output Management
-  
-  show: function() {
-    if (!this.viewport.getPartByName(this.store.name)) {
-      this.viewport.registerPart(this.store);
-      this.viewport.rebuild();
-    }
-    return true;
-  },
-    
-  hide: function() {
-    if (this.viewport.getPartByName(this.store.name)) {
-      this.viewport.unregisterPart(this.store);
-      this.viewport.rebuild();
-    }
-    return false;
-  },
-  
-  toggleShow: function(targetState) {
-    // TODO get the current state from the UI state
-    if ( ((typeof targetState === 'boolean') && !targetState) || this.showing) {
-      this.showing = this.hide();
-    } else {
-      this.showing = this.show();
-    }
-    this.toEachListener({type:'logShow', show: this.showing});
-  }
-}); 
-   
   return LogBase;
 });
 
