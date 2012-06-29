@@ -5,7 +5,7 @@
 	<script src="../../orion/plugin.js"></script>
 	<script src="../../requirejs/require.js"></script>
 	<script type="text/javascript">
-	require({
+	require.config({
 		  baseUrl: '../..',
 		  packages: [
 		    {
@@ -29,12 +29,14 @@
 		  ],
 		  paths: {
 			  text: 'requirejs/text',
-			  i18n: 'requirejs/i18n'	    
-		  }
+			  i18n: 'requirejs/i18n',
+			  domReady: 'requirejs/domReady'	    
+		  },
+		  isTest: true
 		});
 	
 	window.onload = function() {
-		require(["orion/test","./testcase"], function(test, testcase) {
+		require(["orion/test","testcase.js"], function(test, testcase) {
 			test.run(testcase);			
 		});
 	};

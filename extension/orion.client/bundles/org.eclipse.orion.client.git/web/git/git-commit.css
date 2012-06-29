@@ -1,12 +1,12 @@
 @import "../org.dojotoolkit/dojo/resources/dojo.css";
 
-@import "../org.dojotoolkit/dijit/themes/nihilo/nihilo.css";
+@import "../org.dojotoolkit/dijit/themes/claro/claro.css";
 
-@import "../org.dojotoolkit/dijit/themes/nihilo/layout/BorderContainer.css";
+@import "../org.dojotoolkit/dijit/themes/claro/layout/BorderContainer.css";
 
-@import "../org.dojotoolkit/dijit/themes/nihilo/form/Common.css";
+@import "../org.dojotoolkit/dijit/themes/claro/form/Common.css";
 
-@import "../org.dojotoolkit/dijit/themes/nihilo/form/Button.css";
+@import "../org.dojotoolkit/dijit/themes/claro/form/Button.css";
 
 @import "../org.dojotoolkit/dojox/layout/resources/ToggleSplitter.css";
 
@@ -14,15 +14,13 @@
 
 @import "../css/ide.css";
 
-@import "../css/customsplitter.css";
-
 @import "../css/breadcrumbs.css";
 
 @import "../css/commands.css";
 
 @import "../css/sections.css";
 
-@import "../orion/compare/compare.css";
+@import "../orion/compare/compare-container.css";
 
 @import "css/git.css";
 
@@ -39,11 +37,6 @@
 	position: relative;
 	white-space:normal;
 	max-width:700px;
-}
-
-.plugin-settings {
-    overflow-x: hidden;
-    width: 100%;
 }
 
 pre {

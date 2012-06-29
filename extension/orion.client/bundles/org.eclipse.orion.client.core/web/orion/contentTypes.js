@@ -11,9 +11,9 @@
  *******************************************************************************/
 /*global define */
 define([], function() {
-	var SERVICE_ID = "orion.core.contenttypes";
-	var EXTENSION_ID = "orion.core.contenttype";
-	var OLD_EXTENSION_ID = "orion.file.contenttype"; // backwards compatibility
+	var SERVICE_ID = "orion.core.contenttypes"; //$NON-NLS-0$
+	var EXTENSION_ID = "orion.core.contenttype"; //$NON-NLS-0$
+	var OLD_EXTENSION_ID = "orion.file.contenttype"; // backwards compatibility //$NON-NLS-0$
 
 	/**
 	 * @name orion.core.ContentType
@@ -25,7 +25,7 @@ define([], function() {
 	 * @property {String[]} filename Optional; List of filenames characterizing this ContentType.
 	 */
 	
-	function getFilenameContentType(/**String*/ filename) {
+	function getFilenameContentType(/**String*/ filename, contentTypes) {
 		function winner(best, other, filename, extension) {
 			var nameMatch = other.filename.indexOf(filename) >= 0;
 			var extMatch = other.extension.indexOf(extension) >= 0;
@@ -36,8 +36,8 @@ define([], function() {
 			}
 			return best;
 		}
-		var extension = filename && filename.split(".").pop();
-		var contentTypes = this.getContentTypes(), best = null;
+		var extension = filename && filename.split(".").pop(); //$NON-NLS-0$
+		var best = null;
 		for (var i=0; i < contentTypes.length; i++) {
 			var type = contentTypes[i];
 			if (winner(best, type, filename, extension) === type) {
@@ -59,14 +59,14 @@ define([], function() {
 	function ContentTypeService(serviceRegistry) {
 		function buildMap(serviceRegistry) {
 			function array(obj) {
-				if (obj === null || typeof obj === "undefined") { return []; }
+				if (obj === null || typeof obj === "undefined") { return []; } //$NON-NLS-0$
 				return (obj instanceof Array) ? obj : [obj];
 			}
 			var serviceReferences = serviceRegistry.getServiceReferences(EXTENSION_ID).concat(
 					serviceRegistry.getServiceReferences(OLD_EXTENSION_ID));
 			var contentTypes = {};
 			for (var i=0; i < serviceReferences.length; i++) {
-				var serviceRef = serviceReferences[i], types = array(serviceRef.getProperty("contentTypes"));
+				var serviceRef = serviceReferences[i], types = array(serviceRef.getProperty("contentTypes")); //$NON-NLS-0$
 				for (var j=0; j < types.length; j++) {
 					var type = types[j];
 					if (!contentTypes[type.id]) {
@@ -74,7 +74,7 @@ define([], function() {
 							id: type.id,
 							name: type.name,
 							image: type.image,
-							"extends": type["extends"],
+							"extends": type["extends"], //$NON-NLS-1$ //$NON-NLS-0$
 							extension: array(type.extension),
 							filename: array(type.filename)
 						};
@@ -116,7 +116,7 @@ define([], function() {
 		 * @returns {orion.core.ContentType} The ContentType for the file, or <code>null</code> if none could be found.
 		 */
 		getFileContentType: function(fileMetadata) {
-			return getFilenameContentType.call(this, fileMetadata.Name);
+			return getFilenameContentType(fileMetadata.Name, this.getContentTypes());
 		},
 		/**
 		 * Looks up the ContentType, given a filename.
@@ -124,7 +124,7 @@ define([], function() {
 		 * @returns {orion.core.ContentType} The ContentType for the file, or <code>null</code> if none could be found.
 		 */
 		getFilenameContentType: function(filename) {
-			return getFilenameContentType.call(this, filename);
+			return getFilenameContentType(filename, this.getContentTypes());
 		},
 		/**
 		 * Gets a ContentType by ID.
@@ -142,15 +142,15 @@ define([], function() {
 		 *  or <code>contentTypeA</code> descends from <code>contentTypeB</code>.
 		 */
 		isExtensionOf: function(contentTypeA, contentTypeB) {
-			contentTypeA = (typeof contentTypeA === "string") ? this.getContentType(contentTypeA) : contentTypeA;
-			contentTypeB = (typeof contentTypeB === "string") ? this.getContentType(contentTypeB) : contentTypeB;
+			contentTypeA = (typeof contentTypeA === "string") ? this.getContentType(contentTypeA) : contentTypeA; //$NON-NLS-0$
+			contentTypeB = (typeof contentTypeB === "string") ? this.getContentType(contentTypeB) : contentTypeB; //$NON-NLS-0$
 			if (!contentTypeA || !contentTypeB) { return false; }
 			if (contentTypeA.id === contentTypeB.id) { return true; }
 			else {
 				var parent = contentTypeA, seen = {};
-				while (parent && (parent = this.getContentType(parent['extends']))) {
+				while (parent && (parent = this.getContentType(parent['extends']))) { //$NON-NLS-0$
 					if (parent.id === contentTypeB.id) { return true; }
-					if (seen[parent.id]) { throw new Error("Cycle: " + parent.id); }
+					if (seen[parent.id]) { throw new Error("Cycle: " + parent.id); } //$NON-NLS-0$
 					seen[parent.id] = true;
 				}
 			}
@@ -172,5 +172,8 @@ define([], function() {
 			return false;
 		}
 	};
-	return {ContentTypeService: ContentTypeService};
+	return {
+		ContentTypeService: ContentTypeService,
+		getFilenameContentType: getFilenameContentType
+	};
 });

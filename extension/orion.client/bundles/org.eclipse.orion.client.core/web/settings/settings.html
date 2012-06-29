@@ -11,15 +11,15 @@
 				      packages: [{ name: 'dojo', location: 'org.dojotoolkit/dojo', main: 'lib/main-browser', lib: '.' },
 								{ name: 'dijit', location: 'org.dojotoolkit/dijit', main: 'lib/main',lib: '.' },
 								{ name: 'dojox', location: 'org.dojotoolkit/dojox', main: 'lib/main', lib: '.' } ],
-				      paths: { text: 'requirejs/text', i18n: 'requirejs/i18n' } 
+				      paths: { text: 'requirejs/text', i18n: 'requirejs/i18n', domReady: 'requirejs/domReady' } 
 			});
-			require(["./settings"]);
+			require(["settings.js"]);
 		</script>
 	</head>
-	<body style="visibility:hidden;" class="nihilo">
+	<body style="visibility:hidden;" class="claro">
 		<div id="orion.settings" class="orionPage" dojotype="dijit.layout.BorderContainer" design="headline" gutters="false">
 			<div class="banner" id="banner" dojotype="dijit.layout.ContentPane" region="top"></div>
-			<div id="centerPane" dojotype="dijit.layout.ContentPane" region="center">
+			<div id="centerPane" dojotype="dijit.layout.ContentPane" region="center" role="main">
 				<div id="selectionAgent"></div>
 			</div>
 			<div class="footer" id="footer" dojotype="dijit.layout.ContentPane" region="bottom" splitter="false"></div>
