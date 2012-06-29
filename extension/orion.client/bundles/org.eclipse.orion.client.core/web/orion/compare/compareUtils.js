@@ -10,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-define([], function() {
+define(['dojo', 'dijit'], function(dojo, dijit) {
 
 var orion = orion || {};
 
@@ -146,22 +146,6 @@ orion.compareUtils.getMapperLineCount = function(mapper){
 	return curLineindex;
 };
 
-orion.compareUtils.findNextDiff = function(mapper , fromIndex){
-	var from = 0;
-	if(fromIndex >= 0 &&  fromIndex < mapper.length - 1)
-		from = fromIndex + 1;
-	for (var i = from ; i < mapper.length ; i++){
-		if(mapper[i][2] !== 0)
-			return i;
-	}
-	for (var i = 0 ; i < from ; i++){
-		if(mapper[i][2] !== 0)
-			return i;
-	}
-	return fromIndex;
-};
-
-
 orion.compareUtils.getAnnotationIndex = function(annotations, lineIndex){
 	for (var i = 0 ; i < annotations.length ; i++){
 		if(annotations[i][0] === lineIndex){
@@ -192,14 +176,84 @@ orion.compareUtils.isMapperConflict = function(mapper, mapperIndex){
 	return mapper[mapperIndex][3] === 1;
 };
 
+orion.compareUtils.mergeDiffBlocks = function(oldTextModel, newDiffBlocks, mapper, diffArray, diffArraySubstrIndex, lineDelim){
+	for(var i = 0; i < newDiffBlocks.length; i++){
+		var startLineIndex = newDiffBlocks[i][0];
+		var mapperIndex = newDiffBlocks[i][1];
+		var mapperItem = mapper[mapperIndex];
+		if(mapperItem[0] > 0){
+			var text = "";
+			for(var j = 0; j < mapperItem[0]; j++){
+				var lineText = diffArray[mapperItem[2]-1+j];
+				text = text + lineText.substring(diffArraySubstrIndex) + lineDelim;
+			}
+			var startOffset = oldTextModel.getLineStart(startLineIndex);
+			oldTextModel.setText(text, startOffset, startOffset);
+		}
+	}
+};
+
+orion.compareUtils.generateCompareHref = function(diffLocation, options) {
+	var base =  require.toUrl("compare/compare.html"); //$NON-NLS-0$
+	var compareParam = "";
+	var diffPosition = "";
+	if(options){
+		if(options.readonly){
+			compareParam = "?readonly"; //$NON-NLS-0$
+		}
+		if(options.conflict){
+			if(compareParam === ""){
+				compareParam = "?conflict"; //$NON-NLS-0$
+			} else {
+				compareParam = compareParam + "&conflict"; //$NON-NLS-0$
+			}
+		}
+		if(options.block && options.block > 0){
+			diffPosition = ",block=" + options.block; //$NON-NLS-0$
+			if(options.change && options.change > 0){
+				diffPosition = diffPosition + "&change="+ options.change; //$NON-NLS-0$
+			}
+		}
+	}
+	var tempLink = dojo.create("a", {href: base + compareParam + "#" + diffLocation + diffPosition}); //$NON-NLS-1$ //$NON-NLS-0$
+	return tempLink.href;
+};
+
+orion.compareUtils.parseCompareHash = function(hash) {
+	var diffObj = {complexURL: hash};
+	var diffPosIndex = hash.indexOf(",block="); //$NON-NLS-0$
+	if(diffPosIndex > 0){
+		diffObj.complexURL = hash.substring(0, diffPosIndex);
+		var diffPosStr = hash.substring(diffPosIndex+1);
+		var splitDiffPosStr = diffPosStr.split("&"); //$NON-NLS-0$
+		for(var i=0; i < splitDiffPosStr.length; i++){
+			var splitParams = splitDiffPosStr[i].split("="); //$NON-NLS-0$
+			if(splitParams.length === 2){
+				if(splitParams[0] === "block"){ //$NON-NLS-0$
+					diffObj.block = parseInt(splitParams[1]);
+				} else if(splitParams[0] === "change"){ //$NON-NLS-0$
+					diffObj.change = parseInt(splitParams[1]);
+				} 
+			}
+		}
+	} 
+	return diffObj;
+};
+
+orion.compareUtils.destroyDijit = function(dijitId) {
+	var widget = dijit.byId(dijitId);
+	if(widget){
+		widget.destroyRecursive();
+	}
+};
+
+orion.compareUtils.getDijitSizeStyle = function(parentId) {
+	var marginBox = dojo.marginBox(parentId);
+	var styleH = marginBox.h + "px"; //$NON-NLS-0$
+	var styleW = "100%"; //$NON-NLS-0$
+	var styleStr = "height:" + styleH + ";width:" + styleW; //$NON-NLS-1$ //$NON-NLS-0$
+	return styleStr;
+};
 
 return orion.compareUtils;
 });
-
-
-
-
-
-
-
-

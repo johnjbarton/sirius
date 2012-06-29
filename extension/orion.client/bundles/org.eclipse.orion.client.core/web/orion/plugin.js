@@ -10,7 +10,7 @@
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
 
-/*global window addEventListener removeEventListener self*/
+/*global window ArrayBuffer addEventListener removeEventListener self XMLHttpRequest*/
 
 /**
  * @private Don't jsdoc this.
@@ -37,7 +37,14 @@ eclipse.PluginProvider = function(metadata) {
 
 	function _publish(message) {
 		if (_target) {
-				_target.postMessage((window.ArrayBuffer ? message : JSON.stringify(message)), "*");	
+			if (typeof(ArrayBuffer) === "undefined") { //$NON-NLS-0$
+				message = JSON.stringify(message);
+			}
+			if (_target === self) {
+				_target.postMessage(message);
+			} else {
+				_target.postMessage(message, "*"); //$NON-NLS-0$
+			}
 		}
 	}
 	
@@ -48,7 +55,7 @@ eclipse.PluginProvider = function(metadata) {
 				}
 				var message = {
 					serviceId: serviceId,
-					method: "dispatchEvent",
+					method: "dispatchEvent", //$NON-NLS-0$
 					params: [eventName].concat(Array.prototype.slice.call(arguments, 2))
 				};
 				_publish(message);
@@ -72,12 +79,22 @@ eclipse.PluginProvider = function(metadata) {
 		return {services: services, metadata: _metadata || {}};		
 	}
 	
+	function jsonXMLHttpRequestReplacer(name, value) {
+		if (value && value instanceof XMLHttpRequest) {
+			return {
+				status: value.status, 
+				statusText: value.statusText
+			};
+		}
+		return value;
+	}
+	
 	function _handleRequest(event) {
 		
 		if (event.source !== _target ) {
 			return;
 		}
-		var message = (typeof event.data !== "string" ? event.data : JSON.parse(event.data));
+		var message = (typeof event.data !== "string" ? event.data : JSON.parse(event.data)); //$NON-NLS-0$
 		var serviceId = message.serviceId;
 		var service = _services[serviceId].implementation;
 		var method = service[message.method];
@@ -85,22 +102,22 @@ eclipse.PluginProvider = function(metadata) {
 		var response = {id: message.id, result: null, error: null};		
 		try {
 			var promiseOrResult = method.apply(service, message.params);
-			if(promiseOrResult && typeof promiseOrResult.then === "function"){
+			if(promiseOrResult && typeof promiseOrResult.then === "function"){ //$NON-NLS-0$
 				promiseOrResult.then(function(result) {
 					response.result = result;
 					_publish(response);
 				}, function(error) {
-					response.error = error ? JSON.parse(JSON.stringify(error)) : error; // sanitizing Error object 
+					response.error = error ? JSON.parse(JSON.stringify(error, jsonXMLHttpRequestReplacer)) : error; // sanitizing Error object 
 					_publish(response);
 				}, function() {
-					_publish({requestId: message.id, method: "progress", params: Array.prototype.slice.call(arguments)});
+					_publish({requestId: message.id, method: "progress", params: Array.prototype.slice.call(arguments)}); //$NON-NLS-0$
 				});
 			} else {
 				response.result = promiseOrResult;
 				_publish(response);
 			}
 		} catch (error) {
-			response.error = error ? JSON.parse(JSON.stringify(error)) : error; // sanitizing Error object
+			response.error = error ? JSON.parse(JSON.stringify(error, jsonXMLHttpRequestReplacer)) : error; // sanitizing Error object 
 			_publish(response);
 		}
 	}
@@ -113,7 +130,7 @@ eclipse.PluginProvider = function(metadata) {
 		var method = null;
 		var methods = [];
 		for (method in implementation) {
-			if (typeof implementation[method] === 'function') {
+			if (typeof implementation[method] === 'function') { //$NON-NLS-0$
 				methods.push(method);
 			}
 		}
@@ -131,7 +148,7 @@ eclipse.PluginProvider = function(metadata) {
 			return;
 		}
 
-		if (!window) {
+		if (typeof(window) === "undefined") { //$NON-NLS-0$
 			_target = self;
 		} else if (window !== window.parent) {
 			_target = window.parent;
@@ -143,9 +160,9 @@ eclipse.PluginProvider = function(metadata) {
 			}
 			return;
 		}
-		addEventListener("message", _handleRequest, false);
+		addEventListener("message", _handleRequest, false); //$NON-NLS-0$
 		var message = {
-			method: "plugin",
+			method: "plugin", //$NON-NLS-0$
 			params: [_getPluginData()]
 		};
 		_publish(message);
@@ -157,7 +174,7 @@ eclipse.PluginProvider = function(metadata) {
 	
 	this.disconnect = function() {
 		if (_connected) { 
-			removeEventListener("message", _handleRequest);
+			removeEventListener("message", _handleRequest); //$NON-NLS-0$
 			_target = null;
 			_connected = false;
 		}
