@@ -54,18 +54,12 @@ function(require,                               orion){
     document.head.appendChild(elt);
   });
     
-  var contentAssistFactory = function(editor) {
-    var contentAssist = new orion.editor.contentAssist.ContentAssist(editor, "contentassist");
-    var cssContentAssistProvider = new orion.editor.cssContentAssist.CssContentAssistProvider();
-    var jsContentAssistProvider = new orion.editor.jsContentAssist.JavaScriptContentAssistProvider();
-    contentAssist.addEventListener("show", function() {
-		if (/\.css$/.test(contentName)) {
-			contentAssist.setProviders([cssContentAssistProvider]);
-		} else if (/\.js$/.test(contentName)) {
-			contentAssist.setProviders([jsContentAssistProvider]);
-		}
-	});
-    return contentAssist;
+  var contentAssistFactory = {
+    createContentAssistMode: function(editor) {
+      contentAssist = new orion.editor.contentAssist.ContentAssist(editor.getTextView());
+      var contentAssistWidget = new orion.editor.contentAssist.ContentAssistWidget(contentAssist, "contentassist");
+      return new orion.editor.contentAssist.ContentAssistMode(contentAssist, contentAssistWidget);
+    }
   };
   
   
