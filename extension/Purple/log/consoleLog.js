@@ -29,9 +29,12 @@ define(['log/LogBase', 'log/ConsoleEntry'],
     },
     //---------------------------------------------------------------------------------------------
   
-    connect: function() {
+    connect: function(debuggerProtocol) {
+      LogBase.connect.apply(this, [this]);     
       this.addListeners();  // register with the protocol
-      LogBase.connect.apply(this, [this]);   // this causes the event store to be pulled into the viewport   
+      this.enable(function onEnable(){
+          console.log("Console.enable");
+      })
     },
   
     disconnect: function() {

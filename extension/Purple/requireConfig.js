@@ -9,7 +9,7 @@ require({
       'orion': '../orion.client/bundles/org.eclipse.orion.client.editor/web/orion',
       'text': '../orion.client/bundles/org.eclipse.orion.client.core/web/requirejs/text',
       'i18n': '../orion.client/bundles/org.eclipse.orion.client.core/web/requirejs/i18n',
-       'log': "./log",
+       'log': "log",
        'resources': "resources",
        'reps': "reps",
        'domplate': "ui/domplate",

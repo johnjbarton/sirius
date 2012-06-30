@@ -13,25 +13,10 @@ function(    consoleLog,              resources) {
       resources.initialize(clock);
     },
      
-    connect: function(viewport) {
-      this.viewport = viewport;
-      resources.connect(this.viewport);
-      // we have to wait for onPreAttach to complete the connection
-    },
- 
-    
-    onPreAttach: function(debuggerProxy) {
-      consoleLog.connect(debuggerProxy, this.viewport);
-    },
-
-    onPostAttach: function(debuggerProxy) {
-        debuggerProxy.Console.enable()
-    },
-    
-    showAll: function() {
-      consoleLog.show();
-    }
-    
+    connect: function(debuggerProtocol) {
+      resources.connect(debuggerProtocol);
+      consoleLog.connect(debuggerProtocol);
+    }    
   };
   
   return DebuggerLogAssembly;
