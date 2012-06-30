@@ -17,7 +17,7 @@ function initialize() {
        var globalClock = {p_id: 0};
        DebuggerLogAssembly.initialize(globalClock);
        
-       DebuggerLogAssembly.connect();
+       DebuggerLogAssembly.connect(chrome.devtools.protocol);
 
        function detach() {
          console.log("detach?");

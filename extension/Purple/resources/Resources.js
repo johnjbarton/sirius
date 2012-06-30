@@ -14,8 +14,10 @@ define(['log/LogBase'], function (LogBase) {
     LogBase.initialize.apply(this, [clock, name]);
   },
   
-  connect: function(viewport) {
-    LogBase.connect.apply(this,[this, viewport]);  
+  connect: function(debuggerProtocol) {
+    LogBase.connect.apply(this,[this]);
+    // TODO getResources()
+    // TODO add resource listener  
   },
 
   disconnect: function(eventSink) {
