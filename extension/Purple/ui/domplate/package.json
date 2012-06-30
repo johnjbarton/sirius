@@ -1,0 +1,26 @@
+{
+    "uid": "http://registry.pinf.org/cadorn.org/github/domplate/",
+    "name": "domplate",
+    "description": "JavaScript Template Library",
+    "keywords": [
+        "js",
+        "template",
+        "library",
+        "domplate",
+        "rep",
+        "reps"
+    ],
+    "author": "Joe Hewitt (http://joehewitt.com/)",
+    "contributors": [
+        "Christoph Dorn (http://www.christophdorn.com/)"
+    ],
+    "license": [
+        "BSD"
+    ],
+    "repositories": [
+        {
+            "type": "git",
+            "url": "git://github.com/cadorn/domplate.git"
+        }
+    ]
+}

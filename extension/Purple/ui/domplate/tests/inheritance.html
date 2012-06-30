@@ -1,0 +1,185 @@
+<html>
+<head>
+<style>
+.t1 {
+  margin-left: 1ex;
+}
+.t2 {
+  margin-left: 1ex;
+}
+.t3 {
+  margin-left: 1ex;
+}
+</style>
+<script  src="http://ajax.cdnjs.com/ajax/libs/require.js/0.24.0/require.min.js"></script>
+<script type="text/javascript">
+require(['../lib/domplate'], function(domplate) {
+
+with(domplate.tags) {
+
+var t1_baseTagOnly = domplate.domplate(
+{
+    tag:
+        DIV({'class':'t1'}, "$object|getValue"),
+  
+    getValue: function(object) {
+        return "temp1 "+object.value;
+    },
+    name: "t1",
+});
+
+var t2_baseTagOnly = domplate.domplate(t1_baseTagOnly,
+{
+    getValue: function(object) {
+        return "temp2 "+object.value;
+    },
+    name: "t2",
+});
+
+var t3_baseTagOnly = domplate.domplate(t2_baseTagOnly, 
+{
+    getValue: function(object) {
+        return "temp3 "+object.value;
+    },
+    name: "t3",
+});
+
+
+var t1_TAGnTag = domplate.domplate(
+{
+    tag:
+        DIV({'class':'t1'}, "$object|getValue"),
+  
+    getValue: function(object) {
+        return "temp1 "+object.value;
+    },
+    name: "t1",
+});
+
+var t2_TAGnTag = domplate.domplate(t1_TAGnTag,
+{
+    tag: DIV({'class':'t2'},
+      SPAN('t2_TAGnTag tag'),
+      TAG(t1_TAGnTag.tag, {object: '$object.inner'})
+    ),
+    getValue: function(object) {
+        return "temp2 "+object.value;
+    },
+    name: "t2",
+});
+
+var t3_TAGnTag = domplate.domplate(t2_TAGnTag, 
+{
+    tag: DIV({'class':'t3'},
+      SPAN('t3_TAGnTag tag'),
+      TAG(t2_TAGnTag.tag, {object: '$object.inner'})
+    ),
+    getValue: function(object) {
+        return "temp3 "+object.value;
+    },
+    name: "t3",
+});
+
+var t1_tagRef = domplate.domplate(
+{
+    tag:
+        DIV({'class':'t1'}, "$object|getValue"),
+  
+    getValue: function(object) {
+        return "temp1 "+object.value;
+    },
+    name: "t1",
+});
+
+var t2_tagRef = domplate.domplate(t1_tagRef,
+{
+    tag: DIV({'class':'t2'},
+      SPAN('t2_tagRef tag'),
+      DIV({'style':'color:green'},
+         t1_tagRef.tag
+      )
+    ),
+    getValue: function(object) {
+        return "temp2 "+object.value;
+    },
+    name: "t2",
+});
+
+var t3_tagRef = domplate.domplate(t2_tagRef, 
+{
+    tag: DIV({'class':'t3'},
+      SPAN('t3_tagRef tag'),
+      DIV({'style':'color: orange'},
+         t2_tagRef.tag
+      )
+    ),
+    getValue: function(object) {
+        return "temp3 "+object.value;
+    },
+    name: "t3",
+});
+
+}
+
+function testOne(template1, template2, template3, suffix) {
+
+  var object = {object: {value: 'topArg', inner: {value:'innerArg', inner:{value:'innerMost'}}}}
+
+  var elt = document.getElementById('t1'+suffix);
+  template1.tag.replace(object, elt);
+  
+  elt = document.getElementById('t2'+suffix);
+  template2.tag.replace(object, elt);
+  
+  elt = document.getElementById('t3'+suffix);
+  template3.tag.replace(object, elt);
+}
+
+window.testRender = function() {
+  testOne(t1_baseTagOnly, t2_baseTagOnly, t3_baseTagOnly, '_baseTagOnly');
+
+  testOne(t1_TAGnTag, t2_TAGnTag, t3_TAGnTag, '_TAGnTag');
+
+  testOne(t1_tagRef, t2_tagRef, t3_tagRef, '_tagRef');
+}
+
+});
+
+</script>
+</head>
+<body>
+<h1>Domplate Inheritance Test</h1>
+<button onclick='testRender()'>Test</button>
+<h2>Base class has tag:, derived classes override methods</h2>
+<h3>Level 1</h3>
+<div id='t1_baseTagOnly'>
+</div>
+<h3>Level 2</h3>
+<div id='t2_baseTagOnly'>
+</div>
+<h3>Level 3</h3>
+<div id='t3_baseTagOnly'>
+</div>
+<h2>Derived classes have tag:, it uses TAG()</h2>
+<h3>Level 1</h3>
+<div id='t1_TAGnTag'>
+</div>
+<h3>Level 2</h3>
+<div id='t2_TAGnTag'>
+</div>
+<h3>Level 3</h3>
+<div id='t3_TAGnTag'>
+</div>
+<h2>Derived classes have tag:, it references base class tag:</h2>
+<h3>Level 1</h3>
+<div id='t1_tagRef'>
+</div>
+<h3>Level 2</h3>
+<div id='t2_tagRef'>
+</div>
+<h3>Level 3</h3>
+<div id='t3_tagRef'>
+</div>
+
+</body>
+</html>
