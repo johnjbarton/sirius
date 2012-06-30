@@ -1,0 +1,6 @@
+.DS_Store
+.tmp_*
+/packages/dependencies/
+/build/
+.pinf-workspace.json
+/bin/.pinf-activate-workspace
