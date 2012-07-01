@@ -5,20 +5,19 @@
 
 /*globals define window console document */
 
-define(['lib/Assembly', 'log/consoleEntryRep','../resources/objRep','reps/reps' ], 
-function(    Assembly,       consoleEntryRep,               ObjRep,      reps) {
+define(['log/consoleEntryRep','../resources/objRep','reps/reps' ], 
+function(   consoleEntryRep,               ObjRep,      reps) {
   
   'use strict';
   //------------------------------------------------------------------------------------
-  // Implement PurplePart
+  // 'reverse listeners': each log is polled for 
+  // new entries, the entries are filtered, then displayed.
   
-  var EventLogViewport =  {}; 
+  var LogViewportManager =  {
+    _logs: []
+  }; 
   
-  // The parts are 'reverse listeners': each part is polled for 
-  // new log entries, the entries are filtered, then displayed.
-  Assembly.addPartContainer(EventLogViewport);
-  
-  EventLogViewport.initialize = function(globalClock) {
+  LogViewportManager.initialize = function(globalClock) {
     this.globalClock = globalClock;
     this.scrollLock = false; // false means the viewport tracks the bottom of the log
     this.onPoll = this.poll.bind(this);
@@ -27,8 +26,7 @@ function(    Assembly,       consoleEntryRep,               ObjRep,      reps) {
     reps.rehash();
   };
     
-  EventLogViewport.connect = function(log) {
-    
+  LogViewportManager.connect = function() {
     this.initializeUI();
     if (this.optionPolling) {
       this.beginPolling();
@@ -38,11 +36,11 @@ function(    Assembly,       consoleEntryRep,               ObjRep,      reps) {
     this.update();
   };
 
-  EventLogViewport.disconnect = function() {
+  LogViewportManager.disconnect = function() {
       this.endPolling();
   };
   
-  EventLogViewport.toggleClass = function(name, on) {
+  LogViewportManager.toggleClass = function(name, on) {
     var logElt = document.getElementById('log');
     if (on) {
       logElt.classList.add(name);
@@ -50,9 +48,12 @@ function(    Assembly,       consoleEntryRep,               ObjRep,      reps) {
       logElt.classList.remove(name);
     }
   };
-  
   // -----------------------------------------------------------------------------------
-  EventLogViewport.computeLineHeight = function() {
+  LogViewportManager.add = function(log) {
+    this._logs.push(log);
+  };
+  // -----------------------------------------------------------------------------------
+  LogViewportManager.computeLineHeight = function() {
     return 14;
   };
   
@@ -137,7 +138,7 @@ function(    Assembly,       consoleEntryRep,               ObjRep,      reps) {
     }
   };
   
-  EventLogViewport.initializeUI = function () {
+  LogViewportManager.initializeUI = function () {
     var logElement = document.createElement('div');
     logElement.setAttribute('id', 'log');
     document.body.appendChild(logElement);
@@ -145,29 +146,29 @@ function(    Assembly,       consoleEntryRep,               ObjRep,      reps) {
   };
 
   //-------------------------------------------------------
-  // Query the indexes for entries from event p_id that match the constraints.
-  EventLogViewport.pullEntry = function(p_id) {
+  // Query the logs for entries from event p_id that match the constraints.
+  LogViewportManager.pullEntry = function(p_id) {
     var constraint = {  // TODO from findAnything
       matches: function(entry) {
         return true;
       }
     };
-    // We want to visit each index so they all can contribute items from p_id.
+    // We want to visit each log so they all can contribute items from p_id.
     // p_id is a proxy for 'time': 
     //   every log entry that can ever appear in the viewport must have a p_id
     //   p_id increase monotonically
-    //   an index may or may not have an entry for a p_id
-    this.forEachPart(function filterAndAppendMatches(index) {
-      var indexEntry = index.get(p_id);
-      if (indexEntry) {
-        if(constraint.matches(indexEntry)) {
-            renderedLines.append(indexEntry, p_id);
+    //   an log may or may not have an entry for a p_id
+    this._logs.forEach(function filterAndAppendMatches(log) {
+      var logEntry = log.get(p_id);
+      if (logEntry) {
+        if(constraint.matches(logEntry)) {
+            renderedLines.append(logEntry, p_id);
         }
       }
     });
   };
 
-  EventLogViewport.update = function() {
+  LogViewportManager.update = function() {
     if (!this.scrollLock) {
       var max = this.globalClock.p_id;
       var last = renderedLines.lastPID; 
@@ -180,35 +181,35 @@ function(    Assembly,       consoleEntryRep,               ObjRep,      reps) {
     delete this.queueUpdate;
   };
   
-  EventLogViewport.rebuild = function() {
+  LogViewportManager.rebuild = function() {
     renderedLines.clear();
     this.update();
   };
   
-  EventLogViewport.boundUpdate = EventLogViewport.update.bind(EventLogViewport);
+  LogViewportManager.boundUpdate = LogViewportManager.update.bind(LogViewportManager);
   
-  EventLogViewport.appendData = function (data, p_id) {
+  LogViewportManager.appendData = function (data, p_id) {
     if (!this.queueUpdate) {
-      this.queueUpdate = EventLogViewport.boundUpdate;
+      this.queueUpdate = LogViewportManager.boundUpdate;
       window.setTimeout(this.queueUpdate);
     }
   };
   
-  EventLogViewport.poll = function(event) {
+  LogViewportManager.poll = function(event) {
     if (window.debugLog) {
       var now = new Date().getTime();
       var delta = this.then - now;
       this.then = now;
-      console.log("EventLogViewport poll "+delta, event);
+      console.log("LogViewportManager poll "+delta, event);
     }
     this.update();
   };
   
-  EventLogViewport.beginPolling = function() {
+  LogViewportManager.beginPolling = function() {
     this.pollingId = window.setInterval(this.onPoll, this.pollInterval);
   };
   
-  EventLogViewport.endPolling = function() {
+  LogViewportManager.endPolling = function() {
     if (this.pollingId) {
       window.clearInterval(this.pollId);
     }
@@ -220,6 +221,6 @@ function(    Assembly,       consoleEntryRep,               ObjRep,      reps) {
   
   //----------------------------------------------------------------------------------
   
-  return EventLogViewport;
+  return LogViewportManager;
   
 });

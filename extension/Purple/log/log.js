@@ -12,16 +12,21 @@ window.debugChromeDebuggerRemote = false;
 
 function initialize() {
 
-  require(['log/DebuggerLogAssembly'], 
-    function ( DebuggerLogAssembly) {
-       var globalClock = {p_id: 0};
-       DebuggerLogAssembly.initialize(globalClock);
+  require(['log/consoleLog', 'log/LogViewportManager'], 
+    function (  consoleLog,   LogViewportManager) {
+      var globalClock = {p_id: 0};
+      
+      consoleLog.initialize(globalClock);
+      LogViewportManager.initialize(globalClock);
        
-       DebuggerLogAssembly.connect(chrome.devtools.protocol);
+      consoleLog.connect(chrome.devtools.protocol);
+      LogViewportManager.connect();
 
-       function detach() {
-         console.log("detach?");
-       }
+      LogViewportManager.add(consoleLog);
+
+      function detach() {
+        console.log("detach?");
+      }
 
        window.addEventListener('unload', detach, false);
   });
