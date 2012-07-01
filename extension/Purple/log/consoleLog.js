@@ -10,40 +10,40 @@ define(['log/LogBase', 'log/ConsoleEntry'],
     // Start with the protocol's base funcions
     chrome.devtools.protocol.Console.prototype,
     {
-    // override the notification handlers
-    messageAdded: function(message) {
-      this._latestEntry = new ConsoleEntry(message);
-      this.post(this._latestEntry);
-    },
-    messageRepeatCountUpdated: function(count) {
-      // ignore this for now
-    },
-    messagesCleared: function() {
-      this._latestEntry = ConsoleEntry.messagesClearedEntry;
-      this.post(this._latestEntry);
-    },
+      // override the notification handlers
+      messageAdded: function(message) {
+        this._latestEntry = new ConsoleEntry(message);
+        this.post(this._latestEntry);
+      },
+      messageRepeatCountUpdated: function(count) {
+        // ignore this for now
+      },
+      messagesCleared: function() {
+        this._latestEntry = ConsoleEntry.messagesClearedEntry;
+        this.post(this._latestEntry);
+      },
     
-    initialize: function(clock) {
-      var name = 'consoleLog';
-      LogBase.initialize.apply(this, [clock, name]);
-    },
-    //---------------------------------------------------------------------------------------------
+      initialize: function(clock) {
+        var name = 'consoleLog';
+        LogBase.initialize.apply(this, [clock, name]);
+      },
+      //---------------------------------------------------------------------------------------------
   
-    connect: function(debuggerProtocol) {
-      LogBase.connect.apply(this, [this]);     
-      this.addListeners();  // register with the protocol
-      this.enable(function onEnable(){
+      connect: function(debuggerProtocol) {
+        LogBase.connect.apply(this, [this]);     
+        this.addListeners();  // register with the protocol
+        this.enable(function onEnable(){
           console.log("Console.enable");
-      })
-    },
+        });
+      },
   
-    disconnect: function() {
-      if (this.enabled) {
-        throw new Error("Disable before disconnecting");
+      disconnect: function() {
+        if (this.enabled) {
+          throw new Error("Disable before disconnecting");
+        }
       }
     }
-
-  });
+  );
 
   return consoleLog;
 });

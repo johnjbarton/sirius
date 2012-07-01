@@ -25,6 +25,10 @@ var LogBase = MetaObject.extend({
     this.store.set(this.clock.p_id++, data);
   },
  
+  get: function(p_id) {
+    return this.store.get(p_id);
+  },
+  
   // Input Management
 
   getHasEnableDisable: function() {
