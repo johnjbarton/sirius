@@ -3,45 +3,18 @@
 
 function loadJSAsync() {
 require(
-  ['OrionEditorEmbedded/editorInserter', 'log/consoleLog', 'resources/Resources', 'log/LogViewportManager'], 
-  function(editorInserter, consoleLog,             resources,      LogViewportManager){
+  ['log/editorLog', 'log/consoleLog', 'resources/Resources', 'log/LogViewportManager'], 
+function(editorLog,      consoleLog,             resources,      LogViewportManager){
 
-    var editorsByURL = {};
- 
-    function PurpleOrionEditor(url, content, type) {
-      this._orion_editor = editorInserter.createEditor(document.body, '100%');
-      this._orion_editor.installTextView();
-      this._orion_editor.setInput(url, undefined, content );   
-    }
     
-    PurpleOrionEditor.prototype = {
-      setCursorOn: function(line, column, character) {
-        var start = 1;
-        var end = 10;
-        this._orion_editor.setSelection(start, end, true);
-      },
-      _onSave: function() {
-          console.log("save called", arguments);
-      }
-    };  
-      
-    window.purple.showContent = function(url, content, type) {
-      editorsByURL[url] = new PurpleOrionEditor(url, content, type);
-    };
-      
-    window.purple.setCursorOn = function(url, line, column, character) {
-        var editor = editorsByURL[url];
-        if (editor) {
-            editor.setCursorOn(line, column, character);
-        } else {
-            console.error("no editor for url "+url);
-        }
-    };
+    window.purple.onShowResource = editorLog.onShowResource.bind(editorLog);
 
     function initialize() {
       var globalClock = {p_id: 0};
       
+      editorLog.initialize(globalClock);
       consoleLog.initialize(globalClock);
+      
       resources.initialize();
       LogViewportManager.initialize(globalClock);
     }
@@ -49,15 +22,16 @@ require(
     function connect() {
       var devtoolsProtocol = chrome.devtools.protocol;
       
-      consoleLog.connect(devtoolsProtocol, function consoleConnected(error){
-        resources.connect(devtoolsProtocol, function resourceConnected(error) {
-            LogViewportManager.connect(devtoolsProtocol, function viewportManagerConnected(error){
-              LogViewportManager.add(consoleLog);
-              LogViewportManager.update();
-              console.log("connected");  
-            });
- 
-        });          
+      editorLog.connect(devtoolsProtocol, function editorConnected(error) {
+        consoleLog.connect(devtoolsProtocol, function consoleConnected(error){
+          resources.connect(devtoolsProtocol, function resourceConnected(error) {
+              LogViewportManager.connect(devtoolsProtocol, function viewportManagerConnected(error){
+                LogViewportManager.add(editorLog);  
+                LogViewportManager.add(consoleLog);
+                console.log("connected");  
+              });
+          });          
+        });
       });
 
       function detach() {
