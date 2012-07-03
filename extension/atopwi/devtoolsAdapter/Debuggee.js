@@ -245,15 +245,18 @@ function(            ChromeProxy)  {
       this.completeLoad = WebInspector.delayLoaded; // set by openInspector
     
       // Called asynchronously from WebInspector _initializeCapability
-      // which is called byt the load event vai doLoadedDone()
+      // which is called by the load event vai doLoadedDone()
       this._doLoadedDoneWithCapabilities = 
         WebInspector._doLoadedDoneWithCapabilities;
+        
+      // Called by _doLoadedDoneWithCapabilities after panels are created by before we select the initial panel.  
+      InspectorExtensionRegistry.getExtensionsAsync = function() {
+        this.loadExtensions();
+      }.bind(this);
     
       WebInspector._doLoadedDoneWithCapabilities = function() {
         var args = Array.prototype.slice.call(arguments, 0);
         this._doLoadedDoneWithCapabilities.apply(WebInspector, args);
-        this.loadExtensions();
-        this.navigateToURL();
       }.bind(this);
       this.completeLoad.call(this.inspectorWindow.WebInspector);
       callback && callback();
@@ -268,7 +271,6 @@ function(            ChromeProxy)  {
           WebInspector.addExtensions(options.extensionInfos);
         }
       }
-      this.navigateToURL();
     },
     
     _eventListenersByDomain: {},
