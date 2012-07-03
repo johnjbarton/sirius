@@ -25,15 +25,16 @@ chrome.devtools.inspectedWindow.getResources(function(resources) {
 chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purplePath + 'purplePanel.html', function(panel) {
   console.log('purple-panel',JSON.stringify(panel),panel);
 
-  var panel_window; // the panel does not load until shown
-  var buffer;       // so we may need to buffer resource info
+  var panel_window; // the panel does not load until shown,
+  var buffer;       // so we may need to buffer resource info,
+  var panel_isReady; // until we flip this flag
 
   var resource_cache = {};
 
   // load resource code into the editor
   //
   function load(url, content, type, line) {
-    if (panel_window) {
+    if (panel_isReady) {
       panel_window.purple.showContent(url, content, type);
       panel_window.purple.setCursorOn(url, line || 1, 1);
     } else {
@@ -69,7 +70,7 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
     // Add initial methods for the panel to use
     //
     connection.register(
-      'hello',        // URL for feature
+      'hello',        // URL for commands from panel to devtools
       {
         // feature documentation
         options: function() {
@@ -80,11 +81,6 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
         
         // When the panel sends us "hello", finally we can dequeue any buffers
         put: function (obj) {
-         if (buffer) {
-            console.log('loading buffer', buffer);
-            load.apply(null, buffer);
-            buffer = null;
-         }
           return {message:'hey'};
         }
       }
@@ -105,6 +101,13 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
       },        
       childErr                      // or fail
     );
+    
+    panel_isReady = true;
+    if (buffer) {
+      console.log('loading buffer', buffer);
+      load.apply(null, buffer);
+      buffer = null;
+    }
 
   }
 
@@ -138,8 +141,9 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
     resource.getContent(function(content, encoding) {
       console.log('encoding', encoding);
       load(resource.url, content, resource.type, line);
-      panel.show();
     });
+    
+    panel.show();
 
   });
 
