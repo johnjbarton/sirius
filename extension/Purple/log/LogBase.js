@@ -23,7 +23,9 @@ var LogBase = MetaObject.extend({
   },
   
   post: function(data) {
-    this.store.set(++this.clock.p_id, data);
+    var p_id = ++this.clock.p_id;
+    this.store.set(p_id, data);
+    this.toEachListener({log: this, p_id: p_id});
   },
  
   get: function(p_id) {

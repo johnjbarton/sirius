@@ -51,7 +51,7 @@ function(   consoleEntryRep,               ObjRep,      reps) {
   };
   // -----------------------------------------------------------------------------------
   LogViewportManager.onLogEvent = function(log, p_id) {
-    this.update;
+    this.update();
   };
   LogViewportManager.add = function(log) {
     log.addListener(this.onLogEvent);

@@ -33,13 +33,12 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
 
   // load resource code into the editor
   //
-  function load(url, content, type, line) {
+  function fireShowResource(resource, line) {
     if (panel_isReady) {
-      panel_window.purple.showContent(url, content, type);
-      panel_window.purple.setCursorOn(url, line || 1, 1);
+      panel_window.purple.onShowResource(resource, line);
     } else {
       buffer = Array.prototype.slice.apply(arguments);
-      console.log('buffering load', buffer);
+      console.log('buffering resource', buffer);
     }
   }
 
@@ -104,8 +103,8 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
     
     panel_isReady = true;
     if (buffer) {
-      console.log('loading buffer', buffer);
-      load.apply(null, buffer);
+      console.log('dequeue buffer', buffer);
+      fireShowResource.apply(null, buffer);
       buffer = null;
     }
 
@@ -119,7 +118,6 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
     }
     if (!panel_window) { // Then this is the first time we opened the panel       
       panel_window = window;
-      panel_window.chrome.devtools = chrome.devtools;
       panel_window.purple.onPanelReady = function() {
         console.log(window.location + ' talking ');
 
@@ -132,17 +130,10 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
     }
   });
 
-  // use CodeMirror panel to open resources
+  // use panel to open resources
   chrome.devtools.panels.setOpenResourceHandler(function(resource, line) {
-    console.log('open resource', resource, resource.url, resource.type, line);
-
-    resource_cache[resource.url] = resource;
-
-    resource.getContent(function(content, encoding) {
-      console.log('encoding', encoding);
-      load(resource.url, content, resource.type, line);
-    });
-    
+    console.log('open resource handler', resource, resource.url, resource.type, line);
+    fireShowResource(resource, line);
     panel.show();
 
   });
