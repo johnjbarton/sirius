@@ -3,8 +3,7 @@
 
 /*global require */
 
-require({
-    paths: {
+var paths = {
       'OrionEditorEmbedded': '../../OrionEditorEmbedded',
       'orion': '../orion.client/bundles/org.eclipse.orion.client.editor/web/orion',
       'text': '../orion.client/bundles/org.eclipse.orion.client.core/web/requirejs/text',
@@ -14,10 +13,14 @@ require({
        'reps': "reps",
        'domplate': "ui/domplate",
        'MetaObject': '../MetaObject/'
-    }
+    };
+    
+
+require({
+    paths: paths,
+    waitSeconds: 0 // DEBUG
 });
 
-require(["debugRequire"], function(d) {});
 require.onError = function (err) {
         console.error("requirejs ", err);
     };

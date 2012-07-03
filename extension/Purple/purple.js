@@ -34,8 +34,8 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
   //
   function load(url, content, type, line) {
     if (panel_window) {
-      var editor = panel_window.purple.createEditor(url, content, type);
-      editor.setCursorOn(line || 1, 1);
+      panel_window.purple.showContent(url, content, type);
+      panel_window.purple.setCursorOn(url, line || 1, 1);
     } else {
       buffer = Array.prototype.slice.apply(arguments);
       console.log('buffering load', buffer);
@@ -63,7 +63,7 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
     }
   }
 
-   function onAttach(connection) {
+  function onAttach(connection) {
     console.log(window.location + ' attach');
 
     // Add initial methods for the panel to use
@@ -108,24 +108,24 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
 
   }
 
-  // Open a postMessage port and wait for the panel to completely load.
-  //
-  function attachToPanel(panel_window) {
-      console.log(window.location + ' talking ');
-
-      var disposer =  RESTChannel.talk(panel_window, onAttach);
-      window.addEventListener('unload', function unload() {
-        disposer();
-        window.removeEventListener('unload', unload);
-      });
-  }
-
   // as panels load lazily, grab the editor when it's ready
   panel.onShown.addListener(function(window) {
-    if (!panel_window) {        
+    console.log("panel.onShown");
+    function onShown() {
+      panel_window.purple.show();
+    }
+    if (!panel_window) { // Then this is the first time we opened the panel       
       panel_window = window;
       panel_window.chrome.devtools = chrome.devtools;
-      attachToPanel(panel_window);
+      panel_window.purple.onPanelReady = function() {
+        console.log(window.location + ' talking ');
+
+        var disposer =  RESTChannel.talk(panel_window, onAttach);
+        window.addEventListener('unload', function unload() {
+          disposer();
+          window.removeEventListener('unload', unload);
+        });
+      }
     }
   });
 
@@ -138,9 +138,9 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
     resource.getContent(function(content, encoding) {
       console.log('encoding', encoding);
       load(resource.url, content, resource.type, line);
+      panel.show();
     });
 
-    panel.show();
   });
 
   // wire WebInspector search bar to the editor

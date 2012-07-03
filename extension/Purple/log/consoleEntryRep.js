@@ -4,7 +4,7 @@
 /*globals define window console*/
 
 define(['domplate/lib/domplate', 'resources/PartLinkRep', 'resources/Resources', 'reps/reps',  'reps/Rep', 'firebugSource/Str'], 
-function (                    domplate,                   PartLinkRep,                    Resources,            Reps,          Rep,                          Str) {
+function (            domplate,             PartLinkRep,             Resources,        Reps,         Rep,                 Str) {
   
   var dp = domplate.tags;
   
@@ -12,8 +12,8 @@ function (                    domplate,                   PartLinkRep,          
     // {action: function (event) { return disclosedElement; } }
     var LazyDisclosureRep = domplate.domplate({
       tag: dp.SPAN({'onclick':'$action|setToggleMore'},
-             dp.IMG({'class':'closedLazy', 'src':"../ui/icons/from-firebug/twistyClosed.png"}),
-             dp.IMG({'class':'openedLazy', 'src':"../ui/icons/from-firebug/twistyOpen.png"})
+             dp.IMG({'class':'closedLazy', 'src':"ui/icons/from-firebug/twistyClosed.png"}),
+             dp.IMG({'class':'openedLazy', 'src':"ui/icons/from-firebug/twistyOpen.png"})
            ),
 
       // called when the domplate is expanded

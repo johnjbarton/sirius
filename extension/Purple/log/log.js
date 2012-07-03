@@ -12,17 +12,25 @@ window.debugChromeDebuggerRemote = false;
 
 function initialize() {
 
-  require(['log/consoleLog', 'log/LogViewportManager'], 
-    function (  consoleLog,   LogViewportManager) {
+  require(['log/consoleLog', 'resources/Resources', 'log/LogViewportManager'], 
+    function (  consoleLog,             resources,      LogViewportManager) {
       var globalClock = {p_id: 0};
       
       consoleLog.initialize(globalClock);
+      resources.initialize();
       LogViewportManager.initialize(globalClock);
-       
-      consoleLog.connect(chrome.devtools.protocol);
-      LogViewportManager.connect();
-
-      LogViewportManager.add(consoleLog);
+      
+      var devtoolsProtocol = chrome.devtools.protocol;
+      
+      consoleLog.connect(devtoolsProtocol, function consoleConnected(error){
+        resources.connect(devtoolsProtocol, function resourceConnected(error) {
+            LogViewportManager.connect(devtoolsProtocol, function viewportManagerConnected(error){
+              LogViewportManager.add(consoleLog);
+              console.log("connected");  
+            });
+ 
+        });          
+      });
 
       function detach() {
         console.log("detach?");

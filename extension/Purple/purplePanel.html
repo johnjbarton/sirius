@@ -3,14 +3,15 @@
 <title> Purple Panel </title>
 <link rel="stylesheet" type="text/css" href="ui/normalize.css" />
 <link rel="stylesheet" type="text/css" href="log/log.css">
-
+<script>
+window.addEventListener('load', function(){
+	console.log("load "+window.location);
+});
+</script>
 <script src="PurpleAPI.js"></script>
 <!-- These channel scripts must run before the require.js complete -->
 <script src="../RESTChannel/RESTChannel.js"></script>
 
 <script src="../orion.client/bundles/org.eclipse.orion.client.core/web/requirejs/require.js"></script>
 <script src="requireConfig.js"></script>
-<script src="LoadOrionEditorEmbedded.js"></script>
-
-<script src="log/log.js"></script>
- 
+<script src="purplePanel.js"></script>
