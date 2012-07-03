@@ -8,22 +8,33 @@ define(['log/LogBase'], function (LogBase) {
   var Resources = LogBase.extend({
   
   initialize: function(clock) {
-    this.resources = [];
-    this.resourcesByURL = {}; // a Resource or an array of
+    this.resourcesByURL = {}; 
+    this._onResourceAdded = this._onResourceAdded.bind(this);
     var name = "resources";
     LogBase.initialize.apply(this, [clock, name]);
   },
   
-  connect: function(debuggerProtocol) {
-    LogBase.connect.apply(this,[this]);
-    // TODO getResources()
-    // TODO add resource listener  
+  connect: function(debuggerProtocol, onConnect) {
+    
+    function baseConnect(error) {
+      chrome.devtools.inspectedWindow.getResources(function onResources(resources) {
+        resources.forEach(this._onResourceAdded);
+        chrome.devtools.inspectedWindow.onResourceAdded.addListener(this._onResourceAdded);
+        onConnect(error);
+      }.bind(this));
+    }
+    
+    LogBase.connect.apply(this, [this, baseConnect.bind(this)]);
   },
 
   disconnect: function(eventSink) {
     if (this.eventSink === eventSink) {
       delete this.eventSink;
     }
+  },
+
+  _onResourceAdded: function(resource) {
+    this.resourcesByURL[resource.url] = resource;
   },
 
   append: function(url, resource) {
@@ -45,6 +56,7 @@ define(['log/LogBase'], function (LogBase) {
     if ( this.resourcesByURL.hasOwnProperty(url) ) {
       return this.resourcesByURL[url];
     }
+    this.resources.som
   }
 });
   

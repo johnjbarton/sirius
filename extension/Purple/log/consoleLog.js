@@ -29,12 +29,14 @@ define(['log/LogBase', 'log/ConsoleEntry'],
       },
       //---------------------------------------------------------------------------------------------
   
-      connect: function(debuggerProtocol) {
-        LogBase.connect.apply(this, [this]);     
-        this.addListeners();  // register with the protocol
-        this.enable(function onEnable(){
-          console.log("Console.enable");
-        });
+      connect: function(debuggerProtocol, onConnect) {
+        LogBase.connect.apply(this, [this, function baseConnected(error) {
+          this.addListeners();  // register with the protocol
+          this.enable(function onEnable(){
+            console.log("Console.enable");
+            onConnect(error);
+          }.bind(this));  
+        }.bind(this)]);     
       },
   
       disconnect: function() {

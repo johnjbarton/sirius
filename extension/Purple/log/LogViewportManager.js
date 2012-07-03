@@ -21,19 +21,20 @@ function(   consoleEntryRep,               ObjRep,      reps) {
     this.globalClock = globalClock;
     this.scrollLock = false; // false means the viewport tracks the bottom of the log
     this.onPoll = this.poll.bind(this);
+    this.onLogEvent.bind(this);
     this.pollInterval = 500;
-    this.optionPolling = true;
+    this.optionPolling = false;
     reps.rehash();
   };
     
-  LogViewportManager.connect = function() {
+  LogViewportManager.connect = function(devtoolProtocol, onConnect) {
     this.initializeUI();
     if (this.optionPolling) {
       this.beginPolling();
     } else {
       this.endPolling();
     }
-    this.update();
+    onConnect();
   };
 
   LogViewportManager.disconnect = function() {
@@ -49,7 +50,11 @@ function(   consoleEntryRep,               ObjRep,      reps) {
     }
   };
   // -----------------------------------------------------------------------------------
+  LogViewportManager.onLogEvent = function(log, p_id) {
+    this.update;
+  };
   LogViewportManager.add = function(log) {
+    log.addListener(this.onLogEvent);
     this._logs.push(log);
   };
   // -----------------------------------------------------------------------------------
@@ -171,7 +176,7 @@ function(   consoleEntryRep,               ObjRep,      reps) {
   LogViewportManager.update = function() {
     if (!this.scrollLock) {
       var max = this.globalClock.p_id;
-      var last = renderedLines.lastPID; 
+      var last = renderedLines.lastPID || 1; 
       // work bottom up and stop once we fill the viewport
       for (var ndx = last; ndx <= max; ndx++) {
         this.pullEntry(ndx);

@@ -3,8 +3,8 @@
 
 /*globals define console */
 
-define(['MetaObject/MetaObject', 'log/SparseArray'], 
-function (          MetaObject,        SparseArray){
+define(['MetaObject/MetaObject', 'log/SparseArray', 'log/addListenerFeatures'], 
+function (          MetaObject,        SparseArray,      addListenerFeatures){
   
 var LogBase = MetaObject.extend({
     
@@ -13,8 +13,9 @@ var LogBase = MetaObject.extend({
     this.store = SparseArray.new(name);
   },
   
-  connect: function(hasEnableDisable) {
+  connect: function(hasEnableDisable, onConnected) {
     this.hasEnableDisable = hasEnableDisable;
+    onConnected();
   },
   
   disconnect: function() {
@@ -22,7 +23,7 @@ var LogBase = MetaObject.extend({
   },
   
   post: function(data) {
-    this.store.set(this.clock.p_id++, data);
+    this.store.set(++this.clock.p_id, data);
   },
  
   get: function(p_id) {
@@ -47,6 +48,8 @@ var LogBase = MetaObject.extend({
   },
 });  
   
+  addListenerFeatures(LogBase);
+
   return LogBase;
 });
 

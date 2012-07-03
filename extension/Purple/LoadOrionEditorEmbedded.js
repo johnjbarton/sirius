@@ -13,6 +13,8 @@ require(
           return {message:'Did you do your homework?'};
         }
       });
+      
+      var editorsByURL = {};
    
       function PurpleOrionEditor(url, content, type) {
         this._orion_editor = editorInserter.createEditor(document.body, '100%');
@@ -31,8 +33,17 @@ require(
         }
       };  
         
-      window.purple.createEditor = function(url, content, type) {
-        return new PurpleOrionEditor(url, content, type);
+      window.purple.showContent = function(url, content, type) {
+        editorByURL[url] = new PurpleOrionEditor(url, content, type);
+      };
+      
+      window.purple.setCursorOn = function(url, line, column, character) {
+          var editor = editorByURL[url];
+          if (editor) {
+              editor.setCursorOn(line, column, character);
+          } else {
+              console.error("no editor for url "+url);
+          }
       };
       
       // We have loaded all of our scripts and built our API. Tell our creator
