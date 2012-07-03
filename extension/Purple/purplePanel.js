@@ -26,11 +26,11 @@ require(
     };  
       
     window.purple.showContent = function(url, content, type) {
-      editorByURL[url] = new PurpleOrionEditor(url, content, type);
+      editorsByURL[url] = new PurpleOrionEditor(url, content, type);
     };
       
     window.purple.setCursorOn = function(url, line, column, character) {
-        var editor = editorByURL[url];
+        var editor = editorsByURL[url];
         if (editor) {
             editor.setCursorOn(line, column, character);
         } else {
