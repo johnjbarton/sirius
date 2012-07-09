@@ -40,7 +40,7 @@ function (            domplate,             PartLinkRep,             Resources, 
         tag:  // the property |tag| is special, see domplate isTag()
               dp.TR({'class':'callStackFrame noSource'}, 
                 dp.TD({'class':'functionName'}, '$object|getFunctionName'), // only one of the next two should be shown
-                dp.TD({'class':'sourceCodeJS', 'id':'$object|getPromiseId'}, ""),
+                dp.TD({'class':'sourceCodeJS', 'id':'$object|getId'}, ""),
                 dp.TD({'title':'$object|getTooltipText'},
                    dp.TAG(PartLinkRep.tag, {object:'$object'})
                 )
@@ -55,7 +55,7 @@ function (            domplate,             PartLinkRep,             Resources, 
           return "sf_"+this.timesCalled;
         },
         
-        getPromiseId: function(object) {
+        getId: function(object) {
           var resource = this.getResource(object);
           var id = this.getUniqueId();
           if (resource && resource.fetchContent) {
@@ -108,7 +108,7 @@ function (            domplate,             PartLinkRep,             Resources, 
       {
         tag:  
           dp.TR({'class':'editorRow noSource'}, 
-            dp.TD({'class':'editorCell', 'id':'$object|getPromiseId'}, 
+            dp.TD({'class':'editorCell', 'id':'$object|getId'}, 
               dp.DIV({'class': 'editor', 'id': 'editor'}, ''
                 // filled in by editor
               )
@@ -120,21 +120,23 @@ function (            domplate,             PartLinkRep,             Resources, 
           return "sf_"+this.timesCalled;
         },
         
-        getPromiseId: function(object) {
+        getId: function(object) {
           var resource = this.getResource(object);
           var id = this.getUniqueId();
-          window.setTimeout(function() {
-            var elt = window.document.getElementById(id);
-            var url = resource.url;
-            var bottomLine = this.getLineNumber(object);
-            var editor = new EditorInterface(elt.firstElementChild);
-            var line = bottomLine - 4; // position the frame line at the bottom
-            var col = this.getColumnNumber(object);
-            console.log('editor ready, opening '+url + '@' +bottomLine + '.' +col);
-            editor.open(url, line);
-            this.highlightRegion(elt, line, 1, col);
-          }.bind(this));
+          window.setTimeout(this.openEditorOn.bind(this));
           return id;
+        },
+
+        openEditorOn: function(id) {
+          var elt = window.document.getElementById(id);
+          var url = resource.url;
+          var bottomLine = this.getLineNumber(object);
+          var editor = new EditorInterface(elt.firstElementChild);
+          var line = bottomLine - 4; // position the frame line at the bottom
+          var col = this.getColumnNumber(object);
+          console.log('editor ready, opening '+url + '@' +bottomLine + '.' +col);
+          editor.open(url, line);
+          this.highlightRegion(elt, line, 1, col);
         },
 
         updateFrameUI: function(object, id, content) {
