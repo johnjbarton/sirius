@@ -91,14 +91,23 @@
         });
       }
 
+      function runDevtoolsTest(url, tabId) {
+        var ndx = url.indexOf(':9696');
+        if (ndx > 0) {
+          chrome.pageAction.show(tabId);
+          chrome.pageAction.setTitle({tabId: tabId, title: "run devtools test"});
+        }
+      }
+
       function checkForPageAction(url, tabId) {
         return openAsFilePageAction(url, tabId) || 
-	  openInOrionEditor(url, tabId);
+               openInOrionEditor(url, tabId) ||
+               runDevtoolsTest(url, tabId);
       }
    
       function reportListeners(where, like) {
         console.log(where+" has:"+chrome.webNavigation.onBeforeNavigate.hasListener(like)+" total: "+
-         chrome.webNavigation.onBeforeNavigate.listeners_.length);
+        chrome.webNavigation.onBeforeNavigate.listeners_.length);
       }
 
 
@@ -136,14 +145,22 @@
             chrome.tabs.create({url: fileURL}, function(tab) {
               console.log("opened "+fileURL+" in ", tab);
             });
+          } else {
+            runDevtoolsTest();
           }
         }
       }
       chrome.pageAction.onClicked.addListener(pageAction);
 
 //------------------------------------------------------------------------------
-// SuperLogin: reload all Orion pages after logging in.
+// run devtools testing on page Action
+function runDevtoolsTest() {
+  // notify our content-script to load the layoutTestController
+  // That will trigger the tests
+}
 
+//------------------------------------------------------------------------------
+// SuperLogin: reload all Orion pages after logging in.
   var debugRequests = true;
 
   function superLogin(request, sender, sendResponse) {
