@@ -1,0 +1,117 @@
+<html>
+<head><title>Sirius Chrome Extension Options</title>
+<script type="text/javascript" src="ensureOrigin.js"></script>
+<script type="text/javascript" src="saveRestoreOptions.js"></script>
+<link rel="stylesheet" type="text/css" href="options.css" />
+</head>
+<body>
+
+<h2>Web Origins Allowed to Control Your Browser</h2> 
+<b class='warning'>
+Warning: the Web sites you add in the table below will have some powers of Chrome extensions.
+</b>
+<ol>
+<li>Click <code>Add Allowed Site</code></li>
+<li>Type a URL in the Allowed Sites box</li>
+<li>Optional: add a name under <i>Debug With</i> to add the site to the Chrome browser right-click menu</li>
+<li>Save</li>
+</ol>
+<div class="tableSurround">
+<table id="origins">
+<tbody>
+  <tr>
+    <th>Action</th><th>Allowed Sites</th><th><i>Debug With</i> Name</th>
+  </tr>
+  <tr class="allowedSite-template stateSaved"><!-- Don't use any ids in this element -->
+    <td>
+      <button class="action" onclick="changeState(event);"> <!-- only one of these states will be visible at any time -->
+        <span class='edit'>Edit</span><!-- stateSaved, to go stateEditing -->
+        <span class='save'>Save</span> <!-- statePreviewing, go to stateSaved -->
+      </button>
+    </td>
+    <td>
+      <input class="origin userInput" type="url" size="80" disabled='disabled' />
+    </td>
+    <td>
+      <input class="contextMenuId userInput" type='text' disabled='disabled' value='(none)'/>
+    <td>
+      <button class="action" onclick="revertState(event);"> <!-- only one of these states will be visible at any time -->
+        <span class='remove'>Remove</span><!-- stateSaved, delete; stateEditing, go to statePreviewing -->
+        <span class='cancel'>Cancel</span> <!-- statePreviewing, go to stateEditing -->
+      </button>
+    </td>
+  </tr>
+  <tr>
+    <td id="addAllowedSiteRow" colspan="4"><button>Add Allowed Site</button><span> All pages with the same Web Origin will be allowed</span></td>
+  </tr>
+</tbody>
+</table>
+</div>
+<h3>Devtools extensions</h3>
+<div class='extensionInfos'>
+<table>
+<tbody>
+<tr>
+  <th>Action</th>
+  <th>Name</th>
+  <th>URL</th>
+  <th>Remove</th>
+</tr>
+<tr class='extensionInfo-template extensionInfos-row stateSaved'>
+  <td>
+      <button class="action" onclick="changeState(event);"> <!-- only one of these states will be visible at any time -->
+        <span class='edit'>Edit</span><!-- stateSaved, to go stateEditing -->
+        <span class='save'>Save</span> <!-- statePreviewing, go to stateSaved -->
+      </button>
+  </td>
+  <td>
+    <input class="extensionInfo-name userInput"  type='text' disabled='disabled' value='(none)'/>
+  </td>
+  <td>
+    <input class="extensionInfo-startPage userInput" type="url" size="80"  disabled='disabled' />
+  </td>
+  <td>
+    <button class="action" onclick="revertState(event);"> <!-- only one of these states will be visible at any time -->
+      <span class='remove'>Remove</span><!-- stateSaved, delete; stateEditing, go to statePreviewing -->
+      <span class='cancel'>Cancel</span> <!-- statePreviewing, go to stateEditing -->
+    </button>
+  </td>
+</tr>
+  <tr>
+    <td class='addExtensionInfosRow' colspan="4"><button>Add Extension</button></td>
+  </tr>
+</tbody>
+</table>
+</div>
+<h3>Testing Devtools</h3>
+<div id="testingOptions">
+  <p>Start the 
+    <a href="http://www.chromium.org/developers/testing/webkit-layout-tests#TOC-Tests-that-use-a-HTTP-Server">test server</a>
+     on port 9696, eg <pre>
+    cd src/third_party/WebKit/Tools/Scripts
+    ./new-run-webkit-httpd --server start --root=/work/sirius/extension/atopwi/LayoutTests/ --port 9696
+  </pre>
+  <p>Open the <a target="_blank" href="http://localhost:9696/">test client</a> and navigate to the test(s) you want to run. Use the page action icon to start the tests</p>
+  <p>Navigate to your unpacked extension directory <code>atopwi/LayoutTests</code><p> 
+  <input type="file" id="files" name="files[]" multiple webkitdirectory="" directory/>
+  <button onclick="document.querySelector('#files').click();">Select a directory</button>
+  <button onclick="selectAll();">Select All</button>
+  <button onclick="runTests();">Run Test(s)</button>
+  <output id="list"></output>
+</div>
+<h3>Debugging Communications to chrome.devtools Extension</h3> 
+<div id="debugOptions">
+<br />
+  <div>Console Tracing Options For Debugging This Extension</div>
+  <input type='checkbox' id="debugConnection" onclick='onClickDebug(event)' />Trace connection events<br />
+  <input type='checkbox' id="debugMessages" onclick='onClickDebug(event)' />Trace messages<br />
+  <input type='checkbox' id="debugWarnings" onclick='onClickDebug(event)' />Trace Warning IO<br />
+  <input type='checkbox' id="debugAdapters" onclick='onClickDebug(event)' />Trace chrome.* adapters<br />
+</div>
+<br />
+<div>
+<span id='warnReload' class='hidden warning'>To Complete Options Update, Please click <code>reload</code> the chrome://extensions page</span>
+</div>
+</body>
+<script type="text/javascript" src="options.js"></script>
+</html>
