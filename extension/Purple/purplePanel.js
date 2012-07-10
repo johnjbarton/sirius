@@ -80,5 +80,6 @@ function(editorLog,      consoleLog,             resources,      LogViewportMana
 
 // https://code.google.com/p/chromium/issues/detail?id=135526
 window.addEventListener('load', function onLoad() {
+    console.log("purplePanel load event");
     setTimeout(loadJSAsync);
 });
