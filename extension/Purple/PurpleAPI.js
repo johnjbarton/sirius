@@ -3,7 +3,7 @@ window.purple = {
     // Implemented by devtools_page
     //
     onPanelReady : function(){
-            console.error("Implement me", arguments);
+        console.error("onShown never fired", arguments);
     },
     
     
