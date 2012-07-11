@@ -36,6 +36,10 @@
      {
        "matches": ["*://*/*atopwi.html*"],
        "js": ["atopwi/devtoolsAdapter/webSocketOverrides.js"]
+     },
+     {
+      "matches": ["http://*/inspector/*","http://*/http/*"],
+      "js": ["atopwi/devtoolsAdapter/layoutTestLoader.js"]
      }
    ]
 }

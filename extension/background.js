@@ -70,39 +70,28 @@
 //-------------------------------------------------------------------------------
 // Page Actions
 
-      function openAsFilePageAction(url, tabId) {
+      function checkForOpenAsFile(url, tabId) {
         var ndx = url.indexOf(editSubString);
-        if (ndx > 0) {
-          chrome.pageAction.show(tabId);
-          chrome.pageAction.setTitle({tabId: tabId, title: "Open As File"});
-          return true;
-        }
+        if (ndx > 0) return "Open As File";
       }
 
-      function openInOrionEditor(url, tabId) {   
+      function checkForOpenInOrionEditor(url, tabId) {   
         var editableTabIds = Object.keys(editableByTabId);
         editableTabIds.forEach(function(tabIdName) {
           var tabId = parseInt(tabIdName, 10);
-           if(tabId) {
-             chrome.pageAction.show(tabId);
-             chrome.pageAction.setTitle({tabId: tabId, title: "Open In Orion Editor"});
-             return true;
-           }
+          if(tabId) return "Open In Orion Editor";
         });
       }
 
-      function runDevtoolsTest(url, tabId) {
+      function checkForDevtoolsTest(url, tabId) {
         var ndx = url.indexOf(':9696');
-        if (ndx > 0) {
-          chrome.pageAction.show(tabId);
-          chrome.pageAction.setTitle({tabId: tabId, title: "run devtools test"});
-        }
+        if (ndx > 0) return "run devtools test";
       }
 
       function checkForPageAction(url, tabId) {
-        return openAsFilePageAction(url, tabId) || 
-               openInOrionEditor(url, tabId) ||
-               runDevtoolsTest(url, tabId);
+        return checkForOpenAsFile(url, tabId) || 
+               checkForOpenInOrionEditor(url, tabId) ||
+               checkForDevtoolsTest(url, tabId);
       }
    
       function reportListeners(where, like) {
@@ -115,7 +104,11 @@
 // Add Page Action onUpdated tab
 
       function onTabUpdated(tabId, changeInfo, tab) {
-        checkForPageAction(tab.url, tab.id);
+        var title = checkForPageAction(tab.url, tab.id);
+        if (title) {
+          chrome.pageAction.show(tabId);
+          chrome.pageAction.setTitle({tabId: tabId, title: title}); 
+        }
       }
 
       chrome.tabs.onUpdated.addListener(onTabUpdated);
@@ -129,35 +122,81 @@
 //-----------------------------------------------------------------------------
 // Open editor or file on page action click
 
-      function pageAction(tab) {
+      function openInOrionEditor(tab) {
         var editables = editableByTabId[tab.id];
         if (editables) {
           editables.forEach(function(editable) {
             if (editable.url === tab.url) {
               chrome.tabs.create({url: editable.editURL});
+              return true;
             }
           });
-        } else {
-          var ndx = tab.url.indexOf(editSubString);
-          if (ndx > 0) {
-            var fileURL = tab.url.substr(0, ndx);
-            fileURL += tab.url.substr(ndx + editSubString.length);
-            chrome.tabs.create({url: fileURL}, function(tab) {
-              console.log("opened "+fileURL+" in ", tab);
-            });
-          } else {
-            runDevtoolsTest();
-          }
         }
       }
+
+      function openAsFile(tab) {
+        var ndx = tab.url.indexOf(editSubString);
+        if (ndx > 0) {
+          var fileURL = tab.url.substr(0, ndx);
+          fileURL += tab.url.substr(ndx + editSubString.length);
+          chrome.tabs.create({url: fileURL}, function(tab) {
+            console.log("opened "+fileURL+" in ", tab);
+          });
+          return true;
+        }
+      } 
+      
+      function pageAction(tab) {
+        return openInOrionEditor(tab) || 
+               openAsFile(tab) ||
+               devtoolsTest(tab);
+      }
+
       chrome.pageAction.onClicked.addListener(pageAction);
 
 //------------------------------------------------------------------------------
 // run devtools testing on page Action
-function runDevtoolsTest() {
+
+function getTestListFromContentScript(tab) {
+    chrome.tabs.sendMessage(tab.id, 
+      {method: "getTestList", arguments:[]},
+      function(response) {
+        console.log("getTestList response", response || chrome.extension.lastError );
+      }
+    );
+}
+
+function fireDevToolsTest(tab) {
+    chrome.tabs.sendMessage(tab.id, 
+    {
+      method: "fireDevtoolsTest", 
+      arguments:["chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/atopwi/devtoolsAdapter/layoutTestController.js"]
+    },
+    function(response) {
+        console.log("fireDevtoolsTest", response || chrome.extension.lastError );
+    });
+}
+
+
+function devtoolsTest(tab) {
   // notify our content-script to load the layoutTestController
   // That will trigger the tests
+  console.log("devtoolsTest -------------------------- " + tab.url);
+  if ( /\/$/.test(tab.url) ) { // isDirectory
+      var testList = getTestListFromContentScript(tab);
+      testList && testList.forEach(function(testURL) {
+          chrome.tabs.update(tab.id, {url: testURL}, function(reloadedTab) {
+              devtoolsTest(reloadedTab);
+          });
+      });
+  } else if (/\.html$/.test(tab.url)) {  // isHTML
+      fireDevToolsTest(tab);
+  } else {
+      console.warn("Not a directory nor an .html file "+tab.url);
+  }
 }
+
+
 
 //------------------------------------------------------------------------------
 // SuperLogin: reload all Orion pages after logging in.
