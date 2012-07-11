@@ -5,6 +5,7 @@ var layoutTestController = {
   evaluateInWebInspector: function(runTestCallId, toEvaluate) {
     console.log("evaluateInWebInspector "+runTestCallId);
     eval(toEvaluate);
+  }
 };
   
 // InspectorTest calls all functions named "initialize_*" before running tests
