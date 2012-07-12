@@ -6,43 +6,46 @@
 /* 
  * Returns a number or null
  */
-function insureNumber(n) {
+function ensureNumber(n) {
   return isFinite(n) ? n : null;
 }
-      
-function buildContextMenuItem(title, url, onDebuggerWindowCreated) {
-      /**
-       * Returns a handler which will open url?tabId=tab.id in a new window when activated.
-       */
-      function getClickHandler() {
-        return function(info, tab) {
+ 
+// return a contextMenu onclick handler that opens a chrome popup window
+//
+function halfWidthWindowOpener(url, onWindowCreated) {
+  return function(info, tab) {
 
-          var createData = {url: url, type: 'popup' };
+    var createData = {url: url, type: 'popup' };
 
-          var width = parseInt(window.localStorage.getItem('windowWidth'), 10);
-          createData.width = insureNumber(width) || (Math.floor(window.screen.availWidth / 2) - 2);
+    var width = parseInt(window.localStorage.getItem('windowWidth'), 10);
+    createData.width = ensureNumber(width) || (Math.floor(window.screen.availWidth / 2) - 2);
 
-          var height = parseInt(window.localStorage.getItem('windowHeight'), 10);
-          createData.height = Math.max( (isFinite(height) ? height : 0) , window.screen.availHeight - 80);
+    var height = parseInt(window.localStorage.getItem('windowHeight'), 10);
+    createData.height = Math.max( (isFinite(height) ? height : 0) , window.screen.availHeight - 80);
 
-          var top = parseInt(window.localStorage.getItem('windowTop'), 10);
-          createData.top = insureNumber(top) || window.screen.availTop;
+    var top = parseInt(window.localStorage.getItem('windowTop'), 10);
+    createData.top = ensureNumber(top) || window.screen.availTop;
 
-          var left = parseInt(window.localStorage.getItem('windowLeft'), 10);
-          createData.left = insureNumber(left) || (window.screen.availLeft + (window.screen.availWidth - createData.width) );
+    var left = parseInt(window.localStorage.getItem('windowLeft'), 10);
+    createData.left = ensureNumber(left) || (window.screen.availLeft + (window.screen.availWidth - createData.width) );
 
-          // Open Purple in a new window.
-          chrome.windows.create(createData, onDebuggerWindowCreated.bind(null, info, tab));
-        };
-      }
+    // Open Purple in a new window.
+    chrome.windows.create(createData, onWindowCreated.bind(null, info, tab));
+  };
+}
 
-      /**
-       * Create a context menu which will only show up on all pages
-       */
-      chrome.contextMenus.create({
-        "title" : title,
-        "type" : "normal",
-        "contexts" : ["page"],
-        "onclick" : getClickHandler()
-      });
+function formDebuggerURL(allowedSite, debuggeeTabId, debuggeeURL) {
+  return allowedSite + '?tabId=' + debuggeeTabId + '&' + 'url=' + debuggeeURL;
+}
+
+function buildContextMenuItem(title, opener) {
+  /**
+   * Create a context menu which will only show up on all pages
+   */
+  chrome.contextMenus.create({
+    "title" : title,
+    "type" : "normal",
+    "contexts" : ["page"],
+    "onclick" : opener
+  });
 }

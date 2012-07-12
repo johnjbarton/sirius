@@ -167,14 +167,35 @@ function getTestListFromContentScript(tab) {
 }
 
 function fireDevToolsTest(tab) {
-    chrome.tabs.sendMessage(tab.id, 
-    {
-      method: "fireDevtoolsTest", 
-      arguments:["chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/atopwi/devtoolsAdapter/layoutTestController.js"]
-    },
-    function(response) {
-        console.log("fireDevtoolsTest", response || chrome.extension.lastError );
+  // test the first options entry
+  //
+  var site = options.allowedSites[0].site;
+  
+  var opener = debuggerOpener(site, function (debuggerTab, debuggeeTab){
+    // Prepare to ferry messages from the test tab to the debugger tab
+    //
+    chrome.extension.onMessage.addListener(function onMessageToDevtools(message, sender, sendResponse) {
+      chrome.tabs.sendMessage(debuggerTab.id, message, sendResponse);
     });
+
+    // Signal the test system content-script to begin testing
+    //
+    chrome.tabs.sendMessage(
+      debuggeeTab.id, 
+      {
+        method: "fireDevtoolsTest", 
+        arguments:["chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/atopwi/devtoolsAdapter/layoutTestController.js"]
+      },
+      function(response) {
+        console.log("fireDevtoolsTest", response || chrome.extension.lastError );
+      }
+    );
+  
+  });
+
+  // Open devtools on the test debuggeee tab
+  //
+  opener({}, tab);  
 }
 
 
