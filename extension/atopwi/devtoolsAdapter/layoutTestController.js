@@ -4,7 +4,7 @@ var layoutTestController = {
   notifyDone: function() {},
   evaluateInWebInspector: function(runTestCallId, toEvaluate) {
     console.log("evaluateInWebInspector "+runTestCallId);
-    eval(toEvaluate);
+    window.postMessage({evaluateInWebInspector:toEvaluate},  "*");
   }
 };
   
