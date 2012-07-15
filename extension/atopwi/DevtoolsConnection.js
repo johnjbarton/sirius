@@ -9,11 +9,10 @@ function(appendFrame)  {
 
   var debug = true;
 
-  var DevtoolsConnection = {
+  var DevtoolsConnection = { 
 
     openInspector: function(debuggee) {
       this.debuggee = debuggee;
-    
       this.listenDebuggee();
       this.showInspectorIframe();
     },
@@ -31,12 +30,16 @@ function(appendFrame)  {
       }
       this.onUnload = RESTChannel.listen(
         window, 
-        this.sendDebuggeeSpec.bind(this)
+        this._onConnect.bind(this)
       );
     },
     
-    sendDebuggeeSpec: function(connection) {
+    _onConnect: function(connection) {
       this.devtools = connection;
+      this.sendDebuggeeSpec();
+    },
+    
+    sendDebuggeeSpec: function() {
       this.devtools.putObject(
         'debuggee', 
         this.debuggee,
@@ -47,7 +50,8 @@ function(appendFrame)  {
           console.error("atopwi puts debuggee then err", err);
         }
       );
-    }
+    },
+    
   };
   
   return DevtoolsConnection;
