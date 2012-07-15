@@ -9,7 +9,7 @@ function(  )  {
 
   // dynamic iframe load
   //
-  function appendFrame(id, url, onload) {
+  function appendFrame(id, url) {
     var iframe = window.document.createElement('iframe');
     iframe.setAttribute('src', url);
     var elt = id;

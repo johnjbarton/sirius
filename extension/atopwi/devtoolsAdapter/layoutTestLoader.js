@@ -1,6 +1,6 @@
 var layoutTestLoader = {
   
-  onMessage: function(details, sender, sendResponse) {
+  onMessageFromDevTools: function(details, sender, sendResponse) {
     var method = details.method;
     if (method) {
       sendResponse(
@@ -9,16 +9,14 @@ var layoutTestLoader = {
     }
   },
   
-  getTestList: function() {
-    return [];
-  },
-
-  fireDevtoolsTest: function(scriptURL) {
+  loadLayoutTestController: function(scriptURL) {
     var elt = document.createElement('script');
     elt.src = scriptURL;
     document.body.appendChild(elt);
     return true;
   },
+
+   //--------------------------------------------------------------------- 
 
   onWindowMessage: function(event) {
     console.log("onWindowMessage " + (window===event.source)?"go":"fail", event);
@@ -28,11 +26,15 @@ var layoutTestLoader = {
   },
 
   addListeners: function() {
-    chrome.extension.onMessage.addListener(this.onMessage.bind(this));
+    chrome.extension.onMessage.addListener(this.onMessageFromDevTools.bind(this));
     window.addEventListener('message', this.onWindowMessage.bind(this));
-    console.log("addListener ready");  
+    console.log("addListeners complete");  
   }
 };
 
 layoutTestLoader.addListeners();
 
+// At the of this script we will attempt to runTests()
+var controllerURL = "chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/atopwi/devtoolsAdapter/layoutTestController.js"
+layoutTestLoader.loadLayoutTestController(controllerURL);
+console.log("loaded "+controllerURL);

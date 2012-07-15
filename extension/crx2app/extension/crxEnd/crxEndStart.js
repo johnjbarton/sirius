@@ -25,7 +25,7 @@ function adapterFactory(origin, debuggerTab) {
 // return an extended chrome.contextMenu onClick handler closed over a 'site'
 // callback(debuggerTab, debuggeeTab) 
 //
-function allowSiteWhenDebuggerOpens(site, callback) {
+function allowSiteWhenDebuggerOpens(site, callback, extraURLParams) {
   return function onDebuggerWindowCreated(onClickInfo, debuggeeTab, win) {
     var debuggerTab = win.tabs[0];
 
@@ -44,6 +44,9 @@ function allowSiteWhenDebuggerOpens(site, callback) {
         }
 
         var url = site + '?tabId=' + debuggeeTab.id + '&' + 'url=' + onClickInfo.pageUrl;
+        if (extraURLParams) 
+          url += extraURLParams;
+
         // now release the debugger
         var onUpdate = callback ? callback.bind(null, debuggeeTab) : null;
         chrome.tabs.update(debuggerTab.id, {url: url}, onUpdate);
@@ -59,13 +62,13 @@ function allowSiteWhenDebuggerOpens(site, callback) {
 
 // return a chrome.contextMenus onclick handler that opens and allows a debugger from 'site'
 //
-function debuggerOpener(site, callback) {
+function debuggerOpener(site, callback, extraURLParams) {
   // open blank and update to avoid racing debugger attaching to the tab   
   //********** workaround for http://code.google.com/p/chromium/issues/detail?id=108519
   var crx2appBase = window.crx2appBase || "crx2app/extension"; 
   var fakeBlankURL = crx2appBase + '/workaroundBug108519.html';
   //**********
-  return halfWidthWindowOpener(fakeBlankURL, allowSiteWhenDebuggerOpens(site, callback));
+  return halfWidthWindowOpener(fakeBlankURL, allowSiteWhenDebuggerOpens(site, callback, extraURLParams));
 }
 
 function obeyOptions() {
