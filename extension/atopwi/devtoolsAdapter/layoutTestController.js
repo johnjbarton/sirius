@@ -3,7 +3,7 @@ var layoutTestController = {
   waitUntilDone: function() {},
   notifyDone: function() {},
   evaluateInWebInspector: function(runTestCallId, toEvaluate) {
-    console.log("evaluateInWebInspector "+runTestCallId);
+    console.log("evaluateInWebInspector sending to content script, id "+runTestCallId);
     window.postMessage({evaluateInWebInspector:toEvaluate},  "*");
   }
 };

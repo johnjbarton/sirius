@@ -175,9 +175,19 @@ function fireDevToolsTest(tab) {
     // Prepare to ferry messages from the test tab to the debugger tab
     //
     chrome.extension.onMessage.addListener(function onMessageToDevtools(message, sender, sendResponse) {
+      console.log("background forwarding message to debuggerTab", message);
       chrome.tabs.sendMessage(debuggerTab.id, message, sendResponse);
     });
 
+    
+  }, "&tests=true");
+
+  // Open devtools on the test debuggeee tab
+  //
+  opener({}, tab);  
+}
+
+function beginTesting(debuggeeTab) {
     // Signal the test system content-script to begin testing
     //
     chrome.tabs.sendMessage(
@@ -190,14 +200,7 @@ function fireDevToolsTest(tab) {
         console.log("fireDevtoolsTest", response || chrome.extension.lastError );
       }
     );
-  
-  });
-
-  // Open devtools on the test debuggeee tab
-  //
-  opener({}, tab);  
 }
-
 
 function devtoolsTest(tab) {
   // notify our content-script to load the layoutTestController

@@ -4,8 +4,8 @@
 /*global define console WebInspector RESTChannel getChromeExtensionPipe window */
 
 
-define(['crx2app/rpc/ChromeProxy'], 
-function(            ChromeProxy)  {
+define(['crx2app/rpc/ChromeProxy', 'devtoolsAdapter/appendFrame'], 
+function(            ChromeProxy,                    appendFrame)  {
 
   var debug = false;
   
@@ -26,32 +26,32 @@ function(            ChromeProxy)  {
   Debuggee.prototype = {
     attachToParent: function() {
       console.log(window.location + ' talking ');
-      RESTChannel.talk(window.parent, function(atopwi) {
-        this.register(atopwi);
-        console.log('Debuggee connected', atopwi);
+      RESTChannel.talk(window.parent, function(atopwiConnection) {
+        this.register(atopwiConnection);
+        console.log('Debuggee connected', atopwiConnection);
       }.bind(this));
     },
     
-    options: function() {
-      return {
-        put: '{url: string || tabId: number}'
-      };
-    },
-        
-    put: function (atopwi, obj) {
-      if (obj.url || obj.tabId) {
-        this.attachToChrome(obj);
-        return {message:'attached'};
-      } else {
-        var error = "No url or tabId property on debuggee";
-        return {message:"Error: "+error, error: error};
-      }
-    },
-    
-    register: function(atopwi) {
-      atopwi.register(
+    register: function(atopwiConnection) {
+      var debuggee = this;
+      atopwiConnection.register(
         'debuggee',
-        { options: this.options.bind(this), put: this.put.bind(this) }
+        { 
+          options: function() {
+            return {
+              put: '{url: string || tabId: number}'
+            };        
+          },
+          put: function (connection, obj) {
+            if (obj.url || obj.tabId) {
+              debuggee.attachToChrome(obj);
+             return {message:'attached'};
+            } else {
+             var error = "No url or tabId property on debuggee";
+             return {message:"Error: "+error, error: error};
+            }
+          }
+        }
       );
     },
   
@@ -83,6 +83,7 @@ function(            ChromeProxy)  {
           this.parseDebuggee(debuggeeSpec);
           this.attach(function() {
               console.log("Debuggee attach ", this.chrome);
+              // TODO remove this, it just helps us get a consistent starting point for dev.
               this.chrome.debugger.sendCommand(
                   {tabId: this.tabId}, 
                   "Page.reload",
@@ -115,6 +116,9 @@ function(            ChromeProxy)  {
       }
       if ( !isNaN(tabId) ) {  // then we better have a URL
         this.tabId = tabId;
+      }
+      if (debuggeeSpec.tests) {
+        this.obeyLayoutTestController = true;
       }
     },
     
@@ -204,6 +208,7 @@ function(            ChromeProxy)  {
 
       var WebInspector = this.inspectorWindow.WebInspector;
       WebInspector.attached = true; // small icons for embed in orion
+
       
       this.completeLoad = WebInspector.delayLoaded; // set by openInspector
     
@@ -216,6 +221,10 @@ function(            ChromeProxy)  {
       InspectorExtensionRegistry.getExtensionsAsync = function() {
         this.loadExtensions();
       }.bind(this);
+
+      if (this.obeyLayoutTestController) {
+        this.listenForLayoutTestController();
+      }
     
       WebInspector._doLoadedDoneWithCapabilities = function() {
         var args = Array.prototype.slice.call(arguments, 0);
@@ -289,6 +298,26 @@ function(            ChromeProxy)  {
         messageObject.params, 
         handleSendCommandResponse.bind(this, messageObject.id)
       );
+    },
+
+    layoutTestResponder: {
+      evaluateInWebInspector: function(src) {
+        return eval(src);
+      }
+    },
+
+    listenForLayoutTestController: function() {
+      chrome.extension.onMessage.addListener(function(message, sender, sendResponse) {
+        console.log("message from layoutTestController: ", message);
+        Object.keys(message).forEach(function (methodName) {
+          var method = this.layoutTestResponder[methodName];
+          if (method) {
+            sendResponse(method.apply(this.layoutTestResponder, [message[methodName]]));
+          } else {
+            console.error("no such method " + methodName + " from layoutTestController ", message);
+          }
+        }.bind(this));
+      }.bind(this));
     }
     
 };
