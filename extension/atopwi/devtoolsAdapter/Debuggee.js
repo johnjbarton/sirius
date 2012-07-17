@@ -303,20 +303,21 @@ function(            ChromeProxy,                    appendFrame)  {
     layoutTestResponder: {
       evaluateInWebInspector: function(src) {
         return eval(src);
+      },
+      notifyDone: function(message) {
+        console.log("notifyDone "+message);
       }
     },
 
     listenForLayoutTestController: function() {
       chrome.extension.onMessage.addListener(function(message, sender, sendResponse) {
         console.log("message from layoutTestController: ", message);
-        Object.keys(message).forEach(function (methodName) {
-          var method = this.layoutTestResponder[methodName];
-          if (method) {
-            sendResponse(method.apply(this.layoutTestResponder, [message[methodName]]));
-          } else {
-            console.error("no such method " + methodName + " from layoutTestController ", message);
-          }
-        }.bind(this));
+        var method = this.layoutTestResponder[message.method];
+        if (method) {
+          sendResponse(method.apply(this.layoutTestResponder, message.arguments));
+        } else {
+          console.error("layoutTestResponder: no such method " + message.method + " from layoutTestController ", message);
+        }
       }.bind(this));
     }
     
