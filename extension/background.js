@@ -176,30 +176,31 @@ function fireDevToolsTest(tab) {
     //
     chrome.extension.onMessage.addListener(function onMessageToDevtools(message, sender, sendResponse) {
       console.log("background forwarding message to debuggerTab", message);
-      chrome.tabs.sendMessage(debuggerTab.id, message, sendResponse);
+      chrome.tabs.sendMessage(debuggerTab.id, message, function onResponse(response) {
+        console.log("debuggerTab response: ", response);
+        sendResponse(response);
+        console.log("sent debuggerTab response: ", response);
+      });
+      return true; // allow asynchronous sendMessage to call our sendResponse
+    });
+    
+    chrome.tabs.onRemoved.addListener(function onDebuggerTabRemoved(tabId, removeInfo) {
+      if (tabId === debuggerTab.id) {
+        chrome.extension.onMessage.addListener();  
+      }
     });
 
+    chrome.tabs.onUpdated.addListener(function onDebuggeeTabUpdated(tabId, changeInfo, tab) {
+      if (tabId === debuggeeTab.id) {
+        console.log("debuggeeTab updated ", changeInfo);
+      }
+    })
     
   }, "&tests=true");
 
-  // Open devtools on the test debuggeee tab
+  // Open devtools on the test debuggee tab
   //
   opener({}, tab);  
-}
-
-function beginTesting(debuggeeTab) {
-    // Signal the test system content-script to begin testing
-    //
-    chrome.tabs.sendMessage(
-      debuggeeTab.id, 
-      {
-        method: "fireDevtoolsTest", 
-        arguments:["chrome-extension://fkhgelnmojgnpahkeemhnbjndeeocehc/atopwi/devtoolsAdapter/layoutTestController.js"]
-      },
-      function(response) {
-        console.log("fireDevtoolsTest", response || chrome.extension.lastError );
-      }
-    );
 }
 
 function devtoolsTest(tab) {

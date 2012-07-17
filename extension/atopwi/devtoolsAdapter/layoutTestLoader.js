@@ -1,11 +1,15 @@
 var layoutTestLoader = {
   
   onMessageFromDevTools: function(details, sender, sendResponse) {
+    console.log("layoutTestLoader.onMessageFromDevTools sender %o details: %o",sender, details);
     var method = details.method;
-    if (method) {
+    if (method && this[method]) {
       sendResponse(
         this[method].apply(this, details.arguments)
       );
+    } else {
+      if(method)
+        console.error("layoutTestLoader.onMessageFromDevTools no "+ method + " in ", this)
     }
   },
   
@@ -19,14 +23,14 @@ var layoutTestLoader = {
    //--------------------------------------------------------------------- 
 
   onWindowMessage: function(event) {
-    console.log("onWindowMessage " + (window===event.source)?"go":"fail", event);
+    console.log("layoutTestLoader.onWindowMessage ", event);
     chrome.extension.sendMessage(event.data, function(response) {
-      console.log("onWindowMessage sendMessage response ", response);
+      console.log("layoutTestLoader.onWindowMessage sendMessage response ", response);
     })
   },
 
   addListeners: function() {
-    chrome.extension.onMessage.addListener(this.onMessageFromDevTools.bind(this));
+    //chrome.extension.onMessage.addListener(this.onMessageFromDevTools.bind(this));
     window.addEventListener('message', this.onWindowMessage.bind(this));
     console.log("addListeners complete");  
   }

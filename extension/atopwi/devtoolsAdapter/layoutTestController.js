@@ -1,10 +1,19 @@
 var layoutTestController = {
-  dumpAsText: function() {},
-  waitUntilDone: function() {},
-  notifyDone: function() {},
+  dumpAsText: function() {
+      console.log("layoutTestController: ignored dumpAsText");
+  },
+  waitUntilDone: function() {
+      console.log("layoutTestController: ignored waitUntilDone");
+  },
+  closeWebInspector: function() {
+      console.log("layoutTestController: ignored closeWebInspector");
+  },
+  notifyDone: function(message) {
+      window.postMessage({method: 'notifyDone', arguments: [message]}, "*");
+  },
   evaluateInWebInspector: function(runTestCallId, toEvaluate) {
     console.log("evaluateInWebInspector sending to content script, id "+runTestCallId);
-    window.postMessage({evaluateInWebInspector:toEvaluate},  "*");
+    window.postMessage({method: 'evaluateInWebInspector', arguments:[toEvaluate]},  "*");
   }
 };
   
