@@ -23,9 +23,9 @@ var layoutTestLoader = {
    //--------------------------------------------------------------------- 
 
   onWindowMessage: function(event) {
-    console.log("layoutTestLoader.onWindowMessage ", event);
+    console.log("layoutTestLoader.onWindowMessage "+event.data.method, event);
     chrome.extension.sendMessage(event.data, function(response) {
-      console.log("layoutTestLoader.onWindowMessage sendMessage response ", response);
+      console.log("layoutTestLoader.onWindowMessage " + event.data.method +", sendMessage response ", response);
     })
   },
 
