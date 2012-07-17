@@ -462,6 +462,14 @@ WebInspector.ResourcesPanel.prototype = {
         this._innerShowView(this._applicationCacheViews[frameId]);
     },
 
+    /**
+     *  @param {WebInspector.View} view
+     */
+    showFileSystem: function(view)
+    {
+        this._innerShowView(view);
+    },
+
     showCategoryView: function(categoryName)
     {
         if (!this._categoryView)
@@ -633,16 +641,6 @@ WebInspector.ResourcesPanel.prototype = {
         var regex = WebInspector.SourceFrame.createSearchRegex(query);
         var totalMatchesCount = 0;
 
-        function searchInEditedResource(treeElement)
-        {
-            var resource = treeElement.representedObject;
-            if (resource.history.length == 0)
-                return;
-            var matchesCount = countRegexMatches(regex, resource.content)
-            treeElement.searchMatchesFound(matchesCount);
-            totalMatchesCount += matchesCount;
-        }
-
         function callback(error, result)
         {
             if (!error) {
@@ -659,8 +657,6 @@ WebInspector.ResourcesPanel.prototype = {
                     if (!resource)
                         continue;
 
-                    if (resource.history.length > 0)
-                        continue; // Skip edited resources.
                     this._findTreeElementForResource(resource).searchMatchesFound(searchResult.matchesCount);
                     totalMatchesCount += searchResult.matchesCount;
                 }
@@ -673,7 +669,6 @@ WebInspector.ResourcesPanel.prototype = {
                 this.jumpToNextSearchResult();
         }
 
-        this._forAllResourceTreeElements(searchInEditedResource.bind(this));
         PageAgent.searchInResources(regex.source, !regex.ignoreCase, true, callback.bind(this));
     },
 
@@ -1525,6 +1520,7 @@ WebInspector.FileSystemListTreeElement.prototype = {
         var fileSystemTreeElement = this._fileSystemTreeElementByName(fileSystem.name);
         if (!fileSystemTreeElement)
             return;
+        fileSystemTreeElement.clear();
         this.removeChild(fileSystemTreeElement);
     },
 
@@ -1722,8 +1718,12 @@ WebInspector.IDBObjectStoreTreeElement.prototype = {
 
     _updateTooltip: function()
     {
+        
         var keyPathString = this._objectStore.keyPathString;
-        this.tooltip = keyPathString !== null ? (WebInspector.UIString("Key path: ") + keyPathString) : "";
+        var tooltipString = keyPathString !== null ? (WebInspector.UIString("Key path: ") + keyPathString) : "";
+        if (this._objectStore.autoIncrement)
+            tooltipString += "\n" + WebInspector.UIString("autoIncrement");
+        this.tooltip = tooltipString
     },
 
     onselect: function()
@@ -1977,6 +1977,19 @@ WebInspector.FileSystemTreeElement.prototype = {
     get itemURL()
     {
         return "filesystem://" + this._fileSystem.name;
+    },
+
+    onselect: function()
+    {
+        WebInspector.BaseStorageTreeElement.prototype.onselect.call(this);
+        this._fileSystemView = new WebInspector.FileSystemView(this._fileSystem);
+        this._storagePanel.showFileSystem(this._fileSystemView);
+    },
+
+    clear: function()
+    {
+        if (this.fileSystemView && this._storagePanel.visibleView == this.fileSystemView)
+            this._storagePanel.closeVisibleView();
     }
 }
 

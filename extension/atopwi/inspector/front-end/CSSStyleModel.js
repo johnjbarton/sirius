@@ -335,6 +335,14 @@ WebInspector.CSSStyleModel.prototype = {
             return;
         }
         this._resourceBinding._requestViaInspectorResource(rule.id.styleSheetId, callback);
+    },
+
+    /**
+     * @return {WebInspector.CSSStyleModelResourceBinding}
+     */
+    resourceBinding: function()
+    {
+        return this._resourceBinding;
     }
 }
 
@@ -926,7 +934,6 @@ WebInspector.CSSStyleSheet.prototype = {
 
 /**
  * @constructor
- * @implements {WebInspector.ResourceDomainModelBinding}
  */
 WebInspector.CSSStyleModelResourceBinding = function(cssModel)
 {
@@ -935,34 +942,23 @@ WebInspector.CSSStyleModelResourceBinding = function(cssModel)
     this._styleSheetIdToHeader = {};
     this._cssModel.addEventListener(WebInspector.CSSStyleModel.Events.StyleSheetChanged, this._styleSheetChanged, this);
     WebInspector.resourceTreeModel.addEventListener(WebInspector.ResourceTreeModel.EventTypes.InspectedURLChanged, this._inspectedURLChanged, this);
-    WebInspector.Resource.registerDomainModelBinding(WebInspector.resourceTypes.Stylesheet, this);
 }
 
 WebInspector.CSSStyleModelResourceBinding.prototype = {
     /**
-     * @param {WebInspector.Resource} resource
+     * @param {WebInspector.StyleSource} styleSource
      * @param {string} content
      * @param {boolean} majorChange
      * @param {function(?string)} userCallback
      */
-    setContent: function(resource, content, majorChange, userCallback)
+    setStyleContent: function(styleSource, content, majorChange, userCallback)
     {
-        if (majorChange && resource.type === WebInspector.resourceTypes.Stylesheet)
-            resource.addRevision(content);
-
+        var resource = styleSource.resource();
         if (this._styleSheetIdForResource(resource)) {
             this._innerSetContent(resource, content, majorChange, userCallback, null);
             return;
         }
         this._loadStyleSheetHeaders(this._innerSetContent.bind(this, resource, content, majorChange, userCallback));
-    },
-
-    /**
-     * @return {boolean}
-     */
-    canSetContent: function()
-    {
-        return true;
     },
 
     /**
@@ -1083,12 +1079,13 @@ WebInspector.CSSStyleModelResourceBinding.prototype = {
                 return;
 
             var styleSheetURL = header.origin === "inspector" ? this._viaInspectorResourceURL(header.sourceURL) : header.sourceURL;
-            var resource = frame.resourceForURL(styleSheetURL);
-            if (!resource)
+            
+            var uiSourceCode = WebInspector.workspace.uiSourceCodeForURL(styleSheetURL);
+            if (!uiSourceCode)
                 return;
 
-            if (resource.type === WebInspector.resourceTypes.Stylesheet)
-                resource.addRevision(content);
+            if (uiSourceCode.contentType() === WebInspector.resourceTypes.Stylesheet)
+                uiSourceCode.addRevision(content);
         }
 
         if (!this._styleSheetIdToHeader[styleSheetId]) {
@@ -1173,8 +1170,6 @@ WebInspector.CSSStyleModelResourceBinding.prototype = {
         return fakeURL;
     }
 }
-
-WebInspector.CSSStyleModelResourceBinding.prototype.__proto__ = WebInspector.ResourceDomainModelBinding.prototype;
 
 /**
  * @constructor
