@@ -167,11 +167,29 @@ function getTestListFromContentScript(tab) {
 }
 
 function fireDevToolsTest(tab) {
+  
+  window.debuggerTab = window.debuggerTab || {};
+  
+  if (window.debuggerTab[tab.id]) {
+    // we are already testing, just re-test
+    var debuggerTab = window.debuggerTab[tab.id];
+    chrome.tabs.update(debuggerTab.id, {url: debuggerTab.url}, function(tab) {
+        console.log("retest "+tab.url);
+    });   
+    return;
+  }
+     
   // test the first options entry
   //
   var site = options.allowedSites[0].site;
   
-  var opener = debuggerOpener(site, function (debuggerTab, debuggeeTab){
+  var opener = debuggerOpener(site, function (debuggeeTab, debuggerTab){
+    if (debuggeeTab.id !== tab.id) {
+        console.error("debuggeeTab should be identical to tab");
+    }
+    
+    window.debuggerTab[debuggeeTab.id] = debuggerTab;
+
     // Prepare to ferry messages from the test tab to the debugger tab
     //
     chrome.extension.onMessage.addListener(function onMessageToDevtools(message, sender, sendResponse) {
@@ -186,7 +204,15 @@ function fireDevToolsTest(tab) {
     
     chrome.tabs.onRemoved.addListener(function onDebuggerTabRemoved(tabId, removeInfo) {
       if (tabId === debuggerTab.id) {
-        chrome.extension.onMessage.addListener();  
+        chrome.extension.onMessage.addListener();
+        Object.keys(window.debuggerTab).forEach(function(debuggeeTabId) {
+          if (window.debuggerTab[debuggeeTabId].id === tabId) {
+            delete window.debuggerTab[debuggeeTabId];
+          }
+        });
+      }
+      if (tabId === debuggeeTab.id) {
+        delete window.debuggerTab[tabId];
       }
     });
 
