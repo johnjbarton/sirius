@@ -4,11 +4,13 @@ Test data
 Layout Properties:
 {
     startTime : <number>
+    stackTrace : <object>
     data : {
     }
     children : <object>
     endTime : <number>
     type : "Layout"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>

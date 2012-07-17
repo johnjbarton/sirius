@@ -4,6 +4,7 @@ Test data
 ParseHTML Properties:
 {
     startTime : <number>
+    stackTrace : <object>
     data : {
         length : 9
         startLine : 0
@@ -12,6 +13,7 @@ ParseHTML Properties:
     children : <object>
     endTime : <number>
     type : "ParseHTML"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>
@@ -19,6 +21,7 @@ ParseHTML Properties:
 ParseHTML Properties:
 {
     startTime : <number>
+    stackTrace : <object>
     data : {
         length : 1
         startLine : 0
@@ -27,6 +30,7 @@ ParseHTML Properties:
     children : <object>
     endTime : <number>
     type : "ParseHTML"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>

@@ -3,12 +3,14 @@ Tests the Timeline events for Timers
 TimerInstall Properties:
 {
     startTime : <number>
+    stackTrace : <object>
     data : {
         timerId : <number>
         timeout : 10
         singleShot : true
     }
     type : "TimerInstall"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>
@@ -16,12 +18,14 @@ TimerInstall Properties:
 TimerInstall Properties:
 {
     startTime : <number>
+    stackTrace : <object>
     data : {
         timerId : <number>
         timeout : 20
         singleShot : false
     }
     type : "TimerInstall"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>
@@ -35,6 +39,7 @@ TimerFire Properties:
     children : <object>
     endTime : <number>
     type : "TimerFire"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>
@@ -48,6 +53,7 @@ TimerFire Properties:
     children : <object>
     endTime : <number>
     type : "TimerFire"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>
@@ -61,6 +67,7 @@ TimerFire Properties:
     children : <object>
     endTime : <number>
     type : "TimerFire"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>
@@ -68,10 +75,12 @@ TimerFire Properties:
 TimerRemove Properties:
 {
     startTime : <number>
+    stackTrace : <object>
     data : {
         timerId : <number>
     }
     type : "TimerRemove"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>
@@ -86,6 +95,7 @@ FunctionCall Properties:
     children : <object>
     endTime : <number>
     type : "FunctionCall"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>
@@ -100,6 +110,7 @@ FunctionCall Properties:
     children : <object>
     endTime : <number>
     type : "FunctionCall"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>
@@ -114,6 +125,7 @@ FunctionCall Properties:
     children : <object>
     endTime : <number>
     type : "FunctionCall"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>
@@ -128,6 +140,7 @@ FunctionCall Properties:
     children : <object>
     endTime : <number>
     type : "FunctionCall"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>
@@ -142,6 +155,7 @@ EvaluateScript Properties:
     children : <object>
     endTime : <number>
     type : "EvaluateScript"
+    frameId : <string>
     usedHeapSize : <number>
     totalHeapSize : <number>
     counters : <object>

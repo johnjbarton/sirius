@@ -3,31 +3,21 @@
 <script src="../../http/tests/inspector/inspector-test.js"></script>
 <script src="../../http/tests/inspector/extensions-test.js"></script>
 <script type="text/javascript">
+function logMessage()
+{
+    console.log("hello");
+}
 
 function initialize_extensionsPanelTest()
 {
-    InspectorTest.panelCallback = function(width, height)
-    {
-        InspectorTest.checkPanelSize(width, height);
-        var callback = InspectorTest._pendingPanelSizeTestCallback;
-        if (callback) {
-            delete InspectorTest._pendingPanelSizeTestCallback;
-            callback();
-        }
-    }
-
-    InspectorTest.waitForPanel = function(callback)
-    {
-         InspectorTest._pendingPanelSizeTestCallback = callback;
-    }
-
-    InspectorTest.checkPanelSize = function(width, height)
+    InspectorTest.getPanelSize = function()
     {
         var extensionPanel = WebInspector.inspectorView._panelOrder[WebInspector.inspectorView._panelOrder.length - 1];
         var boundingRect = document.getElementById("main-panels").getBoundingClientRect();
-        InspectorTest.assertEquals(boundingRect.width, width, "panel width mismatch");
-        InspectorTest.assertEquals(boundingRect.height, height, "panel height mismatch");
-        InspectorTest.addResult("Extension panel size correct");
+        return {
+            width: boundingRect.width,
+            height: boundingRect.height
+        };
     }
 
     InspectorTest.dumpStatusBarButtons = function()
@@ -52,23 +42,90 @@ function initialize_extensionsPanelTest()
         var panel = WebInspector.inspectorView.currentPanel();
         panel.statusBarItems[index].click();
     }
+
+    InspectorTest.clickOnURL = function()
+    {
+        WebInspector.showPanel("console");
+        var xpathResult = document.evaluate("//a[starts-with(., 'extensions-panel.html')]",
+                                            WebInspector.panels.console.element, null, XPathResult.ANY_UNORDERED_NODE_TYPE, null);
+        var click = document.createEvent("MouseEvent");
+        click.initMouseEvent("click", true, true);
+        xpathResult.singleNodeValue.dispatchEvent(click);
+    }
 }
 
 function extension_testCreatePanel(nextTest)
 {
-    var callbackCount = 0;
+    var expectOnShown = false;
+
+    function onPanelShown(panel, window)
+    {
+        if (!expectOnShown) {
+            output("FAIL: unexpected onShown event");
+            nextTest();
+            return;
+        }
+        output("Panel shown");
+        panel.onShown.removeListener(onPanelShown);
+        evaluateOnFrontend("reply(InspectorTest.getPanelSize())", function(result) {
+            if (result.width !== window.innerWidth)
+                output("panel width mismatch, outer: " + result.width + ", inner:" + window.innerWidth);
+            else if (result.height !== window.innerHeight)
+                output("panel height mismatch, outer: " + result.height + ", inner:" + window.innerHeight);
+            else
+                output("Extension panel size correct");
+            nextTest();
+        });
+    }
 
     function onPanelCreated(panel)
     {
         output("Panel created");
         dumpObject(panel);
-        // This will force extension iframe to be really loaded and will cause waitForPanel() callback below.
-        extension_showPanel("extension");
+        panel.onHidden.addListener(function() {
+            output("Panel hidden");
+        });
+        panel.onShown.addListener(onPanelShown.bind(this, panel));
+
+        // This is not authorized and therefore should not produce any output
+        panel.show();
+        extension_showPanel("console");
+
+        function handleOpenResource(resource, lineNumber)
+        {
+            // This will force extension iframe to be really loaded.
+            panel.show();
+        }
+        webInspector.panels.setOpenResourceHandler(handleOpenResource);
+        evaluateOnFrontend("WebInspector.openAnchorLocationRegistry._activeHandler = 'test extension'");
+        webInspector.inspectedWindow.eval("logMessage()", function() {
+            expectOnShown = true;
+            evaluateOnFrontend("InspectorTest.clickOnURL();");
+        });
     }
-    // The panel code is expected to report its size via InspectorTest.panelCallback()
-    evaluateOnFrontend("InspectorTest.waitForPanel(reply);", nextTest);
     var basePath = location.pathname.replace(/\/[^/]*$/, "/");
     webInspector.panels.create("Test Panel", basePath + "extension-panel.png", basePath + "extension-panel.html", onPanelCreated);
+}
+
+function extension_testSearch(nextTest)
+{
+    var callbackCount = 0;
+
+    function onPanelCreated(panel)
+    {
+        panel.onSearch.addListener(function(action, queryString) {
+            output("Panel searched:");
+            dumpObject(Array.prototype.slice.call(arguments));
+            callbackCount++;
+            if (callbackCount === 2)
+                nextTest();
+        });
+
+        extension_showPanel("extension");
+    }
+    evaluateOnFrontend("WebInspector.searchController._performSearch('hello', true, false, false); reply()");
+    var basePath = location.pathname.replace(/\/[^/]*$/, "/");
+    webInspector.panels.create("Test Panel", basePath + "extension-panel.png", basePath + "non-existent.html", onPanelCreated);
 }
 
 function extension_testStatusBarButtons(nextTest)
