@@ -25,6 +25,10 @@ var layoutTestLoader = {
   onWindowMessage: function(event) {
     console.log("layoutTestLoader.onWindowMessage "+event.data.method, event);
     chrome.extension.sendMessage(event.data, function(response) {
+      if (chrome.extension.lastError) {
+          console.error("layoutTestLoader failed to send to background:" + chrome.extension.lastError.message);
+          return;
+      }
       console.log("layoutTestLoader.onWindowMessage " + event.data.method +", sendMessage response ", response);
     })
   },
