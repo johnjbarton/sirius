@@ -39,7 +39,7 @@
      },
      {
       "matches": ["http://*/inspector/*","http://*/http/*"],
-      "js": ["atopwi/devtoolsAdapter/layoutTestLoader.js"]
+      "js": ["atopwi/devtoolsAdapter/testRunnerLoader.js"]
      }
    ]
 }

@@ -1,12 +1,12 @@
-var layoutTestController = {
+var testRunner = {
   dumpAsText: function() {
-      console.log("layoutTestController: ignored dumpAsText");
+      console.log("testRunner: ignored dumpAsText");
   },
   waitUntilDone: function() {
-      console.log("layoutTestController: ignored waitUntilDone");
+      console.log("testRunner: ignored waitUntilDone");
   },
   closeWebInspector: function() {
-      console.log("layoutTestController: ignored closeWebInspector");
+      console.log("testRunner: ignored closeWebInspector");
   },
   notifyDone: function(message) {
       window.postMessage({method: 'notifyDone', arguments: [message]}, "*");

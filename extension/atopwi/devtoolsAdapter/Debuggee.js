@@ -84,7 +84,7 @@ function(            ChromeProxy,                    appendFrame)  {
           this.attach(function() {
               console.log("Debuggee attach ", this.chrome);
               // TODO remove this, it just helps us get a consistent starting point for dev.
-              this.chrome.debugger.sendCommand(
+              /*this.chrome.debugger.sendCommand(
                   {tabId: this.tabId}, 
                   "Page.reload",
                   {},
@@ -93,7 +93,7 @@ function(            ChromeProxy,                    appendFrame)  {
                           console.error("Page.reload failed");
                       }
                   }
-              );
+              );*/
           }.bind(this));
           
     
@@ -118,7 +118,7 @@ function(            ChromeProxy,                    appendFrame)  {
         this.tabId = tabId;
       }
       if (debuggeeSpec.tests) {
-        this.obeyLayoutTestController = true;
+        this.obeyTestRunner = true;
       }
     },
     
@@ -222,14 +222,16 @@ function(            ChromeProxy,                    appendFrame)  {
         this.loadExtensions();
       }.bind(this);
 
-      if (this.obeyLayoutTestController) {
-        this.listenForLayoutTestController();
+      if (this.obeyTestRunner) {
+        this.listenForTestRunner();
       }
     
       WebInspector._doLoadedDoneWithCapabilities = function() {
         var args = Array.prototype.slice.call(arguments, 0);
         this._doLoadedDoneWithCapabilities.apply(WebInspector, args);
+        this.loadCompleted();
       }.bind(this);
+      
       this.completeLoad.call(this.inspectorWindow.WebInspector);
       callback && callback();
     },
@@ -300,26 +302,35 @@ function(            ChromeProxy,                    appendFrame)  {
       );
     },
 
-    layoutTestResponder: {
+    testRunnerResponder: {
       evaluateInWebInspector: function(src) {
-        return eval(src);
+        return eval(src + "\n//@ sourceURL=testRunnerEvals.js");
       },
       notifyDone: function(message) {
         console.log("notifyDone "+message);
       }
     },
 
-    listenForLayoutTestController: function() {
+    listenForTestRunner: function() {
       chrome.extension.onMessage.addListener(function(message, sender, sendResponse) {
-        console.log("message from layoutTestController: ", message);
-        var method = this.layoutTestResponder[message.method];
+        console.log("message from testRunner: ", message);
+        var method = this.testRunnerResponder[message.method];
         if (method) {
-          sendResponse(method.apply(this.layoutTestResponder, message.arguments));
+          sendResponse(method.apply(this.testRunnerResponder, message.arguments));
         } else {
-          console.error("layoutTestResponder: no such method " + message.method + " from layoutTestController ", message);
+          console.error("testRunnerResponder: no such method " + message.method + " from TestRunner ", message);
         }
       }.bind(this));
-    }
+    },
+    
+    loadCompleted: function() {
+      if (this.obeyTestRunner) {
+        console.log("loadCompleted, sending runTest with window.InspectorTest: ", window.InspectorTest);
+        chrome.extension.sendMessage({to: "testPage", method: "runTest", arguments: []}, function onResponse(response) {
+            console.log("runTest response", response);
+        }); 
+      }
+    },
     
 };
 
