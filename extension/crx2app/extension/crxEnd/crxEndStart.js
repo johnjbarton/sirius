@@ -41,9 +41,11 @@ function allowSiteWhenDebuggerOpens(site, callback, extraURLParams) {
         var windowsAdapter = crxEnd.getWindowsAdaptersByOrigin(validOrigin, debuggerTab);
         if (!windowsAdapter) {  // then this origin has not been seen
            windowsAdapter = crxEnd.createWindowsAdapter(validOrigin, debuggerTab);
+        } else {
+           windowsAdapter.addTab(debuggerTab);
         }
 
-        var url = site + '?tabId=' + debuggeeTab.id + '&' + 'url=' + onClickInfo.pageUrl;
+        var url = site + '?tabId=' + debuggeeTab.id + '&' + 'url=' + encodeURIComponent(onClickInfo.pageUrl);
         if (extraURLParams) 
           url += extraURLParams;
 
@@ -95,7 +97,7 @@ function obeyOptions() {
     if (title && title !== '(none)') {
       var onClick = debuggerOpener(
         allowedSite.site, 
-        function(debuggerTab, debuggeeTab) {
+        function(debuggeeTab, debuggerTab) {
           console.log("debugger %o, debugeee %o", debuggerTab, debuggeeTab);
         }
       );
