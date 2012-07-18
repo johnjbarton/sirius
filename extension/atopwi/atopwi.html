@@ -103,7 +103,7 @@ URLOptions.prototype = {
         devtoolsURL: this.devToolsURL(),
         ws: this.params.ws,
         frontendURL: getFrontendURL(),
-        tests: this.params.tests && this.params.tests === 'true'
+        tests: this.params.tests && this.params.tests === this.params.tabId
       };
     } // else none.
   }

@@ -166,6 +166,8 @@ function getTestListFromContentScript(tab) {
     );
 }
 
+var messagesSent = 0;
+
 function fireDevToolsTest(tab) {
   
   window.debuggerTab = window.debuggerTab || {};
@@ -192,12 +194,26 @@ function fireDevToolsTest(tab) {
 
     // Prepare to ferry messages from the test tab to the debugger tab
     //
-    chrome.extension.onMessage.addListener(function onMessageToDevtools(message, sender, sendResponse) {
-      console.log("background forwarding message to debuggerTab", message);
-      chrome.tabs.sendMessage(debuggerTab.id, message, function onResponse(response) {
-        console.log("debuggerTab response: ", response);
+    chrome.extension.onMessage.addListener(function onMessageFromDevtools(message, sender, sendResponse) {
+      var dst = debuggerTab.id;
+      var dstName = "debugger";
+      if (message.to && message.to === 'testPage') {
+        dst = debuggeeTab.id;
+        dstName = "debuggee";
+      } else {
+        // For reasons I don't understand chrome.extension.sendMessage() 
+        // from web page to devtools works directly, but we have to 
+        // proxy message from devtools to web page (debuggee).
+        return;
+      }
+      
+      message.count = ++messagesSent;
+      
+      console.log("background forwarding message to " + dstName, message);
+      chrome.tabs.sendMessage(dst, message, function onResponse(response) {
+        console.log(dstName + " response: ", response);
         sendResponse(response);
-        console.log("sent debuggerTab response: ", response);
+        console.log(dstName + " sent response: ", response);
       });
       return true; // allow asynchronous sendMessage to call our sendResponse
     });
@@ -220,9 +236,9 @@ function fireDevToolsTest(tab) {
       if (tabId === debuggeeTab.id) {
         console.log("debuggeeTab updated ", changeInfo);
       }
-    })
+    });
     
-  }, "&tests=true");
+  }, "&tests=" + tab.id);
 
   // Open devtools on the test debuggee tab
   //
