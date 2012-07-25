@@ -41,39 +41,12 @@ function(editorLog,      consoleLog,             resources,      LogViewportMana
       window.addEventListener('unload', detach, false);
     }
 
-    function onAttach(connection) {
-      initialize();
+    initialize();
       
-      connect();
+    connect();
       
-      window.purple._connection = connection;
-      console.log(window.location + ' attach');
-  
-      connection.register('hello', {
-        put: function (obj) {
-          return {message:'Did you do your homework?'};
-        }
-      });
-            
-      // We have loaded all of our scripts and built our API. Tell our creator
-      window.purple._connection.putObject(
-        'hello', 
-        {message:'I am your purplePanel'},
-        function(reply) {
-          console.log("purplePanel hears: "+reply.message, reply);
-        },
-        function(err) {
-          console.error("purplePanel recvd err", err);
-        }
-      );
-    }
-
     console.log(window.location + ' listening');
-    var onUnload = RESTChannel.listen(window, onAttach);
-    window.addEventListener('unload', onUnload);
     
-    window.purple.onPanelReady();
-
   }
 );
 }

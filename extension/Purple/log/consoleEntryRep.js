@@ -123,14 +123,14 @@ function (            domplate,             PartLinkRep,             Resources, 
         getId: function(object) {
           var resource = this.getResource(object);
           var id = this.getUniqueId();
-          window.setTimeout(this.openEditorOn.bind(this));
+          var bottomLine = this.getLineNumber(object);
+          window.setTimeout(this.openEditorOn.bind(this, id, resource, bottomLine));
           return id;
         },
 
-        openEditorOn: function(id) {
+        openEditorOn: function(id, resource, bottomLine) {
           var elt = window.document.getElementById(id);
           var url = resource.url;
-          var bottomLine = this.getLineNumber(object);
           var editor = new EditorInterface(elt.firstElementChild);
           var line = bottomLine - 4; // position the frame line at the bottom
           var col = this.getColumnNumber(object);

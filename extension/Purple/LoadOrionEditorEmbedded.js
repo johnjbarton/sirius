@@ -46,21 +46,10 @@ require(
           }
       };
       
-      // We have loaded all of our scripts and built our API. Tell our creator
-      window.purple.connection.putObject(
-        'hello', 
-        {message:'I am your purplePanel'},
-        function(reply) {
-          console.log("purplePanel hears: "+reply.message, reply);
-        },
-        function(err) {
-          console.error("purplePanel recvd err", err);
-        }
-      );
+    
     }
 
     console.log(window.location + ' listening');
-    var onUnload = RESTChannel.listen(window, onAttach);
-    window.addEventListener('unload', onUnload);
+    
   }
 );
