@@ -66,47 +66,6 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
   function onAttach(connection) {
     console.log(window.location + ' attach');
 
-    // Add initial methods for the panel to use
-    //
-    connection.register(
-      'hello',        // URL for commands from panel to devtools
-      {
-        // feature documentation
-        options: function() {
-          return {
-            put: 'body ignored; {message:}'
-          };
-        },
-        
-        // When the panel sends us "hello", finally we can dequeue any buffers
-        put: function (obj) {
-          return {message:'hey'};
-        }
-      }
-    );
-
-    function childErr(err) {
-      console.error("Child recvd err", err);
-    }
-
-    // Send something to the 'purplePanel'
-    //
-    connection.putObject( 
-      'hello',                      // at this URL
-      {message:'I am your creator'},  // store this object
-      function(reply) {             // then call me
-        // Just log for the demo
-        console.log("Creator hears: "+reply.message, reply);
-      },        
-      childErr                      // or fail
-    );
-    
-    panel_isReady = true;
-    if (buffer) {
-      console.log('dequeue buffer', buffer);
-      fireShowResource.apply(null, buffer);
-      buffer = null;
-    }
 
   }
 
@@ -118,15 +77,6 @@ chrome.devtools.panels.create('Purple', purplePath + 'img/Purple32x32.png', purp
     }
     if (!panel_window) { // Then this is the first time we opened the panel       
       panel_window = window;
-      panel_window.purple.onPanelReady = function() {
-        console.log(window.location + ' talking ');
-
-        var disposer =  RESTChannel.talk(panel_window, onAttach);
-        window.addEventListener('unload', function unload() {
-          disposer();
-          window.removeEventListener('unload', unload);
-        });
-      }
     }
   });
 

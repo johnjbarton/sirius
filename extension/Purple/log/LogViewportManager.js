@@ -21,7 +21,7 @@ function(   consoleEntryRep,               ObjRep,      reps) {
     this.globalClock = globalClock;
     this.scrollLock = false; // false means the viewport tracks the bottom of the log
     this.onPoll = this.poll.bind(this);
-    this.onLogEvent.bind(this);
+    this.onLogEvent = this.onLogEvent.bind(this);
     this.pollInterval = 500;
     this.optionPolling = false;
     reps.rehash();
