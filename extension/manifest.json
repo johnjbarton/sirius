@@ -16,7 +16,6 @@
     "default_icon": "orion16.png",
     "default_title": "Edit in Orion"
    },
-   "devtools_page": "devtools.html",
   "permissions" :
     [
       "*://*/*",
@@ -36,10 +35,6 @@
      {
        "matches": ["*://*/*atopwi.html*"],
        "js": ["atopwi/devtoolsAdapter/webSocketOverrides.js"]
-     },
-     {
-      "matches": ["http://*/inspector/*","http://*/http/*"],
-      "js": ["atopwi/devtoolsAdapter/testRunnerLoader.js"]
      }
    ]
 }

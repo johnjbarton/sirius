@@ -1,9 +1,9 @@
 // Google BSD license http://code.google.com/google_bsd_license.html
 // Copyright 2011 Google Inc. johnjbarton@google.com
 
-var consoleLog = console.log; 
+var channel;
 
-window.testRunner = {
+var testRunner = {
   dumpAsText: function() {
       console.log("testRunner: ignored dumpAsText");
   },
@@ -18,17 +18,14 @@ window.testRunner = {
   },
   evaluateInWebInspector: function(runTestCallId, toEvaluate) {
     console.log("evaluateInWebInspector sending to content script, id "+runTestCallId);
-    this.forWebInspector = {
-      runTestCallId: runTestCallId,
-      method: "evaluateInWebInspector",
-      args: [toEvaluate]
-    };
-    // will be picked up by testDevtools.js
+    channel.postMessage({method: 'evaluateInWebInspector', arguments:[toEvaluate]},  "*");
   },
   onMessage: function(message) {
     console.log("testRunner.onMessage %o", message);
   }
 };
+
+channel = new ChannelPlate.WebPage(testRunner.onMessage);
   
 // InspectorTest calls all functions named "initialize_*" before running tests
 function initialize_sirius() {
@@ -47,6 +44,5 @@ function initialize_sirius() {
   }
   console.log("initialize_sirius");
 }
-window.addEventListener("DOMContentLoaded", function() {
-  //runTest();
-})
+
+runTest();
