@@ -106,6 +106,9 @@ WebInspector.Panel.prototype = {
         WebInspector.searchController.updateSearchMatchesCount(0, this);
     },
 
+    /**
+     * @param {string} query
+     */
     performSearch: function(query)
     {
         // Call searchCanceled since it will reset everything we need before doing a new search.
@@ -117,6 +120,28 @@ WebInspector.Panel.prototype = {
     },
 
     jumpToPreviousSearchResult: function()
+    {
+    },
+
+    /**
+     * @return {boolean}
+     */
+    canSearchAndReplace: function()
+    {
+        return false;
+    },
+
+    /**
+     * @param {string} text
+     */
+    replaceSelectionWith: function(text)
+    {
+    },
+
+    /**
+     * @param {string} text
+     */
+    replaceAllWith: function(text)
     {
     },
 

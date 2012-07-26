@@ -635,6 +635,9 @@ WebInspector.ResourcesPanel.prototype = {
         this.storageViewStatusBarItemsContainer.style.left = width + "px";
     },
 
+    /**
+     * @param {string} query
+     */
     performSearch: function(query)
     {
         this._resetSearchResults();
@@ -701,7 +704,7 @@ WebInspector.ResourcesPanel.prototype = {
         // At first show view for treeElement.
         if (searchResult.treeElement !== this.sidebarTree.selectedTreeElement) {
             this.showResource(searchResult.treeElement.representedObject);
-            WebInspector.searchController.focusSearchField();
+            WebInspector.searchController.showSearchField();
         }
 
         function callback(searchId)

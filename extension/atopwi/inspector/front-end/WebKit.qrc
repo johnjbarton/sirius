@@ -57,6 +57,7 @@
     <file>ExtensionPanel.js</file>
     <file>ExtensionRegistryStub.js</file>
     <file>ExtensionServer.js</file>
+    <file>ExtensionView.js</file>
     <file>FileContentView.js</file>
     <file>FileManager.js</file>
     <file>FileSystemModel.js</file>
@@ -78,7 +79,6 @@
     <file>ImageView.js</file>
     <file>IndexedDBModel.js</file>
     <file>IndexedDBViews.js</file>
-    <file>InjectedFakeWorker.js</file>
     <file>inspector.js</file>
     <file>InspectorBackend.js</file>
     <file>InspectorFrontendAPI.js</file>
@@ -181,6 +181,7 @@
     <file>TopDownProfileDataGridTree.js</file>
     <file>treeoutline.js</file>
     <file>UISourceCode.js</file>
+    <file>UISourceCodeFrame.js</file>
     <file>UIUtils.js</file>
     <file>UserAgentSupport.js</file>
     <file>UserMetrics.js</file>

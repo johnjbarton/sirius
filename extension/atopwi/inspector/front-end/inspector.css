@@ -263,7 +263,7 @@ body.detached.platform-mac-snowleopard #toolbar-dropdown {
     border-radius: 5px;
 }
 
-#search {
+.search-replace {
     -webkit-appearance: none;
     border: 0;
     padding: 0 2px;
@@ -271,8 +271,16 @@ body.detached.platform-mac-snowleopard #toolbar-dropdown {
     width: 165px;
 }
 
-#search:focus {
+.search-replace:focus {
     outline: none;
+}
+
+.toolbar-search {
+    border-spacing: 1px;
+}
+
+.toolbar-search td {
+    padding: 0 5px 0 0;
 }
 
 .toolbar-search-navigation-controls {
@@ -280,7 +288,7 @@ body.detached.platform-mac-snowleopard #toolbar-dropdown {
     top: 0;
     right: 0;
     height: 18px;
-    background-image: -webkit-linear-gradient(rgb(228, 228, 228), rgb(204, 204, 204) 75%, rgb(206, 206, 206));
+    background-image: -webkit-linear-gradient(rgb(228, 228, 228), rgb(206, 206, 206));
 }
 
 .toolbar-search-navigation {
@@ -293,45 +301,67 @@ body.detached.platform-mac-snowleopard #toolbar-dropdown {
     opacity: 0.3;
 }
 
-.toolbar-search-navigation.enabled:hover {
-    border-left: 1px solid rgb(190, 190, 190);
-    opacity: 0.9;
+.toolbar-search-navigation.enabled {
+    opacity: 1.0;
 }
 
-.toolbar-search-navigation.enabled, .toolbar-search-navigation.enabled:active {
-    border-left: 1px solid rgb(170, 170, 170);
-    opacity: 0.7;
+.toolbar-search input[type="checkbox"] {
+    position: relative;
+    margin-top: -1px;
+    margin-left: 15px;
+    top: 2px;
 }
 
-#search:focus {
-    outline: none;
+.toolbar-search button {
+    border: 1px solid rgb(163, 163, 163);
+    border-radius: 12px;
+    margin: 0 6px;
+    font-size: 11px;
+    background-image: -webkit-linear-gradient(rgb(241, 241, 241), rgb(220, 220, 220));
+    width: 100%;
 }
 
-.toolbar-search {
-    line-height: 19px;
+.toolbar-search button:active {
+    background-image: -webkit-linear-gradient(rgb(185, 185, 185), rgb(156, 156, 156));
 }
 
 .toolbar-search-control {
     display: inline-block;
     position: relative;
     background-color: white;
-    border: 1px solid rgb(202, 202, 202);
-    margin: 1px 2px;
+    border: 1px solid rgb(163, 163, 163);
     height: 20px;
     border-radius: 2px;
-    padding-right: 36px;
+    padding-top: 1px;
+}
+
+.toolbar-replace-control {
+    border: 1px solid rgb(163, 163, 163);
+    height: 20px;
+    border-radius: 2px;
+    width: 100%;
+}
+
+.toolbar-search-navigation.enabled:active {
+    background-position: 4px 7px, 0px 0px;
 }
 
 .toolbar-search-navigation.toolbar-search-navigation-prev {
     background-image: url(Images/searchPrev.png);
+    border-left: 1px solid rgb(163, 163, 163);
+}
+
+.toolbar-search-navigation.toolbar-search-navigation-prev.enabled:active {
+    background-image: url(Images/searchPrev.png), -webkit-linear-gradient(rgb(168, 168, 168), rgb(116, 116, 116));
 }
 
 .toolbar-search-navigation.toolbar-search-navigation-next {
     background-image: url(Images/searchNext.png);
+    border-left: 1px solid rgb(230, 230, 230);
 }
 
-body.compact #search {
-    font-size: 11px;
+.toolbar-search-navigation.toolbar-search-navigation-next.enabled:active {
+    background-image: url(Images/searchNext.png), -webkit-linear-gradient(rgb(168, 168, 168), rgb(116, 116, 116));
 }
 
 .search-results-matches {
@@ -532,15 +562,16 @@ body.drawer-visible #main-panels {
 .glyph {
     position: absolute;
     top: -1px;
+    bottom: 1px;
     left: 0;
     right: 0;
-    bottom: 0;
     background-color: rgba(0, 0, 0, 0.75);
     z-index: 1;
 }
 
 .glyph.shadow {
-    top: 1px;
+    top: 0;
+    bottom: 0;
     background-color: white !important;
     z-index: 0;
 }
@@ -563,6 +594,10 @@ button.status-bar-item {
     width: 32px;
     border-left: 1px solid rgb(202, 202, 202);
     border-right: 1px solid rgb(202, 202, 202);
+}
+
+.status-bar button.status-bar-item .glyph {
+    margin: 0 -1px;
 }
 
 .status-bar select.status-bar-item:active,
@@ -595,7 +630,7 @@ button.status-bar-item.extension {
     background-image: url(Images/disclosureTriangleSmallDown.png);
     background-repeat: no-repeat;
     background-position-x: right;
-    background-position-y: 6px;
+    background-position-y: 5px;
     padding-right: 10px;
     border-right: 5px solid transparent;
 }
@@ -612,6 +647,7 @@ select.status-bar-item {
     margin-right: -15px;
     position: relative;
     top: -1px;
+    height: 23px;
 }
 
 select.status-bar-item, select.status-bar-item:hover {
@@ -1817,14 +1853,6 @@ button.enable-toggle-status-bar-item.toggled-on .glyph {
     -webkit-mask-position: -96px -24px;
 }
 
-button.edit-source-status-bar-item .glyph {
-    -webkit-mask-position: -64px -48px;
-}
-
-button.edit-source-status-bar-item.toggled-on .glyph {
-    background-color: rgb(66, 129, 235);
-}
-
 #console-messages.console-filter-top {
     margin-top: 23px;
 }
@@ -2514,7 +2542,7 @@ body.platform-mac .search-drawer-header input[type="checkbox"].search-config-che
 
 .drawer-header-close-button {
     font-family: Arial, monospace;
-    padding: 3px 6px;
+    padding: 3px 8px;
     font-size: 14px;
     color:rgb(80, 80, 80);
     opacity: 0.5;
@@ -2836,5 +2864,5 @@ body.platform-mac #drawer-status-bar .search-status-bar-progress {
     left: 0;
     right: 0;
     font-size: 11px;
-    padding-left: 5px;
+    height: auto;
 }

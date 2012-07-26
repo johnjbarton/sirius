@@ -737,6 +737,9 @@ WebInspector.ProfilesPanel.prototype = {
         return title;
     },
 
+    /**
+     * @param {string} query
+     */
     performSearch: function(query)
     {
         this.searchCanceled();
@@ -838,7 +841,7 @@ WebInspector.ProfilesPanel.prototype = {
 
         if (currentView !== this.visibleView) {
             this.showView(currentView);
-            WebInspector.searchController.focusSearchField();
+            WebInspector.searchController.showSearchField();
         }
 
         if (showFirstResult)
@@ -873,7 +876,7 @@ WebInspector.ProfilesPanel.prototype = {
 
         if (currentView !== this.visibleView) {
             this.showView(currentView);
-            WebInspector.searchController.focusSearchField();
+            WebInspector.searchController.showSearchField();
         }
 
         if (showLastResult)
