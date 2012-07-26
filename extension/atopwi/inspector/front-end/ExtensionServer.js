@@ -683,6 +683,18 @@ WebInspector.ExtensionServer.prototype = {
     {
         if (event.data === "registerExtension")
             this._registerExtension(event.origin, event.ports[0]);
+        else if (WebInspector.experimentsSettings.testRunner.isEnabled()) { // testRunner is always experimental
+            if (this._registeredExtensions[event.origin]) { // only listen to our extensions
+                if (event.data && event.data.method && (event.data.method === 'evaluateInWebInspector') ) {
+                    if (event.data.args) {
+                      var toEvaluate = event.data.args[0];
+                      var sourceURL = event.data.args[1] || "testRunnerEvals.js";
+                      if (typeof toEvaluate === 'string')
+                          eval(toEvaluate + "\n//@ sourceURL=" + sourceURL);
+                    }
+                }
+            }
+        }
     },
 
     _registerExtension: function(origin, port)

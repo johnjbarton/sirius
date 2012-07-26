@@ -187,6 +187,7 @@ WebInspector.ExperimentsSettings = function()
     this.liveNativeMemoryChart = this._createExperiment("liveNativeMemoryChart", "Live native memory chart");
     this.fileSystemInspection = this._createExperiment("fileSystemInspection", "FileSystem inspection");
     this.mainThreadMonitoring = this._createExperiment("mainThreadMonitoring", "Show CPU activity in Timeline");
+    this.testRunner = this._createExperiment("testRunner", "Allow extensions to call eval() in WebInspector");
 
     this._cleanUpSetting();
 }
