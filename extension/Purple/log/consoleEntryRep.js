@@ -131,6 +131,7 @@ function (            domplate,             PartLinkRep,             Resources, 
         openEditorOn: function(id, resource, bottomLine) {
           var elt = window.document.getElementById(id);
           var url = resource.url;
+          return;
           var editor = new EditorInterface(elt.firstElementChild);
           var line = bottomLine - 4; // position the frame line at the bottom
           var col = this.getColumnNumber(object);
