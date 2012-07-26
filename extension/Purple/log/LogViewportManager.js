@@ -176,7 +176,7 @@ function(   consoleEntryRep,               ObjRep,      reps) {
   LogViewportManager.update = function() {
     if (!this.scrollLock) {
       var max = this.globalClock.p_id;
-      var last = renderedLines.lastPID || 1; 
+      var last = (renderedLines.lastPID + 1) || 1; 
       // work bottom up and stop once we fill the viewport
       for (var ndx = last; ndx <= max; ndx++) {
         this.pullEntry(ndx);
