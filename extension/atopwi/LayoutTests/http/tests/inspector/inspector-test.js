@@ -322,6 +322,13 @@ InspectorTest.addSniffer = function(receiver, methodName, override, opt_sticky)
         }
         return result;
     };
+
+    InspectorTest.sniffers = InspectorTest.sniffers || [];
+    InspectorTest.sniffers.push({
+        receiver: receiver,
+        methodName: methodName,
+        original: original
+    })
 }
 
 InspectorTest.addConsoleSniffer = function(override, opt_sticky)
@@ -352,6 +359,15 @@ InspectorTest.override = function(receiver, methodName, override, opt_sticky)
     };
 
     return original;
+}
+
+InspectorTest.removeSniffers = function() 
+{
+    function resetSniffer(sniffer) 
+    {
+        sniffer.receiver[sniffer.methodName] = sniffer.original;
+    }
+    InspectorTest.sniffers.forEach(resetSniffer);
 }
 
 InspectorTest.textContentWithLineBreaks = function(node)
