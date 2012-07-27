@@ -25,7 +25,8 @@
       "webNavigation",
       "webRequest",
       "debugger",
-      "webRequestBlocking"
+      "webRequestBlocking",
+      "experimental"
     ],
    "content_scripts": [
      {

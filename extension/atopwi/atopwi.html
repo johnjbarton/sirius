@@ -103,11 +103,11 @@ URLOptions.prototype = {
   },
 
   devToolsURL: function() {
-    var devtoolsURL = getFrontendURL() + 'devtools.html';
+    var devtoolsURL = getFrontendURL() + 'devtools.html?experiments=true';
     if (this.useWebSocket()) {
-      devtoolsURL += '?ws=' + this.params.ws;
+      devtoolsURL += '&ws=' + this.params.ws;
     } 
-    return devtoolsURL;
+    return devtoolsURL ;
   },
   
   getDebuggeeSpec: function() {
