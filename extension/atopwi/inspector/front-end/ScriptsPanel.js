@@ -404,7 +404,7 @@ WebInspector.ScriptsPanel.prototype = {
 
     showAnchorLocation: function(anchor)
     {
-        this._showSourceLine(anchor.uiSourceCode, anchor.lineNumber);
+        this._showSourceLine(anchor.uiSourceCode, parseInt(anchor.lineNumber));
     },
 
     showFunctionDefinition: function(functionLocation)

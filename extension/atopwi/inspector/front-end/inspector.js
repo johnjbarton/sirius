@@ -988,7 +988,7 @@ WebInspector.updateFocusedNode = function(nodeId)
 
 WebInspector._showAnchorLocation = function(anchor)
 {
-    if (WebInspector.openAnchorLocationRegistry.dispatch({ url: anchor.href, lineNumber: anchor.lineNumber}))
+    if (WebInspector.openAnchorLocationRegistry.dispatch({ url: anchor.href, lineNumber: parseInt(anchor.lineNumber)}))
         return true;
     var preferredPanels = [];
     if (this.panels[anchor.preferredPanel])
