@@ -2,8 +2,6 @@
 set -e -x
 git checkout syncToWebKit
 git push -f origin  syncToWebKit 
-git checkout iframeable
-git push -f origin  iframeable  
 git checkout remoteDebug
 git push -f origin  remoteDebug  
 git checkout DebuggerProtocol
