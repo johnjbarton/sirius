@@ -220,20 +220,24 @@ WebInspector.FilteredItemSelectionDialog.prototype = {
         query = query.trim();
         var regex = this._createSearchRegExp(query);
 
-        var firstElement;
+        var shortestElement;
+        var shortestLength = Infinity;
         for (var i = 0; i < this._itemElements.length; ++i) {
             var itemElement = this._itemElements[i];
             itemElement.lastChild.textContent = this._delegate.itemSubtitleAt(i);
             if (regex.test(this._delegate.itemKeyAt(i))) {
                 this._showItemElement(itemElement);
-                if (!firstElement)
-                    firstElement = itemElement;
+                var length = itemElement.textContent.length;
+                if (length < shortestLength) {
+                    shortestLength = length;
+                    shortestElement = itemElement;
+                }                         
             } else
                 this._hideItemElement(itemElement);
         }
 
         if (!this._selectedElement || !this._itemElementVisible(this._selectedElement))
-            this._updateSelection(firstElement);
+            this._updateSelection(shortestElement);
 
         if (query) {
             this._highlightItems(query);
