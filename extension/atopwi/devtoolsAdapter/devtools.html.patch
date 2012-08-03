@@ -1,24 +1,3 @@
-diff --git a/extension/atopwi/devtoolsAdapter/devtools.html.patch b/extension/atopwi/devtoolsAdapter/devtools.html.patch
-index 0a9cdc2..e69de29 100644
---- a/extension/atopwi/devtoolsAdapter/devtools.html.patch
-+++ b/extension/atopwi/devtoolsAdapter/devtools.html.patch
-@@ -1,13 +0,0 @@
--226,229c226,232
--<     <link rel="stylesheet" type="text/css" href="devTools.css">
--<     <script type="text/javascript" src="DevTools.js"></script>
--<     <script type="text/javascript" src="DevToolsExtensionAPI.js"></script>
--<     <script type="text/javascript" src="Tests.js"></script>
-----
-->     <link rel="stylesheet" type="text/css" href="../../chromium/devTools.css">
-->     <script type="text/javascript" src="../../chromium/DevTools.js"></script>
-->     <script type="text/javascript" src="../../chromium/DevToolsExtensionAPI.js"></script>
-->     <script type="text/javascript" src="../../chromium/Tests.js"></script>
-->     <script type="text/javascript" src="../../devtoolsAdapter/ScriptInjector.js"></script>
-->     <script type="text/javascript" src="../../devtoolsAdapter/embedDevtools.js"></script>
-->     <link rel="stylesheet" type="text/css" href="../../devtoolsAdapter/embedDevTools.css">
-diff --git a/extension/atopwi/inspector/front-end/devtools.html b/extension/atopwi/inspector/front-end/devtools.html
-index 30c1036..07ab50f 100644
---- a/extension/atopwi/inspector/front-end/devtools.html
 +++ b/extension/atopwi/inspector/front-end/devtools.html
 @@ -223,10 +223,13 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
      <script type="text/javascript" src="SnippetStorage.js"></script>
