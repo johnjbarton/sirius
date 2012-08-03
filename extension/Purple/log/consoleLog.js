@@ -34,6 +34,10 @@ define(['log/LogBase', 'log/ConsoleEntry'],
           this.addListeners();  // register with the protocol
           this.enable(function onEnable(){
             console.log("Console.enable");
+            chrome.experimental.devtools.console.getMessages(function (messages) {
+                messages.forEach(this.messageAdded.bind(this));
+            }.bind(this));
+            chrome.experimental.devtools.console.onMessageAdded.addListener(this.messageAdded.bind(this));
             onConnect(error);
           }.bind(this));  
         }.bind(this)]);     
