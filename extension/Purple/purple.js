@@ -5,7 +5,7 @@ var purplePath = "./Purple/";
 
 // watch when resource contents are committed
 chrome.devtools.inspectedWindow.onResourceContentCommitted.addListener(function(resource, content) {
-  console.log('resource content committed', resource, content);
+  console.log('resource content committed ' + resource.url);
 });
 
 var resource_cache = {};
