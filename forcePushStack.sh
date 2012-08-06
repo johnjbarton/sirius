@@ -2,6 +2,7 @@
 set -e -x
 git checkout syncToWebKit
 git push -f origin  syncToWebKit 
+git checkout built-devtools
 git checkout remoteDebug
 git push -f origin  remoteDebug  
 git checkout DebuggerProtocol
