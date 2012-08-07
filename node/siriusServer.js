@@ -12,6 +12,7 @@ function servePathAtPort(path, port) {
 	        //
 	        // Serve files!
 	        //
+	        //console.log("request ", request);
 	        file.serve(request, response);
 	    });
 	}).listen(port);
@@ -21,5 +22,7 @@ function servePathAtPort(path, port) {
 servePathAtPort('../../qpp', 8686);
 
 servePathAtPort('../extension/atopwi', 9696);
+
+servePathAtPort('../../webdev-examples', 7676);
 
 
