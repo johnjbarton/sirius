@@ -32,14 +32,24 @@ define(['log/LogBase', 'log/ConsoleEntry'],
       connect: function(debuggerProtocol, onConnect) {
         LogBase.connect.apply(this, [this, function baseConnected(error) {
           this.addListeners();  // register with the protocol
-          this.enable(function onEnable(){
-            console.log("Console.enable");
+          
+          if (!this._clearedPending) {
+            this._clearedPending = true;
+           
             chrome.experimental.devtools.console.getMessages(function (messages) {
                 messages.forEach(this.messageAdded.bind(this));
             }.bind(this));
-            chrome.experimental.devtools.console.onMessageAdded.addListener(this.messageAdded.bind(this));
+          }
+          
+          chrome.experimental.devtools.console.onMessageAdded.addListener(this.messageAdded.bind(this));
+          /*  
+          this.enable(function onEnable(){
+            console.log("Console.enable");
+          */
             onConnect(error);
+          /*  
           }.bind(this));  
+          */
         }.bind(this)]);     
       },
   
