@@ -285,7 +285,8 @@ function (            domplate,             PartLinkRep,             Resources, 
             var splits = frameString.split(/\s/);
             frame.functionName = splits.slice(5,-1).join(' ');
             var fileArea = splits.slice(-1)[0];
-            var m = /\(([^\)]*)\)/.exec(fileArea);
+            // paren lazy-not-paren paren
+            var m = /\(([^\)]*?)\)/.exec(fileArea);
             var colonSplits = m[1].split(':');
             frame.url = colonSplits.slice(0, -2).join('');
             frame.lineNumber = colonSplits.slice(-2, -1)[0];
