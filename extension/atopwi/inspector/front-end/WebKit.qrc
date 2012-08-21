@@ -15,6 +15,7 @@
     <file>BreakpointsSidebarPane.js</file>
     <file>CallStackSidebarPane.js</file>
     <file>Checkbox.js</file>
+    <file>CodeMirrorTextEditor.js</file>
     <file>Color.js</file>
     <file>CompilerScriptMapping.js</file>
     <file>ConsoleMessage.js</file>
@@ -32,6 +33,12 @@
     <file>CSSKeywordCompletions.js</file>
     <file>CSSSelectorProfileView.js</file>
     <file>CSSStyleModel.js</file>
+    <file>cm/codemirror.css</file>
+    <file>cm/codemirror.js</file>
+    <file>cm/css.js</file>
+    <file>cm/htmlmixed.js</file>
+    <file>cm/javascript.js</file>
+    <file>cm/xml.js</file>
     <file>Database.js</file>
     <file>DatabaseQueryView.js</file>
     <file>DatabaseTableView.js</file>
@@ -95,6 +102,7 @@
     <file>Linkifier.js</file>
     <file>MemoryStatistics.js</file>
     <file>MetricsSidebarPane.js</file>
+    <file>NativeBreakpointsSidebarPane.js</file>
     <file>NativeMemorySnapshotView.js</file>
     <file>NavigatorOverlayController.js</file>
     <file>NavigatorView.js</file>
@@ -114,6 +122,7 @@
     <file>ProfileDataGridTree.js</file>
     <file>ProfileLauncherView.js</file>
     <file>ProfilesPanel.js</file>
+    <file>ProgressBar.js</file>
     <file>PropertiesSection.js</file>
     <file>PropertiesSidebarPane.js</file>
     <file>RawSourceCode.js</file>
@@ -153,6 +162,7 @@
     <file>SidebarOverlay.js</file>
     <file>SidebarPane.js</file>
     <file>SidebarTreeElement.js</file>
+    <file>SnippetJavaScriptSourceFrame.js</file>
     <file>SnippetStorage.js</file>
     <file>SoftContextMenu.js</file>
     <file>SourceCSSTokenizer.js</file>
@@ -164,7 +174,8 @@
     <file>Spectrum.js</file>
     <file>SplitView.js</file>
     <file>StatusBarButton.js</file>
-    <file>StylesPanel.js</file>
+    <file>StyleSheetOutlineDialog.js</file>
+    <file>StyleSource.js</file>
     <file>StylesSidebarPane.js</file>
     <file>TabbedEditorContainer.js</file>
     <file>TabbedPane.js</file>
@@ -197,6 +208,7 @@
     <file>UglifyJS/parse-js.js</file>
     <file>auditsPanel.css</file>
     <file>dataGrid.css</file>
+    <file>cmdevtools.css</file>
     <file>dialog.css</file>
     <file>elementsPanel.css</file>
     <file>filteredItemSelectionDialog.css</file>

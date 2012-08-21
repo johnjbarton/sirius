@@ -825,6 +825,14 @@ WebInspector.DOMAgent.prototype = {
     },
 
     /**
+     * @return {WebInspector.DOMDocument?}
+     */
+    existingDocument: function()
+    {
+        return this._document;
+    },
+
+    /**
      * @param {RuntimeAgent.RemoteObjectId} objectId
      * @param {function(?DOMAgent.NodeId)=} callback
      */
@@ -1278,7 +1286,7 @@ WebInspector.DOMAgent.prototype = {
             this._addTouchEventsScriptId = scriptId;
         }
 
-        DOMAgent.setTouchEmulationEnabled(emulationEnabled);
+        PageAgent.setTouchEmulationEnabled(emulationEnabled);
     },
 
     markUndoableState: function()

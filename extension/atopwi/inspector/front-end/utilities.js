@@ -384,6 +384,22 @@ Object.defineProperty(Array.prototype, "binaryIndexOf",
     }
 });
 
+Object.defineProperty(Array.prototype, "select",
+{
+    /**
+     * @this {Array.<*>}
+     * @param {string} field
+     * @return {Array.<*>}
+     */
+    value: function(field)
+    {
+        var result = new Array(this.length);
+        for (var i = 0; i < this.length; ++i)
+            result[i] = this[i][field];
+        return result;
+    }
+});
+
 /**
  * @param {*} anObject
  * @param {Array.<*>} aList
@@ -764,4 +780,20 @@ StringPool.prototype = {
             }
         }
     }
+}
+
+var _importedScripts = {};
+
+/**
+ * @param {string} scriptName
+ */
+function importScript(scriptName)
+{
+    if (_importedScripts[scriptName])
+        return;
+    _importedScripts[scriptName] = true;
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", scriptName, false);
+    xhr.send(null);
+    window.eval(xhr.responseText + "\n//@ sourceURL=" + scriptName);
 }
