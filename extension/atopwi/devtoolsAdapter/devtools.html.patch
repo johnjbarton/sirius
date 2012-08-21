@@ -1,8 +1,11 @@
+diff --git a/work/chromium/src/out/Release/resources/inspector/devtools.html b/extension/atopwi/inspector/front-end/devtools.html
+index 53d7313..3f24e61 100644
+--- a/work/chromium/src/out/Release/resources/inspector/devtools.html
 +++ b/extension/atopwi/inspector/front-end/devtools.html
-@@ -223,10 +223,13 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-     <script type="text/javascript" src="SnippetStorage.js"></script>
+@@ -159,10 +159,13 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
      <script type="text/javascript" src="ScriptSnippetModel.js"></script>
-     <script type="text/javascript" src="StylesPanel.js"></script>
+     <script type="text/javascript" src="ProgressBar.js"></script>
+     <script type="text/javascript" src="StyleSource.js"></script>
 -    <link rel="stylesheet" type="text/css" href="devTools.css">
 -    <script type="text/javascript" src="DevTools.js"></script>
 -    <script type="text/javascript" src="DevToolsExtensionAPI.js"></script>
