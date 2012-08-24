@@ -12,6 +12,11 @@ body {
   font-family:Verdana,Geneva,sans-serif;
   font-size: small;
 }
+
+a {
+  color: blue;
+}
+
 .hide {
   display: none;
 }

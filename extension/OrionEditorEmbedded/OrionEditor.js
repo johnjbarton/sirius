@@ -40,7 +40,7 @@ function(require,                               orion){
     "orion/textview/rulers.css", 
     "examples/textview/textstyler.css", 
     "examples/editor/htmlStyles.css",
-    "examples/editor/embeddededitor.css"];
+    "../../orion/editor/editor.css"];
   // orion.client/bundles/org.eclipse.orion.client.editor/web/
   stylesheets = stylesheets.map(function(sheet) {
     return require.toUrl("orion/"+"../"+sheet);
