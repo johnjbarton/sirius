@@ -54,9 +54,21 @@ define(['log/LogBase'], function (LogBase) {
 
   get: function(url) {
     if ( this.resourcesByURL.hasOwnProperty(url) ) {
-      return this.resourcesByURL[url];
+      var resource = this.resourcesByURL[url];
+      resource.fetchContent = this.fetchContent.bind(this, url);
+      resource.getContent(this.addContent.bind(this, url));
+      return resource;
     }
-    this.resources.som
+  },
+  
+  addContent: function(url, content, encoding) {
+    var resource = this.resourcesByURL[url];
+    resource.content = content;
+    resource.encoding = encoding;
+  },
+  
+  fetchContent: function(url) {
+      console.error("implement me");
   }
 });
   

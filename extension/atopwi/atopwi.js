@@ -55,7 +55,7 @@ function URLOptions() {
   preset(defaultPreset);
   
   document.querySelector('.crxFrontEnd').addEventListener('click', function() {
-    preset(window.SiriusBase + '/atopwi/inspector/front-end/');
+    preset(window.SiriusBase + '/atopwi/devtoolsAdapter/');
   });
   document.querySelector('.testingFrontEnd').addEventListener('click', function() {
     preset('http://localhost:8081/out/Release/resources/inspector/');
