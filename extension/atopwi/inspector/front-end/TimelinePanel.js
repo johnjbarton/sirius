@@ -46,8 +46,11 @@ WebInspector.TimelinePanel = function()
     this._model = new WebInspector.TimelineModel();
     this._presentationModel = new WebInspector.TimelinePresentationModel();
 
+    this._overviewModeSetting = WebInspector.settings.createSetting("timelineOverviewMode", WebInspector.TimelineOverviewPane.Mode.Events);
+    this._glueRecordsSetting = WebInspector.settings.createSetting("timelineGlueRecords", true);
+
     this._overviewPane = new WebInspector.TimelineOverviewPane(this._model);
-    this._overviewPane.addEventListener(WebInspector.TimelineOverviewPane.Events.WindowChanged, this._scheduleRefresh.bind(this, false));
+    this._overviewPane.addEventListener(WebInspector.TimelineOverviewPane.Events.WindowChanged, this._invalidateAndScheduleRefresh.bind(this, false));
     this._overviewPane.addEventListener(WebInspector.TimelineOverviewPane.Events.ModeChanged, this._overviewModeChanged, this);
     this._overviewPane.show(this.element);
 
@@ -145,8 +148,6 @@ WebInspector.TimelinePanel = function()
     this._presentationModel.addFilter(this._overviewPane);
     this._presentationModel.addFilter(new WebInspector.TimelineCategoryFilter()); 
     this._presentationModel.addFilter(new WebInspector.TimelineIsLongFilter(this)); 
-
-    this._overviewModeSetting = WebInspector.settings.createSetting("timelineOverviewMode", WebInspector.TimelineOverviewPane.Mode.Events);
 }
 
 // Define row height, should be in sync with styles for timeline graphs.
@@ -235,8 +236,8 @@ WebInspector.TimelinePanel.prototype = {
         this._statusBarButtons.push(this.garbageCollectButton);
 
         this._glueParentButton = new WebInspector.StatusBarButton(WebInspector.UIString("Glue asynchronous events to causes"), "glue-async-status-bar-item");
-        this._glueParentButton.toggled = true;
-        this._presentationModel.setGlueRecords(true);
+        this._glueParentButton.toggled = this._glueRecordsSetting.get();
+        this._presentationModel.setGlueRecords(this._glueParentButton.toggled);
         this._glueParentButton.addEventListener("click", this._glueParentButtonClicked, this);
         this._statusBarButtons.push(this._glueParentButton);
 
@@ -283,7 +284,7 @@ WebInspector.TimelinePanel.prototype = {
     _onCategoryCheckboxClicked: function(category, event)
     {
         category.hidden = !event.target.checked;
-        this._scheduleRefresh(true);
+        this._invalidateAndScheduleRefresh(true);
     },
 
     /**
@@ -349,8 +350,31 @@ WebInspector.TimelinePanel.prototype = {
 
     _loadFromFile: function()
     {
-        if (this._operationInProgress)
+        var progressIndicator = this._prepareToLoadTimeline();
+        if (!progressIndicator)
             return;
+        this._model.loadFromFile(this._fileSelectorElement.files[0], progressIndicator);
+        this._createFileSelector();
+    },
+
+    /**
+     * @param {string} url
+     */
+    loadFromURL: function(url)
+    {
+        var progressIndicator = this._prepareToLoadTimeline();
+        if (!progressIndicator)
+            return;
+        this._model.loadFromURL(url, progressIndicator);
+    },
+
+    /**
+     * @return {?WebInspector.ProgressIndicator}
+     */
+    _prepareToLoadTimeline: function()
+    {
+        if (this._operationInProgress)
+            return null;
         if (this.toggleTimelineButton.toggled) {
             this.toggleTimelineButton.toggled = false;
             this._model.stopRecord();
@@ -358,8 +382,7 @@ WebInspector.TimelinePanel.prototype = {
         var progressIndicator = new WebInspector.ProgressIndicator();
         progressIndicator.addEventListener(WebInspector.ProgressIndicator.Events.Done, this._setOperationInProgress.bind(this, null));
         this._setOperationInProgress(progressIndicator);
-        this._model.loadFromFile(this._fileSelectorElement.files[0], progressIndicator);
-        this._createFileSelector();
+        return progressIndicator;
     },
 
     _rootRecord: function()
@@ -393,7 +416,7 @@ WebInspector.TimelinePanel.prototype = {
 
     _shouldShowFrames: function()
     {
-        return this._frameMode && this._presentationModel.frames().length > 0 && this.calculator.boundarySpan < 1.0;
+        return this._frameMode && this._presentationModel.frames().length > 0 && this.calculator.boundarySpan() < 1.0;
     },
 
     _updateFrames: function()
@@ -507,7 +530,7 @@ WebInspector.TimelinePanel.prototype = {
         this._showShortEvents = this.toggleFilterButton.toggled;
         this._overviewPane.setShowShortEvents(this._showShortEvents);
         this.toggleFilterButton.element.title = this._showShortEvents ? this._hideShortRecordsTitleText : this._showShortRecordsTitleText;
-        this._scheduleRefresh(true);
+        this._invalidateAndScheduleRefresh(true);
     },
 
     _garbageCollectButtonClicked: function()
@@ -517,24 +540,27 @@ WebInspector.TimelinePanel.prototype = {
 
     _glueParentButtonClicked: function()
     {
-        this._glueParentButton.toggled = !this._glueParentButton.toggled;
-        this._presentationModel.setGlueRecords(this._glueParentButton.toggled);
+        var newValue = !this._glueParentButton.toggled;
+        this._glueParentButton.toggled = newValue;
+        this._presentationModel.setGlueRecords(newValue);
+        this._glueRecordsSetting.set(newValue);
         this._repopulateRecords();
     },
 
     _repopulateRecords: function()
     {
         this._resetPanel();
+        this._automaticallySizeWindow = false;
         var records = this._model.records;
         for (var i = 0; i < records.length; ++i)
             this._innerAddRecordToTimeline(records[i], this._rootRecord());
-        this._scheduleRefresh(false);
+        this._invalidateAndScheduleRefresh(false);
     },
 
     _onTimelineEventRecorded: function(event)
     {
         if (this._innerAddRecordToTimeline(event.data, this._rootRecord()))
-            this._scheduleRefresh(false);
+            this._invalidateAndScheduleRefresh(false);
     },
 
     _innerAddRecordToTimeline: function(record, parentRecord)
@@ -596,7 +622,7 @@ WebInspector.TimelinePanel.prototype = {
     _onRecordsCleared: function()
     {
         this._resetPanel();
-        this._refresh();
+        this._invalidateAndScheduleRefresh(true);
     },
 
     _resetPanel: function()
@@ -642,6 +668,15 @@ WebInspector.TimelinePanel.prototype = {
         this._scheduleRefresh(true);
     },
 
+    _invalidateAndScheduleRefresh: function(preserveBoundaries)
+    {
+        this._presentationModel.invalidateFilteredRecords();
+        this._scheduleRefresh(preserveBoundaries);
+    },
+
+    /**
+     * @param {boolean} preserveBoundaries
+     */
     _scheduleRefresh: function(preserveBoundaries)
     {
         this._closeRecordDetails();
@@ -749,7 +784,7 @@ WebInspector.TimelinePanel.prototype = {
         var width = this._graphRowsElementWidth;
         this._itemsGraphsElement.removeChild(this._graphRowsElement);
         var graphRowElement = this._graphRowsElement.firstChild;
-        var scheduleRefreshCallback = this._scheduleRefresh.bind(this, true);
+        var scheduleRefreshCallback = this._invalidateAndScheduleRefresh.bind(this, true);
         this._itemsGraphsElement.removeChild(this._expandElements);
         this._expandElements.removeChildren();
 
@@ -974,6 +1009,7 @@ WebInspector.TimelinePanel.prototype.__proto__ = WebInspector.Panel.prototype;
 /**
  * @constructor
  * @param {WebInspector.TimelineModel} model
+ * @implements {WebInspector.TimelineGrid.Calculator}
  */
 WebInspector.TimelineCalculator = function(model)
 {
@@ -988,15 +1024,15 @@ WebInspector.TimelineCalculator.prototype = {
      */
     computePosition: function(time)
     {
-        return (time - this.minimumBoundary) / this.boundarySpan * this._workingArea + this.paddingLeft;
+        return (time - this._minimumBoundary) / this.boundarySpan() * this._workingArea + this.paddingLeft;
     },
 
     computeBarGraphPercentages: function(record)
     {
-        var start = (record.startTime - this.minimumBoundary) / this.boundarySpan * 100;
-        var end = (record.startTime + record.selfTime - this.minimumBoundary) / this.boundarySpan * 100;
-        var endWithChildren = (record.lastChildEndTime - this.minimumBoundary) / this.boundarySpan * 100;
-        var cpuWidth = record.cpuTime / this.boundarySpan * 100;
+        var start = (record.startTime - this._minimumBoundary) / this.boundarySpan() * 100;
+        var end = (record.startTime + record.selfTime - this._minimumBoundary) / this.boundarySpan() * 100;
+        var endWithChildren = (record.lastChildEndTime - this._minimumBoundary) / this.boundarySpan() * 100;
+        var cpuWidth = record.cpuTime / this.boundarySpan() * 100;
         return {start: start, end: end, endWithChildren: endWithChildren, cpuWidth: cpuWidth};
     },
 
@@ -1021,9 +1057,8 @@ WebInspector.TimelineCalculator.prototype = {
 
     setWindow: function(minimumBoundary, maximumBoundary)
     {
-        this.minimumBoundary = minimumBoundary;
-        this.maximumBoundary = maximumBoundary;
-        this.boundarySpan = this.maximumBoundary - this.minimumBoundary;
+        this._minimumBoundary = minimumBoundary;
+        this._maximumBoundary = maximumBoundary;
     },
 
     /**
@@ -1038,7 +1073,22 @@ WebInspector.TimelineCalculator.prototype = {
 
     formatTime: function(value)
     {
-        return Number.secondsToString(value + this.minimumBoundary - this._model.minimumRecordTime());
+        return Number.secondsToString(value + this._minimumBoundary - this._model.minimumRecordTime());
+    },
+
+    maximumBoundary: function()
+    {
+        return this._maximumBoundary;
+    },
+
+    minimumBoundary: function()
+    {
+        return this._minimumBoundary;
+    },
+
+    boundarySpan: function()
+    {
+        return this._maximumBoundary - this._minimumBoundary;
     }
 }
 
@@ -1075,7 +1125,14 @@ WebInspector.TimelineRecordListRow.prototype = {
         this._record = record;
         this._offset = offset;
 
-        this.element.className = "timeline-tree-item timeline-category-" + record.category.name + (isEven ? " even" : "");
+        this.element.className = "timeline-tree-item timeline-category-" + record.category.name;
+        if (isEven)
+            this.element.addStyleClass("even");
+        if (record.hasWarning)
+            this.element.addStyleClass("warning");
+        else if (record.childHasWarning)
+            this.element.addStyleClass("child-warning");
+
         this._typeElement.textContent = record.title;
 
         if (this._dataElement.firstChild)

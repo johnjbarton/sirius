@@ -37,10 +37,10 @@ var WebInspector = {
         WebInspector.inspectorView.show(parentElement);
         WebInspector.inspectorView.addEventListener(WebInspector.InspectorView.Events.PanelSelected, this._panelSelected, this);
 
-        var elements = new WebInspector.PanelDescriptor("elements", WebInspector.UIString("Elements"), "ElementsPanel", "ElementsPanel.js");
+        var elements = new WebInspector.ElementsPanelDescriptor();
         var resources = new WebInspector.PanelDescriptor("resources", WebInspector.UIString("Resources"), "ResourcesPanel", "ResourcesPanel.js");
-        var network = new WebInspector.PanelDescriptor("network", WebInspector.UIString("Network"), "NetworkPanel", "NetworkPanel.js");
-        var scripts = new WebInspector.PanelDescriptor("scripts", WebInspector.UIString("Sources"), "ScriptsPanel", "ScriptsPanel.js");
+        var network = new WebInspector.NetworkPanelDescriptor();
+        var scripts = new WebInspector.ScriptsPanelDescriptor();
         var timeline = new WebInspector.PanelDescriptor("timeline", WebInspector.UIString("Timeline"), "TimelinePanel", "TimelinePanel.js");
         var profiles = new WebInspector.PanelDescriptor("profiles", WebInspector.UIString("Profiles"), "ProfilesPanel", "ProfilesPanel.js");
         var audits = new WebInspector.PanelDescriptor("audits", WebInspector.UIString("Audits"), "AuditsPanel", "AuditsPanel.js");
@@ -56,9 +56,9 @@ var WebInspector = {
             return panelDescriptors;
         }
         var allDescriptors = [elements, resources, network, scripts, timeline, profiles, audits, console];
-        var hiddenPanels = (InspectorFrontendHost.hiddenPanels() || "").split(',');
+        var hiddenPanels = InspectorFrontendHost.hiddenPanels();
         for (var i = 0; i < allDescriptors.length; ++i) {
-            if (hiddenPanels.indexOf(allDescriptors[i].name) === -1)
+            if (hiddenPanels.indexOf(allDescriptors[i].name()) === -1)
                 panelDescriptors.push(allDescriptors[i]);
         }
         return panelDescriptors;
@@ -433,7 +433,14 @@ WebInspector.loaded = function()
         }
         return;
     }
+
     WebInspector.doLoadedDone();
+
+    // In case of loading as a web page with no bindings / harness, kick off initialization manually.
+    if (InspectorFrontendHost.isStub) {
+        InspectorFrontendAPI.dispatchQueryParameters();
+        WebInspector._doLoadedDoneWithCapabilities();
+    }
 }
 
 WebInspector.doLoadedDone = function()
@@ -458,8 +465,6 @@ WebInspector.doLoadedDone = function()
     PageAgent.canOverrideDeviceMetrics(WebInspector._initializeCapability.bind(WebInspector, "canOverrideDeviceMetrics", null));
     PageAgent.canOverrideGeolocation(WebInspector._initializeCapability.bind(WebInspector, "canOverrideGeolocation", null));
     PageAgent.canOverrideDeviceOrientation(WebInspector._initializeCapability.bind(WebInspector, "canOverrideDeviceOrientation", WebInspector._doLoadedDoneWithCapabilities.bind(WebInspector)));
-    if ("debugLoad" in WebInspector.queryParamsObject)
-        WebInspector._doLoadedDoneWithCapabilities();
 }
 
 WebInspector._doLoadedDoneWithCapabilities = function()
@@ -479,7 +484,6 @@ WebInspector._doLoadedDoneWithCapabilities = function()
     WebInspector.CSSCompletions.requestCSSNameCompletions();
 
     this.drawer = new WebInspector.Drawer();
-    this.consoleView = new WebInspector.ConsoleView(WebInspector.WorkerManager.isWorkerFrontend());
 
     this.networkManager = new WebInspector.NetworkManager();
     this.resourceTreeModel = new WebInspector.ResourceTreeModel(this.networkManager);
@@ -487,17 +491,15 @@ WebInspector._doLoadedDoneWithCapabilities = function()
     this.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.DebuggerPaused, this._debuggerPaused, this);
     this.networkLog = new WebInspector.NetworkLog();
     this.domAgent = new WebInspector.DOMAgent();
-    this.javaScriptContextManager = new WebInspector.JavaScriptContextManager(this.resourceTreeModel, this.consoleView);
+    this.runtimeModel = new WebInspector.RuntimeModel(this.resourceTreeModel);
 
-    this.scriptSnippetModel = new WebInspector.ScriptSnippetModel();
+    this.consoleView = new WebInspector.ConsoleView(WebInspector.WorkerManager.isWorkerFrontend());
 
     InspectorBackend.registerInspectorDispatcher(this);
 
     this.cssModel = new WebInspector.CSSStyleModel();
     this.timelineManager = new WebInspector.TimelineManager();
     this.userAgentSupport = new WebInspector.UserAgentSupport();
-    InspectorBackend.registerDatabaseDispatcher(new WebInspector.DatabaseDispatcher());
-    InspectorBackend.registerDOMStorageDispatcher(new WebInspector.DOMStorageDispatcher());
 
     this.searchController = new WebInspector.SearchController();
     this.advancedSearchController = new WebInspector.AdvancedSearchController();
@@ -515,18 +517,29 @@ WebInspector._doLoadedDoneWithCapabilities = function()
     this.openAnchorLocationRegistry.registerHandler(autoselectPanel, function() { return false; });
 
     this.workspace = new WebInspector.Workspace();
+    this.workspaceController = new WebInspector.WorkspaceController(this.workspace);
+
     this.breakpointManager = new WebInspector.BreakpointManager(WebInspector.settings.breakpoints, this.debuggerModel, this.workspace);
+
+    this.scriptSnippetModel = new WebInspector.ScriptSnippetModel(this.workspace);
+    new WebInspector.DebuggerScriptMapping(this.workspace);
+    new WebInspector.NetworkUISourceCodeProvider(this.workspace);
+    new WebInspector.StylesSourceMapping(this.workspace);
+    if (WebInspector.experimentsSettings.sass.isEnabled())
+        new WebInspector.SASSSourceMapping(this.workspace);
+
+    new WebInspector.PresentationConsoleMessageHelper(this.workspace);
 
     this._createGlobalStatusBarItems();
 
     WebInspector._installDockToRight();
 
     this.toolbar = new WebInspector.Toolbar();
-    this.toolbar.setCoalescingUpdate(true);
+    WebInspector.startBatchUpdate();
     var panelDescriptors = this._panelDescriptors();
     for (var i = 0; i < panelDescriptors.length; ++i)
         WebInspector.inspectorView.addPanel(panelDescriptors[i]);
-    this.toolbar.setCoalescingUpdate(false);
+    WebInspector.endBatchUpdate();
 
     this.addMainEventListeners(document);
     WebInspector.registerLinkifierPlugin(this._profilesLinkifier.bind(this));
@@ -548,8 +561,8 @@ WebInspector._doLoadedDoneWithCapabilities = function()
     }
 
     InspectorAgent.enable(showInitialPanel);
-    DatabaseAgent.enable();
-    DOMStorageAgent.enable();
+    this.databaseModel = new WebInspector.DatabaseModel();
+    this.domStorageModel = new WebInspector.DOMStorageModel();
 
     if (!Capabilities.profilerCausesRecompilation || WebInspector.settings.profilerEnabled.get())
         ProfilerAgent.enable();
@@ -993,6 +1006,11 @@ WebInspector.log = function(message, messageLevel, showConsole)
     logMessage(message);
 }
 
+WebInspector.showErrorMessage = function(error)
+{
+    WebInspector.log(error, WebInspector.ConsoleMessage.MessageLevel.Error, true);
+}
+
 WebInspector.inspect = function(payload, hints)
 {
     var object = WebInspector.RemoteObject.fromPayload(payload);
@@ -1007,9 +1025,9 @@ WebInspector.inspect = function(payload, hints)
     }
 
     if (hints.databaseId)
-        WebInspector.showPanel("resources").selectDatabase(hints.databaseId);
+        WebInspector.showPanel("resources").selectDatabase(WebInspector.databaseModel.databaseForId(hints.databaseId));
     else if (hints.domStorageId)
-        WebInspector.showPanel("resources").selectDOMStorage(hints.domStorageId);
+        WebInspector.showPanel("resources").selectDOMStorage(WebInspector.domStorageModel.storageForId(hints.domStorageId));
 
     object.release();
 }
@@ -1050,15 +1068,9 @@ WebInspector._showAnchorLocationInPanel = function(anchor, panel)
         anchor.addStyleClass("webkit-html-resource-link");
     }
 
-    this.showPanelForAnchorNavigation(panel);
+    WebInspector.inspectorView.showPanelForAnchorNavigation(panel);
     panel.showAnchorLocation(anchor);
     return true;
-}
-
-WebInspector.showPanelForAnchorNavigation = function(panel)
-{
-    WebInspector.searchController.disableSearchUntilExplicitAction();
-    WebInspector.inspectorView.setCurrentPanel(panel);
 }
 
 WebInspector.showProfileForURL = function(url)
@@ -1080,11 +1092,6 @@ WebInspector.addMainEventListeners = function(doc)
     doc.addEventListener("copy", this.documentCopy.bind(this), true);
     doc.addEventListener("contextmenu", this.contextMenuEventFired.bind(this), true);
     doc.addEventListener("click", this.documentClick.bind(this), true);
-}
-
-WebInspector.frontendReused = function()
-{
-    this.resourceTreeModel.frontendReused();
 }
 
 WebInspector.ProfileURLRegExp = /webkit-profile:\/\/(.+)\/(.+)#([0-9]+)/;

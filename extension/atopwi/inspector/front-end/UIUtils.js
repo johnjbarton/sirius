@@ -60,22 +60,38 @@ WebInspector._elementDragStart = function(elementDragStart, elementDrag, element
     if (elementDragStart && !elementDragStart(event))
         return;
 
-    // Install glass pane
-    if (WebInspector._elementDraggingGlassPane)
+    if (WebInspector._elementDraggingGlassPane) {
         WebInspector._elementDraggingGlassPane.dispose();
+        delete WebInspector._elementDraggingGlassPane;
+    }
 
-    WebInspector._elementDraggingGlassPane = new WebInspector.GlassPane();
+    var targetDocument = event.target.ownerDocument;
 
     WebInspector._elementDraggingEventListener = elementDrag;
     WebInspector._elementEndDraggingEventListener = elementDragEnd;
+    WebInspector._mouseOutWhileDraggingTargetDocument = targetDocument;
 
-    var targetDocument = event.target.ownerDocument;
     targetDocument.addEventListener("mousemove", WebInspector._elementDraggingEventListener, true);
     targetDocument.addEventListener("mouseup", WebInspector._elementDragEnd, true);
+    targetDocument.addEventListener("mouseout", WebInspector._mouseOutWhileDragging, true);
 
     targetDocument.body.style.cursor = cursor;
 
     event.preventDefault();
+}
+
+WebInspector._mouseOutWhileDragging = function()
+{
+    WebInspector._unregisterMouseOutWhileDragging();
+    WebInspector._elementDraggingGlassPane = new WebInspector.GlassPane();
+}
+
+WebInspector._unregisterMouseOutWhileDragging = function()
+{
+    if (!WebInspector._mouseOutWhileDraggingTargetDocument)
+        return;
+    WebInspector._mouseOutWhileDraggingTargetDocument.removeEventListener("mouseout", WebInspector._mouseOutWhileDragging, true);
+    delete WebInspector._mouseOutWhileDraggingTargetDocument;
 }
 
 WebInspector._elementDragEnd = function(event)
@@ -83,6 +99,7 @@ WebInspector._elementDragEnd = function(event)
     var targetDocument = event.target.ownerDocument;
     targetDocument.removeEventListener("mousemove", WebInspector._elementDraggingEventListener, true);
     targetDocument.removeEventListener("mouseup", WebInspector._elementDragEnd, true);
+    WebInspector._unregisterMouseOutWhileDragging();
 
     targetDocument.body.style.removeProperty("cursor");
 
@@ -680,30 +697,6 @@ Number.withThousandsSeparator = function(num)
     return str;
 }
 
-WebInspector._missingLocalizedStrings = {};
-
-/**
- * @param {string} string
- * @param {...*} vararg
- */
-WebInspector.UIString = function(string, vararg)
-{
-    if (Preferences.localizeUI) {
-        if (window.localizedStrings && string in window.localizedStrings)
-            string = window.localizedStrings[string];
-        else {
-            if (!(string in WebInspector._missingLocalizedStrings)) {
-                console.warn("Localized string \"" + string + "\" not found.");
-                WebInspector._missingLocalizedStrings[string] = true;
-            }
-    
-            if (Preferences.showMissingLocalizedStrings)
-                string += " (not localized)";
-        }
-    }
-    return String.vsprintf(string, Array.prototype.slice.call(arguments, 1));
-}
-
 WebInspector.useLowerCaseMenuTitles = function()
 {
     return WebInspector.platform() === "windows" && Preferences.useLowerCaseMenuTitlesOnWindows;
@@ -1038,75 +1031,49 @@ WebInspector.revertDomChanges = function(domChanges)
     }
 }
 
-/**
- * @param {string} imageURL
- * @param {boolean} showDimensions
- * @param {function(Element=)} userCallback
- * @param {Object=} precomputedDimensions
- */
-WebInspector.buildImagePreviewContents = function(imageURL, showDimensions, userCallback, precomputedDimensions)
+WebInspector._coalescingLevel = 0;
+
+WebInspector.startBatchUpdate = function()
 {
-    var resource = WebInspector.resourceTreeModel.resourceForURL(imageURL);
-    if (!resource) {
-        userCallback();
+    if (!WebInspector._coalescingLevel)
+        WebInspector._postUpdateHandlers = new Map();
+    WebInspector._coalescingLevel++;
+}
+
+WebInspector.endBatchUpdate = function()
+{
+    if (--WebInspector._coalescingLevel)
         return;
-    }
 
-    var imageElement = document.createElement("img");
-    imageElement.addEventListener("load", buildContent, false);
-    imageElement.addEventListener("error", errorCallback, false);
-    resource.populateImageSource(imageElement);
+    var handlers = WebInspector._postUpdateHandlers;
+    delete WebInspector._postUpdateHandlers;
 
-    function errorCallback()
-    {
-        // Drop the event parameter when invoking userCallback.
-        userCallback();
-    }
-
-    function buildContent()
-    {
-        var container = document.createElement("table");
-        container.className = "image-preview-container";
-        var naturalWidth = precomputedDimensions ? precomputedDimensions.naturalWidth : imageElement.naturalWidth;
-        var naturalHeight = precomputedDimensions ? precomputedDimensions.naturalHeight : imageElement.naturalHeight;
-        var offsetWidth = precomputedDimensions ? precomputedDimensions.offsetWidth : naturalWidth;
-        var offsetHeight = precomputedDimensions ? precomputedDimensions.offsetHeight : naturalHeight;
-        var description;
-        if (showDimensions) {
-            if (offsetHeight === naturalHeight && offsetWidth === naturalWidth)
-                description = WebInspector.UIString("%d \xd7 %d pixels", offsetWidth, offsetHeight);
-            else
-                description = WebInspector.UIString("%d \xd7 %d pixels (Natural: %d \xd7 %d pixels)", offsetWidth, offsetHeight, naturalWidth, naturalHeight);
-        }
-
-        container.createChild("tr").createChild("td", "image-container").appendChild(imageElement);
-        if (description)
-            container.createChild("tr").createChild("td").createChild("span", "description").textContent = description;
-        userCallback(container);
+    var keys = handlers.keys();
+    for (var i = 0; i < keys.length; ++i) {
+        var object = keys[i];
+        var methods = handlers.get(object).keys();
+        for (var j = 0; j < methods.length; ++j)
+            methods[j].call(object);
     }
 }
 
 /**
- * @param {WebInspector.ContextMenu} contextMenu
- * @param {Node} contextNode
- * @param {Event} event
+ * @param {Object} object
+ * @param {function()} method
  */
-WebInspector.populateHrefContextMenu = function(contextMenu, contextNode, event)
+WebInspector.invokeOnceAfterBatchUpdate = function(object, method)
 {
-    var anchorElement = event.target.enclosingNodeOrSelfWithClass("webkit-html-resource-link") || event.target.enclosingNodeOrSelfWithClass("webkit-html-external-link");
-    if (!anchorElement)
-        return false;
-
-    var resourceURL = WebInspector.resourceURLForRelatedNode(contextNode, anchorElement.href);
-    if (!resourceURL)
-        return false;
-
-    // Add resource-related actions.
-    contextMenu.appendItem(WebInspector.openLinkExternallyLabel(), WebInspector.openResource.bind(WebInspector, resourceURL, false));
-    if (WebInspector.resourceForURL(resourceURL))
-        contextMenu.appendItem(WebInspector.UIString(WebInspector.useLowerCaseMenuTitles() ? "Open link in Resources panel" : "Open Link in Resources Panel"), WebInspector.openResource.bind(null, resourceURL, true));
-    contextMenu.appendItem(WebInspector.copyLinkAddressLabel(), InspectorFrontendHost.copyText.bind(InspectorFrontendHost, resourceURL));
-    return true;
+    if (!WebInspector._coalescingLevel) {
+        method.call(object);
+        return;
+    }
+    
+    var methods = WebInspector._postUpdateHandlers.get(object);
+    if (!methods) {
+        methods = new Map();
+        WebInspector._postUpdateHandlers.put(object, methods);
+    }
+    methods.put(method);
 }
 
 ;(function() {

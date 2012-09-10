@@ -95,7 +95,10 @@ WebInspector.InspectorView.prototype = {
     {
         return this._currentPanel;
     },
-
+    
+    /**
+     * @param {WebInspector.Panel} x
+     */
     setCurrentPanel: function(x)
     {
         if (this._currentPanel === x)
@@ -234,6 +237,15 @@ WebInspector.InspectorView.prototype = {
             this._panelsElement.style.bottom = 0;
         }
         this.doResize();
+    },
+
+    /**
+     * @param {WebInspector.Panel} panel
+     */
+    showPanelForAnchorNavigation: function(panel)
+    {
+        WebInspector.searchController.disableSearchUntilExplicitAction();
+        this.setCurrentPanel(panel);
     }
 }
 

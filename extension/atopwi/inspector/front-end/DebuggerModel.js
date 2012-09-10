@@ -94,7 +94,8 @@ WebInspector.DebuggerModel.BreakReason = {
     DOM: "DOM",
     EventListener: "EventListener",
     XHR: "XHR",
-    Exception: "exception"
+    Exception: "exception",
+    Assert: "assert"
 }
 
 WebInspector.DebuggerModel.prototype = {
@@ -394,19 +395,6 @@ WebInspector.DebuggerModel.prototype = {
     },
 
     /**
-     * @param {string} sourceURL
-     * @param {string} source
-     * @param {number} startingLine
-     * @param {number} errorLine
-     * @param {string} errorMessage
-     */
-    _failedToParseScriptSource: function(sourceURL, source, startingLine, errorLine, errorMessage)
-    {
-        var script = new WebInspector.Script("", sourceURL, startingLine, 0, 0, 0, false);
-        this.dispatchEventToListeners(WebInspector.DebuggerModel.Events.FailedToParseScriptSource, script);
-    },
-
-    /**
      * @param {WebInspector.Script} script
      * @param {number} lineNumber
      * @param {number} columnNumber
@@ -647,6 +635,7 @@ WebInspector.DebuggerDispatcher.prototype = {
      * @param {number} endLine
      * @param {number} endColumn
      * @param {boolean=} isContentScript
+     * @param {string=} sourceMapURL
      */
     scriptParsed: function(scriptId, sourceURL, startLine, startColumn, endLine, endColumn, isContentScript, sourceMapURL)
     {
@@ -662,7 +651,6 @@ WebInspector.DebuggerDispatcher.prototype = {
      */
     scriptFailedToParse: function(sourceURL, source, startingLine, errorLine, errorMessage)
     {
-        this._debuggerModel._failedToParseScriptSource(sourceURL, source, startingLine, errorLine, errorMessage);
     },
 
     /**

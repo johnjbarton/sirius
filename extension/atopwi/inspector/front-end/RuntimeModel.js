@@ -31,40 +31,53 @@
 /**
  * @constructor
  * @extends {WebInspector.Object}
+ * @param {WebInspector.ResourceTreeModel} resourceTreeModel
  */
-WebInspector.JavaScriptContextManager = function(resourceTreeModel, consoleView)
+WebInspector.RuntimeModel = function(resourceTreeModel)
 {
     resourceTreeModel.addEventListener(WebInspector.ResourceTreeModel.EventTypes.FrameAdded, this._frameAdded, this);
     resourceTreeModel.addEventListener(WebInspector.ResourceTreeModel.EventTypes.FrameNavigated, this._frameNavigated, this);
     resourceTreeModel.addEventListener(WebInspector.ResourceTreeModel.EventTypes.FrameDetached, this._frameDetached, this);
     resourceTreeModel.addEventListener(WebInspector.ResourceTreeModel.EventTypes.CachedResourcesLoaded, this._didLoadCachedResources, this);
-    this._consoleView = consoleView;
-    this._frameIdToContext = {};
+    this._frameIdToContextList = {};
 }
 
-WebInspector.JavaScriptContextManager.prototype = {
+WebInspector.RuntimeModel.Events = {
+    FrameExecutionContextListAdded: "FrameExecutionContextListAdded",
+    FrameExecutionContextListRemoved: "FrameExecutionContextListRemoved",
+}
+
+WebInspector.RuntimeModel.prototype = {
+    /**
+     * @return {Array.<WebInspector.FrameExecutionContextList>}
+     */
+    contextLists: function()
+    {
+        return Object.values(this._frameIdToContextList);
+    },
+
     /**
      * @param {WebInspector.ResourceTreeFrame} frame
      * @param {string} securityOrigin
      */
     contextByFrameAndSecurityOrigin: function(frame, securityOrigin)
     {
-        var frameContext = this._frameIdToContext[frame.id];
+        var frameContext = this._frameIdToContextList[frame.id];
         return frameContext && frameContext.contextBySecurityOrigin(securityOrigin);
     },
 
     _frameAdded: function(event)
     {
         var frame = event.data;
-        var context = new WebInspector.FrameEvaluationContext(frame);
-        this._frameIdToContext[frame.id] = context;
-        this._consoleView.addContext(context);
+        var context = new WebInspector.FrameExecutionContextList(frame);
+        this._frameIdToContextList[frame.id] = context;
+        this.dispatchEventToListeners(WebInspector.RuntimeModel.Events.FrameExecutionContextListAdded, context);
     },
 
     _frameNavigated: function(event)
     {
         var frame = event.data;
-        var context = this._frameIdToContext[frame.id];
+        var context = this._frameIdToContextList[frame.id];
         if (context)
             context._frameNavigated(frame);
     },
@@ -72,11 +85,11 @@ WebInspector.JavaScriptContextManager.prototype = {
     _frameDetached: function(event)
     {
         var frame = event.data;
-        var context = this._frameIdToContext[frame.id];
+        var context = this._frameIdToContextList[frame.id];
         if (!context)
             return;
-        this._consoleView.removeContext(context);
-        delete this._frameIdToContext[frame.id];
+        this.dispatchEventToListeners(WebInspector.RuntimeModel.Events.FrameExecutionContextListRemoved, context);
+        delete this._frameIdToContextList[frame.id];
     },
 
     _didLoadCachedResources: function()
@@ -85,37 +98,37 @@ WebInspector.JavaScriptContextManager.prototype = {
         RuntimeAgent.setReportExecutionContextCreation(true);
     },
 
-    isolatedContextCreated: function(context)
+    _executionContextCreated: function(context)
     {
-        var frameEvaluationContext = this._frameIdToContext[context.frameId];
+        var contextList = this._frameIdToContextList[context.frameId];
         // FIXME(85708): this should never happen
-        if (!frameEvaluationContext)
+        if (!contextList)
             return;
-        frameEvaluationContext._addExecutionContext(new WebInspector.ExecutionContext(context.id, context.name, context.isPageContext));
+        contextList._addExecutionContext(new WebInspector.ExecutionContext(context.id, context.name, context.isPageContext));
     }
 }
 
-WebInspector.JavaScriptContextManager.prototype.__proto__ = WebInspector.Object.prototype;
+WebInspector.RuntimeModel.prototype.__proto__ = WebInspector.Object.prototype;
 
 /**
- * @type {WebInspector.JavaScriptContextManager}
+ * @type {WebInspector.RuntimeModel}
  */
-WebInspector.javaScriptContextManager = null;
+WebInspector.runtimeModel = null;
 
 /**
  * @constructor
  * @implements {RuntimeAgent.Dispatcher}
- * @param {WebInspector.JavaScriptContextManager} contextManager
+ * @param {WebInspector.RuntimeModel} runtimeModel
  */
-WebInspector.RuntimeDispatcher = function(contextManager)
+WebInspector.RuntimeDispatcher = function(runtimeModel)
 {
-    this._contextManager = contextManager;
+    this._runtimeModel = runtimeModel;
 }
 
 WebInspector.RuntimeDispatcher.prototype = {
-    isolatedContextCreated: function(context)
+    executionContextCreated: function(context)
     {
-        this._contextManager.isolatedContextCreated(context);
+        this._runtimeModel._executionContextCreated(context);
     }
 }
 
@@ -149,26 +162,24 @@ WebInspector.ExecutionContext.comparator = function(a, b)
  * @constructor
  * @extends {WebInspector.Object}
  */
-WebInspector.FrameEvaluationContext = function(frame)
+WebInspector.FrameExecutionContextList = function(frame)
 {
     this._frame = frame;
-    this._mainWorldContext = null;
-    this._isolatedContexts = [];
+    this._executionContexts = [];
 }
 
-WebInspector.FrameEvaluationContext.EventTypes = {
-    Updated: "Updated",
-    AddedExecutionContext: "AddedExecutionContext"
+WebInspector.FrameExecutionContextList.EventTypes = {
+    ContextsUpdated: "ContextsUpdated",
+    ContextAdded: "ContextAdded"
 }
 
-WebInspector.FrameEvaluationContext.prototype =
+WebInspector.FrameExecutionContextList.prototype =
 {
     _frameNavigated: function(frame)
     {
         this._frame = frame;
-        this._mainWorldContext = null;
-        this._isolatedContexts = [];
-        this.dispatchEventToListeners(WebInspector.FrameEvaluationContext.EventTypes.Updated, this);
+        this._executionContexts = [];
+        this.dispatchEventToListeners(WebInspector.FrameExecutionContextList.EventTypes.ContextsUpdated, this);
     },
 
     /**
@@ -176,23 +187,14 @@ WebInspector.FrameEvaluationContext.prototype =
      */
     _addExecutionContext: function(context)
     {
-        if (context.isMainWorldContext)
-            this._mainWorldContext = context;
-        else {
-            var insertAt = insertionIndexForObjectInListSortedByFunction(context, this._isolatedContexts, WebInspector.ExecutionContext.comparator);
-            this._isolatedContexts.splice(insertAt, 0, context);
-        }
-        this.dispatchEventToListeners(WebInspector.FrameEvaluationContext.EventTypes.AddedExecutionContext, this);
+        var insertAt = insertionIndexForObjectInListSortedByFunction(context, this._executionContexts, WebInspector.ExecutionContext.comparator);
+        this._executionContexts.splice(insertAt, 0, context);
+        this.dispatchEventToListeners(WebInspector.FrameExecutionContextList.EventTypes.ContextAdded, this);
     },
 
-    mainWorldContext: function()
+    executionContexts: function()
     {
-        return this._mainWorldContext;
-    },
-
-    isolatedContexts: function()
-    {
-        return this._isolatedContexts;
+        return this._executionContexts;
     },
 
     /**
@@ -200,8 +202,8 @@ WebInspector.FrameEvaluationContext.prototype =
      */
     contextBySecurityOrigin: function(securityOrigin)
     {
-        for (var i = 0; i < this._isolatedContexts.length; ++i) {
-            var context = this._isolatedContexts[i];
+        for (var i = 0; i < this._executionContexts.length; ++i) {
+            var context = this._executionContexts[i];
             if (!context.isMainWorldContext && context.name === securityOrigin)
                 return context; 
         }
@@ -232,4 +234,4 @@ WebInspector.FrameEvaluationContext.prototype =
     }
 }
 
-WebInspector.FrameEvaluationContext.prototype.__proto__ = WebInspector.Object.prototype;
+WebInspector.FrameExecutionContextList.prototype.__proto__ = WebInspector.Object.prototype;

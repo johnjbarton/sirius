@@ -55,7 +55,7 @@ WebInspector.DefaultTextEditor = function(url, delegate)
     var syncScrollListener = this._syncScroll.bind(this);
     var syncDecorationsForLineListener = this._syncDecorationsForLine.bind(this);
     var syncLineHeightListener = this._syncLineHeight.bind(this);
-    this._mainPanel = new WebInspector.TextEditorMainPanel(this._textModel, url, syncScrollListener, syncDecorationsForLineListener, enterTextChangeMode, exitTextChangeMode);
+    this._mainPanel = new WebInspector.TextEditorMainPanel(this._delegate, this._textModel, url, syncScrollListener, syncDecorationsForLineListener, enterTextChangeMode, exitTextChangeMode);
     this._gutterPanel = new WebInspector.TextEditorGutterPanel(this._textModel, syncDecorationsForLineListener, syncLineHeightListener);
 
     this._mainPanel.element.addEventListener("scroll", this._handleScrollChanged.bind(this), false);
@@ -413,6 +413,9 @@ WebInspector.DefaultTextEditor.prototype = {
 
     _contextMenu: function(event)
     {
+        var anchor = event.target.enclosingNodeOrSelfWithNodeName("a");
+        if (anchor)
+            return;
         var contextMenu = new WebInspector.ContextMenu();
         var target = event.target.enclosingNodeOrSelfWithClass("webkit-line-number");
         if (target)
@@ -1208,13 +1211,15 @@ WebInspector.TextEditorGutterChunk.prototype = {
 /**
  * @constructor
  * @extends {WebInspector.TextEditorChunkedPanel}
+ * @param {WebInspector.TextEditorDelegate} delegate
  * @param {WebInspector.TextEditorModel} textModel
  * @param {?string} url
  */
-WebInspector.TextEditorMainPanel = function(textModel, url, syncScrollListener, syncDecorationsForLineListener, enterTextChangeMode, exitTextChangeMode)
+WebInspector.TextEditorMainPanel = function(delegate, textModel, url, syncScrollListener, syncDecorationsForLineListener, enterTextChangeMode, exitTextChangeMode)
 {
     WebInspector.TextEditorChunkedPanel.call(this, textModel);
 
+    this._delegate = delegate;
     this._syncScrollListener = syncScrollListener;
     this._syncDecorationsForLineListener = syncDecorationsForLineListener;
     this._enterTextChangeMode = enterTextChangeMode;
@@ -1236,11 +1241,6 @@ WebInspector.TextEditorMainPanel = function(textModel, url, syncScrollListener, 
     this.element.addEventListener("scroll", this._scroll.bind(this), false);
     this.element.addEventListener("focus", this._handleElementFocus.bind(this), false);
 
-    // In WebKit the DOMNodeRemoved event is fired AFTER the node is removed, thus it should be
-    // attached to all DOM nodes that we want to track. Instead, we attach the DOMNodeRemoved
-    // listeners only on the line rows, and use DOMSubtreeModified to track node removals inside
-    // the line rows. For more info see: https://bugs.webkit.org/show_bug.cgi?id=55666
-    //
     // OPTIMIZATION. It is very expensive to listen to the DOM mutation events, thus we remove the
     // listeners whenever we do any internal DOM manipulations (such as expand/collapse line rows)
     // and set the listeners back when we are finished.
@@ -1651,18 +1651,6 @@ WebInspector.TextEditorMainPanel.prototype = {
             this._container.addEventListener("DOMNodeInserted", this._handleDOMUpdatesCallback, false);
             this._container.addEventListener("DOMSubtreeModified", this._handleDOMUpdatesCallback, false);
         }
-    },
-
-    /**
-     * @param {Element} lineRow
-     * @param {boolean} enable
-     */
-    _enableDOMNodeRemovedListener: function(lineRow, enable)
-    {
-        if (enable)
-            lineRow.addEventListener("DOMNodeRemoved", this._handleDOMUpdatesCallback, false);
-        else
-            lineRow.removeEventListener("DOMNodeRemoved", this._handleDOMUpdatesCallback, false);
     },
 
     _buildChunks: function()
@@ -2108,26 +2096,14 @@ WebInspector.TextEditorMainPanel.prototype = {
         else
             quote = null;
 
-        var a = WebInspector.linkifyURLAsNode(this._rewriteHref(content), content, undefined, isExternal);
         var span = document.createElement("span");
         span.className = "webkit-html-attribute-value";
         if (quote)
             span.appendChild(document.createTextNode(quote));
-        span.appendChild(a);
+        span.appendChild(this._delegate.createLink(content, isExternal));
         if (quote)
             span.appendChild(document.createTextNode(quote));
         return span;
-    },
-
-    /**
-     * @param {string=} hrefValue
-     * @param {boolean=} isExternal
-     */
-    _rewriteHref: function(hrefValue, isExternal)
-    {
-        if (!this._url || !hrefValue || hrefValue.indexOf("://") > 0)
-            return hrefValue;
-        return WebInspector.completeURL(this._url, hrefValue);
     },
 
     _handleDOMUpdates: function(e)
@@ -2171,11 +2147,6 @@ WebInspector.TextEditorMainPanel.prototype = {
                 endLine = row.lineNumber;
                 break;
             }
-        }
-
-        if (target === lineRow && e.type === "DOMNodeRemoved") {
-            // Now this will no longer be valid.
-            delete lineRow.lineNumber;
         }
 
         if (this._dirtyLines) {
@@ -2544,7 +2515,6 @@ WebInspector.TextEditorMainChunk = function(chunkedPanel, startLine, endLine)
     this.element = document.createElement("div");
     this.element.lineNumber = startLine;
     this.element.className = "webkit-line-content";
-    this._chunkedPanel._enableDOMNodeRemovedListener(this.element, true);
 
     this._startLine = startLine;
     endLine = Math.min(this._textModel.linesCount, endLine);
@@ -2651,24 +2621,20 @@ WebInspector.TextEditorMainChunk.prototype = {
             var parentElement = this.element.parentElement;
             for (var i = this.startLine; i < this.startLine + this.linesCount; ++i) {
                 var lineRow = this._createRow(i);
-                this._chunkedPanel._enableDOMNodeRemovedListener(lineRow, true);
                 this._updateElementReadOnlyState(lineRow);
                 parentElement.insertBefore(lineRow, this.element);
                 this._expandedLineRows.push(lineRow);
             }
-            this._chunkedPanel._enableDOMNodeRemovedListener(this.element, false);
             parentElement.removeChild(this.element);
             this._chunkedPanel._paintLines(this.startLine, this.startLine + this.linesCount);
         } else {
             var elementInserted = false;
             for (var i = 0; i < this._expandedLineRows.length; ++i) {
                 var lineRow = this._expandedLineRows[i];
-                this._chunkedPanel._enableDOMNodeRemovedListener(lineRow, false);
                 var parentElement = lineRow.parentElement;
                 if (parentElement) {
                     if (!elementInserted) {
                         elementInserted = true;
-                        this._chunkedPanel._enableDOMNodeRemovedListener(this.element, true);
                         parentElement.insertBefore(this.element, lineRow);
                     }
                     parentElement.removeChild(lineRow);
