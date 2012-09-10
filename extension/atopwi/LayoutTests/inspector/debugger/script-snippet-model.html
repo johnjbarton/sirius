@@ -14,7 +14,9 @@ function test()
     // FIXME: Remove once snippets are taken out of experiments.
     WebInspector.experimentsSettings.snippetsSupport = {};
     WebInspector.experimentsSettings.snippetsSupport.isEnabled = function() { return true; };
-    WebInspector.scriptSnippetModel = new WebInspector.ScriptSnippetModel();
+    var workspace = new WebInspector.Workspace();
+    var workspaceController = new WebInspector.WorkspaceController(workspace);
+    WebInspector.scriptSnippetModel = new WebInspector.ScriptSnippetModel(workspace);
 
     InspectorTest.runDebuggerTestSuite([
         function testWorkspaceReset(next)
@@ -24,18 +26,18 @@ function test()
             var snippetName = "TestSnippet" + Math.random();
             InspectorTest.addResult("Snippet created.");
             WebInspector.scriptSnippetModel.renameScriptSnippet(snippetJavaScriptSource, snippetName);
-            WebInspector.scriptSnippetModel.scriptMapping.addEventListener(WebInspector.UISourceCodeProvider.Events.UISourceCodeAdded, uiSourceCodeAdded);
+            workspace.addEventListener(WebInspector.UISourceCodeProvider.Events.UISourceCodeAdded, uiSourceCodeAdded);
             InspectorTest.addResult("Resetting snippet script mapping.");
-            WebInspector.scriptSnippetModel.scriptMapping.reset();
-            InspectorTest.assertTrue(!WebInspector.scriptSnippetModel.scriptMapping.uiSourceCodes().length, "Snippets script mapping should not have any uiSourceCodea after reset.");
+            workspaceController._mainFrameNavigated();
 
             function uiSourceCodeAdded(event)
             {
+                InspectorTest.assertEquals(1, workspace.uiSourceCodes().length, "Only one snippet uiSourceCode should be present after project navigation.");
                 var uiSourceCode = event.data;
                 if (uiSourceCode.url.indexOf(snippetName) === -1)
                     return;
                 InspectorTest.addResult("Snippet uiSourceCode was recreated.");
-                WebInspector.workspace.removeEventListener(WebInspector.UISourceCodeProvider.Events.UISourceCodeAdded, uiSourceCodeAdded);
+                workspace.removeEventListener(WebInspector.UISourceCodeProvider.Events.UISourceCodeAdded, uiSourceCodeAdded);
                 next();
             }
         },
