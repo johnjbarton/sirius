@@ -1,7 +1,7 @@
 // Google BSD license http://code.google.com/google_bsd_license.html
 // Copyright 2011 Google Inc. johnjbarton@google.com
 
-/*global define console window RESTChannel*/
+/*global define console window */
 
 var ScriptInjector = (function()  {
 

@@ -1,20 +1,19 @@
 // Google BSD license http://code.google.com/google_bsd_license.html
 // Copyright 2011 Google Inc. johnjbarton@google.com
 
-/*global define console window RESTChannel*/
+/*global define console window */
 
 
 define(['devtoolsAdapter/appendFrame'], 
 function(appendFrame)  {
 
-  var debug = true;
+  var debug = false;
 
   var DevtoolsConnection = { 
 
     openInspector: function(debuggee) {
       this.debuggee = debuggee;
-      this.listenDebuggee();
-      this.showInspectorIframe();
+      this.listenDebuggee( this.showInspectorIframe());
     },
  
     showInspectorIframe: function() {
@@ -24,32 +23,19 @@ function(appendFrame)  {
       return appendFrame('WebInspector', this.debuggee.devtoolsURL);
     },
 
-    listenDebuggee: function() {
+    listenDebuggee: function(childFrame) {
       if (debug) {
         console.log("DevtoolsConnection listening ");
       }
-      this.onUnload = RESTChannel.listen(
-        window, 
-        this._onConnect.bind(this)
-      );
+      this.portToDevtools = new ChannelPlate.Parent(childFrame, this.onMessage.bind(this) );
+      this.portToDevtools.postMessage({
+        method: 'debuggee',
+        arguments: [this.debuggee]
+      });
     },
     
-    _onConnect: function(connection) {
-      this.devtools = connection;
-      this.sendDebuggeeSpec();
-    },
-    
-    sendDebuggeeSpec: function() {
-      this.devtools.putObject(
-        'debuggee', 
-        this.debuggee,
-        function(reply) {
-          console.log("atopwi puts debuggee %o and hears: "+reply.message, this.debuggee, reply);
-        }.bind(this),
-        function(err) {
-          console.error("atopwi puts debuggee then err", err);
-        }
-      );
+    onMessage: function(message) {
+      console.log("atopwi puts debuggee %o and hears: "+message, message);
     },
     
   };

@@ -1,7 +1,7 @@
 // Google BSD license http://code.google.com/google_bsd_license.html
 // Copyright 2011 Google Inc. johnjbarton@google.com
 
-/*global define console WebInspector RESTChannel getChromeExtensionPipe window */
+/*global define console WebInspector  getChromeExtensionPipe window */
 
 
 define(['crx2app/rpc/ChromeProxy', 'devtoolsAdapter/appendFrame'], 
@@ -26,33 +26,18 @@ function(            ChromeProxy,                    appendFrame)  {
   Debuggee.prototype = {
     attachToParent: function() {
       console.log(window.location + ' talking ');
-      RESTChannel.talk(window.parent, function(atopwiConnection) {
-        this.register(atopwiConnection);
-        console.log('Debuggee connected', atopwiConnection);
-      }.bind(this));
-    },
-    
-    register: function(atopwiConnection) {
-      var debuggee = this;
-      atopwiConnection.register(
-        'debuggee',
-        { 
-          options: function() {
-            return {
-              put: '{url: string || tabId: number}'
-            };        
-          },
-          put: function (connection, obj) {
-            if (obj.url || obj.tabId) {
-              debuggee.attachToChrome(obj);
-             return {message:'attached'};
-            } else {
-             var error = "No url or tabId property on debuggee";
-             return {message:"Error: "+error, error: error};
-            }
-          }
+      this.portToAtopwi = new ChannelPlate.ChildIframe(function(message){
+        console.log('Debuggee got message ', message);
+        var method = message.data.method;
+        var args = message.data.arguments;
+        if (method === "debuggee") {
+          var obj = args[0];
+           if (obj.url || obj.tabId) {
+             this.attachToChrome(obj);
+             console.log("Attached");
+            } 
         }
-      );
+      }.bind(this));
     },
   
     attachToChrome: function(debuggeeSpec) {

@@ -21,7 +21,7 @@
     // relative to atopwi/inspector/front-end
     files: [
        '../../../MetaObject/requirejs/require.js',
-       '../../../RESTChannel/RESTChannel.js',
+       '../../../ChannelPlate/ChannelPlate.js',
        '../../../crx2app/extension/appEnd/appEnd.js',
         '../../devtoolsAdapter/loadDebuggee.js'
       ],
