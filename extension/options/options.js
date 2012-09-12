@@ -101,6 +101,21 @@ function getRow(event) {
   return row;
 }
 
+function selectAction(event) {
+  var action = event.target;
+  while (action && !action.classList.contains('action')) 
+    action = action.parentElement;
+
+  if (action) {
+    if (action.classList.contains('change')) {
+      changeState(event);
+    } 
+    if (action.classList.contains('revert')) {
+      revertState(event);
+    }
+  }
+}
+
 function changeState(event) {
   var row = getRow(event);
   if (row) {
@@ -149,6 +164,15 @@ function addListeners() {
   addExtensionInfosRow.addEventListener('click',function(event) {
     edit(cloneElementByClass('extensionInfo-template'));
   }, false);
+
+  var debugOptions = document.querySelector('#debugOptions');
+  debugOptions.addEventListener('click', onClickDebug);
+
+  var origins = document.querySelector("#origins");
+  origins.addEventListener('click', selectAction);
+
+  var infos = document.querySelector(".extensionInfos");
+  infos.addEventListener('click', selectAction);
 }
 
 function onLoad() {
@@ -219,5 +243,3 @@ function runTests() {
   });
   
 }
-
-document.getElementById('files').addEventListener('change', handleFileSelect, false);
