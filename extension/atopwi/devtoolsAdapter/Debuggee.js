@@ -7,7 +7,7 @@
 define(['crx2app/rpc/ChromeProxy'], 
 function(            ChromeProxy)  {
 
-  var debug = true;
+  var debug = false;
   
   function echoOk() {
     if (debug) {
