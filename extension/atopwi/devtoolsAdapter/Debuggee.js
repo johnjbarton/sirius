@@ -156,7 +156,7 @@ function(            ChromeProxy,                    appendFrame)  {
     },
 
     attach: function(callback) {
-      this.chrome.debugger.attach(
+       this.chrome.debugger.attach(
         {tabId: this.tabId}, 
         '1.0', 
         this.onAttach.bind(this, callback)
@@ -187,6 +187,9 @@ function(            ChromeProxy,                    appendFrame)  {
         console.log("DOMContentLoaded on inspectorWindow ", this);
       }
       this.inspectorWindow = window;
+
+      // Hack to prevent inspector.js from initializing 
+      InspectorFrontendHost.isStub = false;
       
       // Accept command from WebInspector and forward them to chrome.debugger
       var backend = this.inspectorWindow.InspectorBackend;
@@ -233,6 +236,9 @@ function(            ChromeProxy,                    appendFrame)  {
       }.bind(this);
       
       this.completeLoad.call(this.inspectorWindow.WebInspector);
+
+      // Undo Hack to prevent inspector.js from initializing 
+      InspectorFrontendHost.isStub = true;
       callback && callback();
     },
     
