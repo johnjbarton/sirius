@@ -8,6 +8,7 @@ git checkout extendable
 git checkout purple
 
 git rebase syncToWebKit  built-devtools
+git rebase built-devtools remoteDebug
 git rebase remoteDebug DebuggerProtocol
 git rebase DebuggerProtocol extendable
 git rebase extendable purple
